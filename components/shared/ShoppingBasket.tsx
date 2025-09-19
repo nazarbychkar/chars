@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useAppContext } from "@/lib/Provider";
+import { useAppContext } from "@/lib/GeneralProvider";
 
 
 export default function ShoppingBasket() {

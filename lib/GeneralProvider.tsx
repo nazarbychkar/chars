@@ -5,22 +5,22 @@ import { createContext, useContext, useEffect, useState } from "react";
 interface ContextType {
   isDark: boolean;
   setIsDark: React.Dispatch<React.SetStateAction<boolean>>;
-  isSiderbarOpen: boolean;
-  setIsSiderbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<ContextType>({
   isDark: false,
   setIsDark: () => {},
-  isSiderbarOpen: false,
-  setIsSiderbarOpen: () => {}
+  isSidebarOpen: false,
+  setIsSidebarOpen: () => {}
 });
 
 import { ReactNode } from "react";
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isDark, setIsDark] = useState(false);
-  const [isSiderbarOpen, setIsSiderbarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     // Get saved theme from localStorage
@@ -44,7 +44,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [isDark]);
 
   return (
-    <AppContext.Provider value={{ isDark, setIsDark, isSiderbarOpen, setIsSiderbarOpen }}>
+    <AppContext.Provider value={{ isDark, setIsDark, isSidebarOpen, setIsSidebarOpen }}>
       {children}
     </AppContext.Provider>
   );

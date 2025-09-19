@@ -1,6 +1,6 @@
 "use client";
 
-import { useAppContext } from "@/lib/Provider";
+import { useAppContext } from "@/lib/GeneralProvider";
 import { Montserrat } from "next/font/google";
 import Link from "next/link";
 
@@ -105,10 +105,10 @@ export default function Footer() {
       </div>
 
       <div className="flex justify-between">
-        <span className="text-xl text-stone-100">
+        <span className="text-xl ">
           Chars Kyiv © 2025 All rights reserved
         </span>
-        <span className="text-xl text-stone-100">
+        <span className="text-xl ">
           Політика конфінденційності
         </span>
       </div>

@@ -9,7 +9,7 @@ import Reviews from "@/components/main-page/Reviews";
 
 export default function Home() {
   return (
-    <main className="mt-20">
+    <>
       <Hero />
       <TopSale />
       <AboutUs />
@@ -18,6 +18,6 @@ export default function Home() {
       <LimitedEdition />
       <FAQ />
       <Reviews />
-    </main>
+    </>
   );
 }

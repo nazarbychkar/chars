@@ -4,11 +4,11 @@ import Image from "next/image";
 import SidebarMenu from "@/components/layout/SidebarMenu";
 import Search from "@/components/shared/Search";
 import ShoppingBasket from "@/components/shared/ShoppingBasket";
-import { useAppContext } from "@/lib/Provider";
+import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
 
 export default function Header() {
-  const { isDark, setIsDark, isSiderbarOpen, setIsSiderbarOpen } =
+  const { isDark, setIsDark, isSidebarOpen, setIsSidebarOpen } =
     useAppContext();
   const toggleTheme = () => setIsDark((prev) => !prev);
 
@@ -45,7 +45,7 @@ export default function Header() {
           <div className="w-20 h-8 relative">
             <button
               className="cursor-pointer left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-              onClick={() => setIsSiderbarOpen(!isSiderbarOpen)}
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
               Каталог
             </button>
@@ -95,8 +95,8 @@ export default function Header() {
       </header>
       <SidebarMenu
         isDark={isDark}
-        isOpen={isSiderbarOpen}
-        setIsOpen={setIsSiderbarOpen}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
       />
     </>
   );

@@ -1,10 +1,10 @@
 "use client";
 
 import SidebarMenu from "@/components/layout/SidebarMenu";
-import { useAppContext } from "@/lib/Provider";
+import { useAppContext } from "@/lib/GeneralProvider";
 
 export default function Hero() {
-  const { isDark, isSiderbarOpen, setIsSiderbarOpen } = useAppContext();
+  const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
 
   return (
     <section>
@@ -19,7 +19,7 @@ export default function Hero() {
           </div>
 
           <button
-            onClick={() => setIsSiderbarOpen(!isSiderbarOpen)}
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="cursor-pointer mx-auto w-72 h-16 p-2 bg-white inline-flex justify-center items-center gap-2 hover:opacity-50 transition-opacity duration-300"
           >
             <div className="text-center justify-center text-stone-900 text-2xl font-normal font-['Inter'] capitalize leading-none tracking-tight">
@@ -31,8 +31,8 @@ export default function Hero() {
 
       <SidebarMenu
         isDark={isDark}
-        isOpen={isSiderbarOpen}
-        setIsOpen={setIsSiderbarOpen}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
       />
     </section>
   );
