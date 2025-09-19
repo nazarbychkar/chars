@@ -1,18 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import MenuDrawer from "@/components/MenuDrawer";
-import Search from "@/components/Search";
-import ShoppingBasket from "@/components/ShoppingBasket";
+import MenuDrawer from "@/components/layout/MenuDrawer";
+import Search from "@/components/shared/Search";
+import ShoppingBasket from "@/components/shared/ShoppingBasket";
 import { useTheme } from "@/lib/ThemeProvider";
 import Link from "next/link";
 
 export default function Header() {
   const { isDark, setIsDark } = useTheme();
-
   const toggleTheme = () => setIsDark((prev) => !prev);
+
   return (
-    <header className="flex justify-between w-full h-20 relative  overflow-hidden">
+    <header className="flex justify-between h-20 overflow-hidden fixed top-0 left-0 w-full z-50shadow-md">
       <Link href="/#">
         <Image
           className="m-3 mx-10"
