@@ -1,13 +1,13 @@
 "use client";
 
-import { useTheme } from "@/lib/ThemeProvider";
+import { useAppContext } from "@/lib/Provider";
 import { Montserrat } from "next/font/google";
 import Link from "next/link";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
 export default function Footer() {
-  const { isDark } = useTheme();
+  const { isDark } = useAppContext();
 
   return (
     <footer className="mt-50 m-10 h-[764px] relative overflow-hidden flex flex-col justify-between">

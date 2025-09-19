@@ -1,8 +1,11 @@
-"use client"
+"use client";
 
-import MenuDrawer from "@/components/layout/MenuDrawer";
+import SidebarMenu from "@/components/layout/SidebarMenu";
+import { useAppContext } from "@/lib/Provider";
 
 export default function Hero() {
+  const { isDark, isSiderbarOpen, setIsSiderbarOpen } = useAppContext();
+
   return (
     <section>
       <div className="w-[1920px] h-[1080px] bg-[url('/images/hero-bg.png')] bg-cover bg-center">
@@ -16,8 +19,8 @@ export default function Hero() {
           </div>
 
           <button
-            onClick={MenuDrawer}
-            className="cursor-pointer mx-auto w-72 h-16 p-2 bg-white inline-flex justify-center items-center gap-2"
+            onClick={() => setIsSiderbarOpen(!isSiderbarOpen)}
+            className="cursor-pointer mx-auto w-72 h-16 p-2 bg-white inline-flex justify-center items-center gap-2 hover:opacity-50 transition-opacity duration-300"
           >
             <div className="text-center justify-center text-stone-900 text-2xl font-normal font-['Inter'] capitalize leading-none tracking-tight">
               Каталог
@@ -25,6 +28,12 @@ export default function Hero() {
           </button>
         </div>
       </div>
+
+      <SidebarMenu
+        isDark={isDark}
+        isOpen={isSiderbarOpen}
+        setIsOpen={setIsSiderbarOpen}
+      />
     </section>
   );
 }

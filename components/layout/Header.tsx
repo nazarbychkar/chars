@@ -1,14 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import MenuDrawer from "@/components/layout/MenuDrawer";
+import SidebarMenu from "@/components/layout/SidebarMenu";
 import Search from "@/components/shared/Search";
 import ShoppingBasket from "@/components/shared/ShoppingBasket";
-import { useTheme } from "@/lib/ThemeProvider";
+import { useAppContext } from "@/lib/Provider";
 import Link from "next/link";
 
 export default function Header() {
-  const { isDark, setIsDark } = useTheme();
+  const { isDark, setIsDark, isSiderbarOpen, setIsSiderbarOpen } =
+    useAppContext();
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
@@ -34,7 +35,7 @@ export default function Header() {
       <div className="w-4xl inline-flex justify-start items-center gap-20">
         <div className="w-20 h-8 relative">
           <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter']"
+            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
             href="/#about"
           >
             Про нас
@@ -42,15 +43,15 @@ export default function Header() {
         </div>
         <div className="w-20 h-8 relative">
           <button
-            className="cursor-pointer left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter']"
-            onClick={MenuDrawer}
+            className="cursor-pointer left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
+            onClick={() => setIsSiderbarOpen(!isSiderbarOpen)}
           >
             Каталог
           </button>
         </div>
         <div className="w-48 h-8 relative">
           <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter']"
+            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
             href="/#payment-and-delivery"
           >
             Оплата і доставка
@@ -58,7 +59,7 @@ export default function Header() {
         </div>
         <div className="w-20 h-8 relative">
           <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter']"
+            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
             href="/#reviews"
           >
             Відгуки
@@ -66,7 +67,7 @@ export default function Header() {
         </div>
         <div className="w-24 h-8 relative">
           <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter']"
+            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
             href="/#contacts"
           >
             Контакти
@@ -90,6 +91,12 @@ export default function Header() {
         <Search />
         <ShoppingBasket />
       </div>
+
+      <SidebarMenu
+        isDark={isDark}
+        isOpen={isSiderbarOpen}
+        setIsOpen={setIsSiderbarOpen}
+      />
     </header>
   );
 }

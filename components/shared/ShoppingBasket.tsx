@@ -1,9 +1,9 @@
 import Image from "next/image";
-import { useTheme } from "@/lib/ThemeProvider";
+import { useAppContext } from "@/lib/Provider";
 
 
 export default function ShoppingBasket() {
-const { isDark } = useTheme();
+const { isDark } = useAppContext();
 
   return (
     <button

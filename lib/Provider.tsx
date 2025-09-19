@@ -2,20 +2,25 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-interface ThemeContextType {
+interface ContextType {
   isDark: boolean;
   setIsDark: React.Dispatch<React.SetStateAction<boolean>>;
+  isSiderbarOpen: boolean;
+  setIsSiderbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
+const AppContext = createContext<ContextType>({
   isDark: false,
   setIsDark: () => {},
+  isSiderbarOpen: false,
+  setIsSiderbarOpen: () => {}
 });
 
 import { ReactNode } from "react";
 
-export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isDark, setIsDark] = useState(false);
+  const [isSiderbarOpen, setIsSiderbarOpen] = useState(false);
 
   useEffect(() => {
     // Get saved theme from localStorage
@@ -39,11 +44,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [isDark]);
 
   return (
-    <ThemeContext.Provider value={{ isDark, setIsDark }}>
+    <AppContext.Provider value={{ isDark, setIsDark, isSiderbarOpen, setIsSiderbarOpen }}>
       {children}
-    </ThemeContext.Provider>
+    </AppContext.Provider>
   );
 };
 
 // Custom hook for easier access
-export const useTheme = () => useContext(ThemeContext);
+export const useAppContext = () => useContext(AppContext);
