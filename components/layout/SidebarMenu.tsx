@@ -23,7 +23,9 @@ export default function SidebarMenu({
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full w-64 ${isDark ? "bg-stone-900" : "bg-stone-100"}  shadow-md z-40 transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-64 ${
+          isDark ? "bg-stone-900" : "bg-stone-100"
+        }  shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -43,7 +45,27 @@ export default function SidebarMenu({
           <Link href="#contact" className="block hover:text-[#8C7461]">
             Пальта
           </Link>
-          <Link href="#contact" className="block hover:text-[#8C7461]"></Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Лімітований одяг
+          </Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Спортивний одяг
+          </Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Футболки
+          </Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Майки
+          </Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Штани
+          </Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Сорочки
+          </Link>
+          <Link href="#contact" className="block hover:text-[#8C7461]">
+            Джинси
+          </Link>
         </nav>
       </div>
     </div>
