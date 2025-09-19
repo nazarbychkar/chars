@@ -13,90 +13,91 @@ export default function Header() {
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
-    <header
-      className={`flex justify-between h-20 overflow-hidden  z-50 fixed top-0 left-0 w-full z-50shadow-md ${
-        isDark ? "bg-[#1e1e1e]" : "bg-stone-100"
-      }`}
-    >
-      <Link href="/#">
-        <Image
-          className="m-3 mx-10"
-          height="57"
-          width="200"
-          alt="logo"
-          src={
-            isDark
-              ? "/images/dark-theme/chars-logo-header-dark.png"
-              : "/images/light-theme/chars-logo-header-light.png"
-          }
-        />
-      </Link>
-
-      <div className="w-4xl inline-flex justify-start items-center gap-20">
-        <div className="w-20 h-8 relative">
-          <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-            href="/#about"
-          >
-            Про нас
-          </Link>
-        </div>
-        <div className="w-20 h-8 relative">
-          <button
-            className="cursor-pointer left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-            onClick={() => setIsSiderbarOpen(!isSiderbarOpen)}
-          >
-            Каталог
-          </button>
-        </div>
-        <div className="w-48 h-8 relative">
-          <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-            href="/#payment-and-delivery"
-          >
-            Оплата і доставка
-          </Link>
-        </div>
-        <div className="w-20 h-8 relative">
-          <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-            href="/#reviews"
-          >
-            Відгуки
-          </Link>
-        </div>
-        <div className="w-24 h-8 relative">
-          <Link
-            className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-            href="/#contacts"
-          >
-            Контакти
-          </Link>
-        </div>
-      </div>
-
-      <div className="inline-flex justify-start gap-5 m-5">
-        <button className="cursor-pointer" onClick={toggleTheme}>
+    <>
+      <header
+        className={`flex justify-between h-20 overflow-hidden z-50 fixed top-0 left-0 w-full shadow-md ${
+          isDark ? "bg-[#1e1e1e]" : "bg-stone-100"
+        }`}
+      >
+        <Link href="/#">
           <Image
-            height="32"
-            width="32"
-            alt="theme switch"
+            className="m-3 mx-10"
+            height="57"
+            width="200"
+            alt="logo"
             src={
               isDark
-                ? "/images/dark-theme/theme-switch-dark.png"
-                : "/images/light-theme/theme-switch-light.png"
+                ? "/images/dark-theme/chars-logo-header-dark.png"
+                : "/images/light-theme/chars-logo-header-light.png"
             }
           />
-        </button>
-        <Search />
-        <ShoppingBasket />
-      </div>
+        </Link>
 
+        <div className="w-4xl inline-flex justify-start items-center gap-20">
+          <div className="w-20 h-8 relative">
+            <Link
+              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
+              href="/#about"
+            >
+              Про нас
+            </Link>
+          </div>
+          <div className="w-20 h-8 relative">
+            <button
+              className="cursor-pointer left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
+              onClick={() => setIsSiderbarOpen(!isSiderbarOpen)}
+            >
+              Каталог
+            </button>
+          </div>
+          <div className="w-48 h-8 relative">
+            <Link
+              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
+              href="/#payment-and-delivery"
+            >
+              Оплата і доставка
+            </Link>
+          </div>
+          <div className="w-20 h-8 relative">
+            <Link
+              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
+              href="/#reviews"
+            >
+              Відгуки
+            </Link>
+          </div>
+          <div className="w-24 h-8 relative">
+            <Link
+              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
+              href="/#contacts"
+            >
+              Контакти
+            </Link>
+          </div>
+        </div>
+
+        <div className="inline-flex justify-start gap-5 m-5">
+          <button className="cursor-pointer" onClick={toggleTheme}>
+            <Image
+              height="32"
+              width="32"
+              alt="theme switch"
+              src={
+                isDark
+                  ? "/images/dark-theme/theme-switch-dark.png"
+                  : "/images/light-theme/theme-switch-light.png"
+              }
+            />
+          </button>
+          <Search />
+          <ShoppingBasket />
+        </div>
+      </header>
       <SidebarMenu
         isDark={isDark}
         isOpen={isSiderbarOpen}
         setIsOpen={setIsSiderbarOpen}
       />
-    </header>
+    </>
   );
 }
