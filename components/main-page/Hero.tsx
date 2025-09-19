@@ -1,21 +1,30 @@
+"use client"
+
+import MenuDrawer from "@/components/layout/MenuDrawer";
+
 export default function Hero() {
   return (
     <section>
-      <img
-        className="w-[1920px] h-[1080px]"
-        src="https://placehold.co/1920x1080"
-      />
-      <div className="w-[1002px] h-52 bg-black/40 rounded-full blur-[88.50px]" />
-      <div
-        data-property-1="Default"
-        className="w-72 h-16 p-2 bg-white inline-flex justify-center items-center gap-2"
-      >
-        <div className="text-center justify-center text-stone-900 text-2xl font-normal font-['Inter'] capitalize leading-none tracking-tight">
-          каталог
+      <div className="w-[1920px] h-[1080px] bg-[url('/images/hero-bg.png')] bg-cover bg-center">
+        <div className="flex flex-col justify-evenly p-35 gap-70">
+          <div className=" mx-auto relative w-[1046px] h-52">
+            <div className="absolute inset-0 bg-black/40 rounded-full blur-[88.5px] z-0" />
+
+            <div className="relative z-10 flex items-center justify-center h-full text-white text-7xl font-medium font-['Montserrat'] uppercase text-center">
+              Тиша у формі тканини <br /> CHARS
+            </div>
+          </div>
+
+          <button
+            onClick={MenuDrawer}
+            className="cursor-pointer mx-auto w-72 h-16 p-2 bg-white inline-flex justify-center items-center gap-2"
+          >
+            <div className="text-center justify-center text-stone-900 text-2xl font-normal font-['Inter'] capitalize leading-none tracking-tight">
+              Каталог
+            </div>
+          </button>
         </div>
       </div>
-
-      <div className="w-[1920px] h-[1080px] bg-[url('https://placehold.co/1920x1080')"></div>
     </section>
   );
 }

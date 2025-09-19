@@ -12,7 +12,11 @@ export default function Header() {
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
-    <header className="flex justify-between h-20 overflow-hidden fixed top-0 left-0 w-full z-50shadow-md">
+    <header
+      className={`flex justify-between h-20 overflow-hidden  z-50 fixed top-0 left-0 w-full z-50shadow-md ${
+        isDark ? "bg-[#1e1e1e]" : "bg-stone-100"
+      }`}
+    >
       <Link href="/#">
         <Image
           className="m-3 mx-10"
