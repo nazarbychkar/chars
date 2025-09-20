@@ -10,10 +10,10 @@ export default function Footer() {
   const { isDark } = useAppContext();
 
   return (
-    <footer className="mt-50 m-10 h-[764px] relative overflow-hidden flex flex-col justify-between">
-      <div className="w-full mx-1 h-52">
+    <footer className="max-w-[1858px] mx-auto mt-50 m-10 h-[764px] relative overflow-hidden flex flex-col justify-between">
+      <div className="mx-1 h-52 mx-auto">
         <div
-          className={` ${montserrat.className} left-[9px] top-[-20px] absolute justify-center text-[209px] leading-[207.94px] tracking-[50px] border-b`}
+          className={`${montserrat.className} mx-auto justify-center text-[212.7px] leading-[207.94px] tracking-[50px] border-b`}
         >
           CHARS KYIV
         </div>

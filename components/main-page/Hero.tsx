@@ -8,7 +8,7 @@ export default function Hero() {
 
   return (
     <section>
-      <div className="w-[1920px] h-[1080px] bg-[url('/images/hero-bg.png')] bg-cover bg-center">
+      <div className="w-[1885px] mx-auto h-[1080px] bg-[url('/images/hero-bg.png')] bg-cover bg-center">
         <div className="flex flex-col justify-evenly p-35 gap-70">
           <div className=" mx-auto relative w-[1046px] h-52">
             <div className="absolute inset-0 bg-black/40 rounded-full blur-[88.5px] z-0" />

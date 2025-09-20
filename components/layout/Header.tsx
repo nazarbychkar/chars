@@ -15,7 +15,7 @@ export default function Header() {
   return (
     <>
       <header
-        className={`flex justify-between h-20 overflow-hidden z-50 fixed top-0 left-0 w-full shadow-md ${
+        className={`max-w-[1920px] mx-auto flex justify-between h-20 overflow-hidden z-50 fixed top-0 left-1/2 transform -translate-x-1/2 w-full shadow-md ${
           isDark ? "bg-[#1e1e1e]" : "bg-stone-100"
         }`}
       >

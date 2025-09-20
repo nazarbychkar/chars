@@ -14,7 +14,7 @@ export default function Catalog() {
 
   return (
     <>
-      <section className="m-15 mt-30">
+      <section className="max-w-[1824px] mx-auto m-20 mt-30">
         <div className="flex justify-between text-3xl">
           <div className="flex justify-start">
             <button
