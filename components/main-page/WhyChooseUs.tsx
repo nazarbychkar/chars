@@ -41,7 +41,7 @@ export default function WhyChooseUs() {
   return (
     <section
       // h-[2659px]
-      className={`w-[1850px] relative ${
+      className={`mx-auto w-[1880px] relative ${
         isDark ? "" : "bg-[#e3dfd7]"
       } overflow-hidden`}
     >
@@ -66,7 +66,7 @@ export default function WhyChooseUs() {
 
               <div className="w-[509px] justify-center text-5xl font-normal font-['Inter'] lowercase">
                 {item.top_text} <br />
-                <span className="justify-center text-xl font-normal font-['Inter'] capitalize leading-normal">
+                <span className="justify-center text-xl font-normal font-['Inter'] capitalize">
                   {item.bottom_text}
                 </span>
               </div>
