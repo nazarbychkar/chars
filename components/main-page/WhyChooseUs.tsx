@@ -41,7 +41,7 @@ export default function WhyChooseUs() {
   return (
     <section
       // h-[2659px]
-      className={`mx-auto w-[1880px] relative ${
+      className={`max-w-[1920px] mx-auto w-full relative ${
         isDark ? "" : "bg-[#e3dfd7]"
       } overflow-hidden`}
     >

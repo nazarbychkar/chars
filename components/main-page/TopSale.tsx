@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function TopSale() {
   return (
-    <section className="mx-auto w-[1885px] h-[977px] relative overflow-hidden flex flex-col gap-10">
+    <section className="max-w-[1920px] mx-auto w-full h-[977px] relative overflow-hidden flex flex-col gap-10">
       <div className="flex justify-between mt-20 mx-10 items-center">
         <div className=" text-center justify-center text-5xl font-normal font-['Inter'] uppercase">
           Топ продажів | CHARS

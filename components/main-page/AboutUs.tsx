@@ -1,6 +1,6 @@
 export default function AboutUs() {
   return (
-    <section id="about" className="mx-auto w-[1850px] h-[625px] relative overflow-hidden flex flex-col items-center gap-15 justify-center">
+    <section id="about" className="max-w-[1920px] mx-auto w-full h-[625px] relative overflow-hidden flex flex-col items-center gap-15 justify-center">
       <div className="text-[#8C7461] text-center justify-center text-5xl font-normal font-['Inter'] uppercase">
         Про нас
       </div>
