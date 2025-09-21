@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function SocialMedia() {
   return (
-    <section className="max-w-[1920px] mx-auto w-full h-[977px] relative overflow-hidden m-36">
+    <section id="contacts" className="max-w-[1920px] mx-auto w-full h-[977px] relative overflow-hidden m-36">
       <div className="flex justify-center">
         <div className="flex justify-center gap-7">
           <img

@@ -1,3 +1,3 @@
 export default function FAQ() {
-    return <section></section>
+    return <section id="payment-and-delivery"></section>
 }

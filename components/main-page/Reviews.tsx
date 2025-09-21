@@ -1,3 +1,3 @@
 export default function Reviews() {
-    return <section></section>
+    return <section id="reviews"></section>
 }
