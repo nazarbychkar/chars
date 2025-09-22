@@ -10,7 +10,7 @@ export default function FAQ() {
   };
 
   return (
-    <section id="payment-and-delivery" className="bg-[#e3dfd7] py-20">
+    <section id="payment-and-delivery" className="max-w-[1920px] w-full mx-auto  bg-[#e3dfd7] py-20">
       <div className="flex justify-between m-10">
         <div className="w-96 h-72 relative">
           <div className="w-96 h-44 justify-center text-7xl font-medium font-['Montserrat'] leading-[74.69px]">
