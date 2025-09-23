@@ -42,7 +42,7 @@ export default function SidebarBasket({
           <div className="flex flex-col">
             {Array.from({ length: 3 }, (_, i) => (
               <div key={i} className="self-stretch h-48 relative">
-                <div className="left-[143px] top-0 absolute justify-center text-stone-900 text-base font-normal font-['Inter'] leading-normal">
+                <div className="left-[143px] top-0 absolute justify-center text-base font-normal font-['Inter'] leading-normal">
                   LIMITED Виварені спортивні худі
                 </div>
                 <img
@@ -68,7 +68,7 @@ export default function SidebarBasket({
                   <div className="left-[64px] top-[7px] absolute justify-center text-zinc-500 text-base font-normal font-['Inter'] leading-normal">
                     +
                   </div>
-                  <div className="left-[39px] top-[7px] absolute justify-center text-stone-900 text-base font-normal font-['Inter'] leading-normal">
+                  <div className="left-[39px] top-[7px] absolute justify-center text-base font-normal font-['Inter'] leading-normal">
                     1
                   </div>
                   <div className="left-[12px] top-[7px] absolute justify-center text-zinc-500 text-base font-normal font-['Inter'] leading-normal">
