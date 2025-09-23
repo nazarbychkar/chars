@@ -6,15 +6,20 @@ import { Navigation } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
+import { useAppContext } from "@/lib/GeneralProvider";
 
 export default function Reviews() {
+  const { isDark } = useAppContext();
+
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
 
   return (
     <section
       id="reviews"
-      className="max-w-[1920px] w-full mx-auto h-[871px] relative bg-[#e3dfd7] px-8"
+      className={`max-w-[1920px] w-full mx-auto h-[871px] relative ${
+        isDark ? "bg-stone-900" : "bg-[#e3dfd7]"
+      } px-8`}
     >
       {/* Top section */}
       <div className="flex justify-between items-end pt-15 ">

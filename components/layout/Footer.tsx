@@ -11,7 +11,7 @@ export default function Footer() {
 
   return (
     <footer className="max-w-[1858px] mx-auto mt-50 m-10 h-[764px] relative overflow-hidden flex flex-col justify-between">
-      <div className="mx-1 h-52 mx-auto">
+      <div className="h-52 mx-auto">
         <div
           className={`${montserrat.className} mx-auto justify-center text-[212.7px] leading-[207.94px] tracking-[50px] border-b`}
         >

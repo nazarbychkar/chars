@@ -1,16 +1,23 @@
 "use client";
 
+import { useAppContext } from "@/lib/GeneralProvider";
 import { useState } from "react";
 
 export default function FAQ() {
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+  const { isDark } = useAppContext();
 
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? null : index);
   };
 
   return (
-    <section id="payment-and-delivery" className="max-w-[1920px] w-full mx-auto  bg-[#e3dfd7] py-20">
+    <section
+      id="payment-and-delivery"
+      className={`max-w-[1920px] w-full mx-auto  ${
+        isDark ? "bg-stone-900" : "bg-[#e3dfd7]"
+      } py-20`}
+    >
       <div className="flex justify-between m-10">
         <div className="w-96 h-72 relative">
           <div className="w-96 h-44 justify-center text-7xl font-medium font-['Montserrat'] leading-[74.69px]">
@@ -27,10 +34,26 @@ export default function FAQ() {
 
         <div>
           {[
-            { number: "01", title: "Оплата | CHARS KYIV", content: "Штани з корегуванням параметрів" },
-            { number: "02", title: "Доставка | CHARS KYIV", content: "Штани з корегуванням параметрів" },
-            { number: "03", title: "Повернення | CHARS KYIV", content: "Штани з корегуванням параметрів" },
-            { number: "04", title: "Відправка замовлення | CHARS KYIV", content: "Штани з корегуванням параметрів" },
+            {
+              number: "01",
+              title: "Оплата | CHARS KYIV",
+              content: "Штани з корегуванням параметрів",
+            },
+            {
+              number: "02",
+              title: "Доставка | CHARS KYIV",
+              content: "Штани з корегуванням параметрів",
+            },
+            {
+              number: "03",
+              title: "Повернення | CHARS KYIV",
+              content: "Штани з корегуванням параметрів",
+            },
+            {
+              number: "04",
+              title: "Відправка замовлення | CHARS KYIV",
+              content: "Штани з корегуванням параметрів",
+            },
           ].map((item, index) => (
             <div key={index}>
               <div className="flex justify-between items-center border-b-2 p-5">

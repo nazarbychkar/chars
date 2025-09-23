@@ -28,7 +28,7 @@ export default function FinalCard() {
             type="text"
             id="name"
             placeholder="Ваше імʼя"
-            className="border justify-center text-stone-900/60 text-xl font-normal font-['Arial'] p-5"
+            className="border justify-center text-xl font-normal font-['Arial'] p-5"
           />
 
           <label
@@ -41,7 +41,7 @@ export default function FinalCard() {
             type="text"
             id="email"
             placeholder="Ваш Email"
-            className="border justify-center text-stone-900/60 text-xl font-normal font-['Arial'] p-5"
+            className="border justify-center text-xl font-normal font-['Arial'] p-5"
           />
 
           <label
@@ -54,7 +54,7 @@ export default function FinalCard() {
             type="text"
             id="phone"
             placeholder="Ваш телефон"
-            className="border justify-center text-stone-900/60 text-xl font-normal font-['Arial'] p-5"
+            className="border justify-center text-xl font-normal font-['Arial'] p-5"
           />
 
           <label
@@ -67,7 +67,7 @@ export default function FinalCard() {
             type="text"
             id="comment"
             placeholder="Ваш коментар"
-            className="border justify-center text-stone-900/60 text-xl font-normal font-['Arial'] p-5"
+            className="border justify-center text-xl font-normal font-['Arial'] p-5"
           />
 
           <button

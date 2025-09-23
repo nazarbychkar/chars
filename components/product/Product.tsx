@@ -1,4 +1,10 @@
+"use client";
+
+import { useAppContext } from "@/lib/GeneralProvider";
+
 export default function Product() {
+  const { isDark } = useAppContext();
+
   return (
     <section className="max-w-[1920px] w-full mx-auto">
       <div className="flex justify-around p-10">
@@ -50,7 +56,11 @@ export default function Product() {
             </div>
           </div>
 
-          <div className="left-[291px] bg-black p-3 text-center justify-center text-white text-2xl font-medium font-['Inter'] uppercase leading-snug tracking-tight">
+          <div
+            className={`left-[291px] ${
+              isDark ? "bg-white text-black" : "bg-black text-white"
+            } p-3 text-center justify-center text-2xl font-medium font-['Inter'] uppercase leading-snug tracking-tight`}
+          >
             в кошик
           </div>
 

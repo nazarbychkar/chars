@@ -1,9 +1,17 @@
-import Image from "next/image";
+"use client";
+
+import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
 
 export default function SocialMedia() {
+  const { isDark } = useAppContext();
+
   return (
-    <section id="contacts" className="max-w-[1920px] mx-auto w-full h-[977px] relative overflow-hidden m-36">
+    // h-[977px]
+    <section
+      id="contacts"
+      className="max-w-[1920px] mx-auto w-full  relative overflow-hidden m-36"
+    >
       <div className="flex justify-center">
         <div className="flex justify-center gap-7">
           <img
@@ -28,14 +36,16 @@ export default function SocialMedia() {
             </span>
           </div>
 
-          <div className="w-[465px] justify-center text-black text-3xl font-normal font-['Inter'] capitalize leading-9">
+          <div className="w-[465px] justify-center text-3xl font-normal font-['Inter'] capitalize leading-9">
             Лімітована колекція — для тих кому важлива унікальність.
           </div>
 
           <div className="flex justify-between w-115 items-center">
             <Link
               href="https://www.tiktok.com/"
-              className=" w-80 h-16 text-center flex items-center bg-stone-900 justify-center text-white text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight"
+              className={`w-80 h-16 text-center flex items-center ${
+                isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white "
+              } justify-center text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
             >
               МИ В TIKTOK
             </Link>
@@ -45,7 +55,9 @@ export default function SocialMedia() {
           <div className="flex justify-between items-center w-115">
             <Link
               href="https://www.instagram.com/"
-              className="flex items-center text-center w-80 h-16 p-2 bg-stone-900 justify-center text-white text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight"
+              className={`w-80 h-16 text-center flex items-center ${
+                isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white "
+              } justify-center text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
             >
               МИ В ІНСТАГРАМ
             </Link>
