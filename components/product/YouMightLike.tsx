@@ -8,7 +8,7 @@ export default function YouMightLike() {
 
         <div className="flex justify-around">
           {Array.from({ length: 4 }, (_, i) => (
-            <div className="w-96 h-[682px] relative">
+            <div key={i} className="w-96 h-[682px] relative">
               <img
                 className="w-96 h-[613px]"
                 src="https://placehold.co/432x613"
