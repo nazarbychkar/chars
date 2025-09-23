@@ -89,7 +89,7 @@ export default function Footer() {
         </div>
 
         <Link
-          href="/#"
+          href="/"
           className={`w-60 h-60 rounded-full flex justify-center ${
             isDark ? "bg-stone-100" : "bg-stone-900"
           }`}
@@ -105,12 +105,8 @@ export default function Footer() {
       </div>
 
       <div className="flex justify-between">
-        <span className="text-xl ">
-          Chars Kyiv © 2025 All rights reserved
-        </span>
-        <span className="text-xl ">
-          Політика конфінденційності
-        </span>
+        <span className="text-xl ">Chars Kyiv © 2025 All rights reserved</span>
+        <span className="text-xl ">Політика конфінденційності</span>
       </div>
     </footer>
   );

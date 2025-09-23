@@ -4,7 +4,6 @@ import { JSX, useState } from "react";
 import SidebarFilter from "../layout/SidebarFilter";
 import { useAppContext } from "@/lib/GeneralProvider";
 import SidebarMenu from "../layout/SidebarMenu";
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Catalog() {

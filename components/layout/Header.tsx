@@ -19,7 +19,7 @@ export default function Header() {
           isDark ? "bg-[#1e1e1e]" : "bg-stone-100"
         }`}
       >
-        <Link href="/#">
+        <Link href="/">
           <Image
             className="m-3 mx-10"
             height="57"

@@ -1,3 +1,11 @@
+import Product from "@/components/product/Product";
+import YouMightLike from "@/components/product/YouMightLike";
+
 export default function Page() {
-    return <section>Nothing yet</section>
+  return (
+    <main>
+      <Product />
+      <YouMightLike />
+    </main>
+  );
 }
