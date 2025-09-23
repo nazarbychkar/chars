@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -7,13 +7,17 @@ interface ContextType {
   setIsDark: React.Dispatch<React.SetStateAction<boolean>>;
   isSidebarOpen: boolean;
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isBasketOpen: boolean;
+  setIsBasketOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<ContextType>({
   isDark: false,
   setIsDark: () => {},
   isSidebarOpen: false,
-  setIsSidebarOpen: () => {}
+  setIsSidebarOpen: () => {},
+  isBasketOpen: false,
+  setIsBasketOpen: () => {},
 });
 
 import { ReactNode } from "react";
@@ -21,6 +25,7 @@ import { ReactNode } from "react";
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isDark, setIsDark] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isBasketOpen, setIsBasketOpen] = useState(false);
 
   useEffect(() => {
     // Get saved theme from localStorage
@@ -44,7 +49,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [isDark]);
 
   return (
-    <AppContext.Provider value={{ isDark, setIsDark, isSidebarOpen, setIsSidebarOpen }}>
+    <AppContext.Provider
+      value={{ isDark, setIsDark, isSidebarOpen, setIsSidebarOpen, isBasketOpen, setIsBasketOpen }}
+    >
       {children}
     </AppContext.Provider>
   );

@@ -6,10 +6,17 @@ import Search from "@/components/shared/Search";
 import ShoppingBasket from "@/components/shared/ShoppingBasket";
 import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
+import SidebarBasket from "./SidebarBasket";
 
 export default function Header() {
-  const { isDark, setIsDark, isSidebarOpen, setIsSidebarOpen } =
-    useAppContext();
+  const {
+    isDark,
+    setIsDark,
+    isSidebarOpen,
+    setIsSidebarOpen,
+    isBasketOpen,
+    setIsBasketOpen,
+  } = useAppContext();
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
@@ -90,13 +97,32 @@ export default function Header() {
             />
           </button>
           <Search />
-          <ShoppingBasket />
+          <button
+            className="cursor-pointer"
+            onClick={() => setIsBasketOpen(!isBasketOpen)}
+          >
+            <Image
+              height="32"
+              width="32"
+              alt="shopping basket"
+              src={
+                isDark
+                  ? "/images/dark-theme/shopping-basket-dark.png"
+                  : "/images/light-theme/shopping-basket-light.png"
+              }
+            />
+          </button>
         </div>
       </header>
       <SidebarMenu
         isDark={isDark}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
+      />
+      <SidebarBasket
+        isDark={isDark}
+        isOpen={isBasketOpen}
+        setIsOpen={setIsBasketOpen}
       />
     </>
   );
