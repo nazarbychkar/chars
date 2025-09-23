@@ -1,6 +1,6 @@
 export default function Product() {
   return (
-    <section>
+    <section className="max-w-[1920px] w-full mx-auto">
       <div className="flex justify-around p-10">
         <div className="relative">
           <img
