@@ -6,12 +6,9 @@ import { sqlGetOrder, sqlPutOrder, sqlDeleteOrder } from "@/lib/sql"; // adjust 
 // ==========================
 // GET /api/orders/[id]
 // ==========================
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(context: { params: { id: string } }) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
     }
@@ -36,16 +33,16 @@ export async function GET(
 // PUT /api/orders/[id]
 // ==========================
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
     }
 
-    const body = await req.json();
+    const body = await request.json();
 
     if (!body.status) {
       return NextResponse.json(
@@ -65,16 +62,12 @@ export async function PUT(
     );
   }
 }
-
 // ==========================
 // DELETE /api/orders/[id]
 // ==========================
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(context: { params: { id: string } }) {
   try {
-    const id = Number(params.id);
+    const id = Number(context.params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
     }
