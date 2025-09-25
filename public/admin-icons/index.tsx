@@ -54,9 +54,9 @@ import BellIconSvg from "./bell.svg";
 import Image from "next/image";
 
 function createIconComponent(src: string, alt: string) {
-  return function Icon(props: { width?: number; height?: number }) {
-    const { width = 24, height = 24 } = props;
-    return <Image src={src} alt={alt} width={width} height={height} />;
+  return function Icon(props: { width?: number; height?: number; className?: string }) {
+    const { width = 24, height = 24, className } = props;
+    return <Image src={src} alt={alt} width={width} height={height} className={className} />;
   };
 }
 

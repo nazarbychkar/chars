@@ -8,10 +8,10 @@ import { sqlGetProduct, sqlPutProduct, sqlDeleteProduct } from "@/lib/sql";
 // =========================
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id);
+    const id = Number((await params).id);
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid product ID" },
@@ -40,10 +40,10 @@ export async function GET(
 // =========================
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id);
+    const id = Number((await params).id);
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid product ID" },
@@ -83,10 +83,10 @@ export async function PUT(
 // =========================
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id);
+    const id = Number((await params).id);
     if (isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid product ID" },
