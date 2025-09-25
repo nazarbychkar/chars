@@ -6,7 +6,10 @@ import { sqlGetOrder, sqlPutOrder, sqlDeleteOrder } from "@/lib/sql"; // adjust 
 // ==========================
 // GET /api/orders/[id]
 // ==========================
-export async function GET(context: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const id = Number(context.params.id);
     if (isNaN(id)) {
@@ -62,10 +65,10 @@ export async function PUT(
     );
   }
 }
-// ==========================
-// DELETE /api/orders/[id]
-// ==========================
-export async function DELETE(context: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
     const id = Number(context.params.id);
     if (isNaN(id)) {
