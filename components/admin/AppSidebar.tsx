@@ -30,69 +30,57 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    path: "/admin",
 
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
-    name: "Tables",
+    name: "Products",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    // subItems: [
+    //   { name: "Products Tables", path: "/admin/products", pro: false },
+    // ],
+    path: "/admin/products",
   },
   {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
+    name: "Orders",
+    icon: <TableIcon />,
+    // subItems: [{ name: "Orders Tables", path: "/admin/orders", pro: false }],
+    path: "/admin/orders",
+
   },
 ];
 
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
-];
+// const othersItems: NavItem[] = [
+//   {
+//     icon: <PieChartIcon />,
+//     name: "Charts",
+//     subItems: [
+//       { name: "Line Chart", path: "/line-chart", pro: false },
+//       { name: "Bar Chart", path: "/bar-chart", pro: false },
+//     ],
+//   },
+//   {
+//     icon: <BoxCubeIcon />,
+//     name: "UI Elements",
+//     subItems: [
+//       { name: "Alerts", path: "/alerts", pro: false },
+//       { name: "Avatar", path: "/avatars", pro: false },
+//       { name: "Badge", path: "/badge", pro: false },
+//       { name: "Buttons", path: "/buttons", pro: false },
+//       { name: "Images", path: "/images", pro: false },
+//       { name: "Videos", path: "/videos", pro: false },
+//     ],
+//   },
+//   {
+//     icon: <PlugInIcon />,
+//     name: "Authentication",
+//     subItems: [
+//       { name: "Sign In", path: "/signin", pro: false },
+//       { name: "Sign Up", path: "/signup", pro: false },
+//     ],
+//   },
+// ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -236,31 +224,31 @@ const AppSidebar: React.FC = () => {
   // const isActive = (path: string) => path === pathname;
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
-  useEffect(() => {
-    // Check if the current path matches any submenu item
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
-    });
+  // useEffect(() => {
+  //   // Check if the current path matches any submenu item
+  //   let submenuMatched = false;
+  //   ["main", "others"].forEach((menuType) => {
+  //     const items = menuType === "main" ? navItems : othersItems;
+  //     items.forEach((nav, index) => {
+  //       if (nav.subItems) {
+  //         nav.subItems.forEach((subItem) => {
+  //           if (isActive(subItem.path)) {
+  //             setOpenSubmenu({
+  //               type: menuType as "main" | "others",
+  //               index,
+  //             });
+  //             submenuMatched = true;
+  //           }
+  //         });
+  //       }
+  //     });
+  //   });
 
-    // If no submenu item matches, close the open submenu
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [pathname, isActive]);
+  //   // If no submenu item matches, close the open submenu
+  //   if (!submenuMatched) {
+  //     setOpenSubmenu(null);
+  //   }
+  // }, [pathname, isActive]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened
@@ -356,7 +344,7 @@ const AppSidebar: React.FC = () => {
               {renderMenuItems(navItems, "main")}
             </div>
 
-            <div className="">
+            {/* <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
                   !isExpanded && !isHovered
@@ -371,10 +359,10 @@ const AppSidebar: React.FC = () => {
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}
-            </div>
+            </div> */}
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
+        {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
       </div>
     </aside>
   );
