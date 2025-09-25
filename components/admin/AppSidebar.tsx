@@ -29,13 +29,12 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
+    name: "Головна",
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
     path: "/admin",
-
   },
   {
-    name: "Products",
+    name: "Продукти",
     icon: <TableIcon />,
     // subItems: [
     //   { name: "Products Tables", path: "/admin/products", pro: false },
@@ -43,11 +42,10 @@ const navItems: NavItem[] = [
     path: "/admin/products",
   },
   {
-    name: "Orders",
+    name: "Замовлення",
     icon: <TableIcon />,
     // subItems: [{ name: "Orders Tables", path: "/admin/orders", pro: false }],
     path: "/admin/orders",
-
   },
 ];
 
