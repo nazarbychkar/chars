@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
     path: "/admin",
   },
   {
-    name: "Продукти",
+    name: "Товари",
     icon: <TableIcon />,
     // subItems: [
     //   { name: "Products Tables", path: "/admin/products", pro: false },

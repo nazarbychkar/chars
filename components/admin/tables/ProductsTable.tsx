@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import Link from "next/link";
 
 interface Product {
   id: number;
@@ -20,6 +21,26 @@ interface Product {
 export default function ProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  function handleEdit(product: Product) {
+    // Implement edit logic here, e.g., open a modal or navigate to edit page
+    console.log("Edit product:", product);
+  }
+
+  async function handleDelete(productId: number) {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete product");
+      }
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  }
 
   useEffect(() => {
     async function fetchProducts() {
@@ -76,7 +97,14 @@ export default function ProductsTable() {
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Створено
+                  Дата створення
+                </TableCell>
+
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  <Link className="bg-green-300 rounded-xl p-1" href="/admin/products/add">Додати</Link>
                 </TableCell>
               </TableRow>
             </TableHeader>
@@ -101,12 +129,19 @@ export default function ProductsTable() {
                     {order.created_at.toString()}
                   </TableCell>
 
-                  <TableCell className="rounded-3xl bg-emerald-300 px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <button>Edit</button>
+                  <TableCell className=" px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <button className="rounded-3xl bg-emerald-300 p-1">
+                      Edit
+                    </button>
                   </TableCell>
 
-                  <TableCell className="rounded-3xl bg-red-500 px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <button>Delete</button>
+                  <TableCell className=" px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <button
+                      className="rounded-3xl bg-red-500 p-1"
+                      onClick={() => handleDelete(order.id)}
+                    >
+                      Delete
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
