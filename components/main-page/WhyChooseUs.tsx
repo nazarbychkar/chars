@@ -45,11 +45,11 @@ export default function WhyChooseUs() {
         isDark ? "" : "bg-[#e3dfd7]"
       } overflow-hidden`}
     >
-      <div className="flex justify-between items-center m-10">
-        <div className=" text-center justify-center  text-5xl font-normal font-['Inter'] uppercase">
+      <div className="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center m-10">
+        <div className="text-start lg:text-center justify-center text-3xl lg:text-5xl font-normal font-['Inter'] uppercase">
           Чому обирають нас
         </div>
-        <div className=" justify-center opacity-70 text-xl font-normal font-['Inter'] capitalize leading-normal">
+        <div className=" justify-center opacity-70 lg:text-xl font-normal font-['Inter'] capitalize leading-normal">
           Chars — коли естетика не потребує зайвих слів.
         </div>
       </div>
@@ -57,21 +57,23 @@ export default function WhyChooseUs() {
       <div className="flex flex-col p-10">
         {info.map((item, i) => (
           <div key={i} className="border-y">
-            <div className="flex justify-between items-center m-15">
-              <img
-                className="w-[589px] h-80"
-                src={item.pic}
-                alt={`image-${i}`}
-              />
+            <div className="flex justify-between gap-5 m-5 lg:m-15">
+              <div className="flex flex-col lg:flex-row gap-3 lg:gap-15 items-center">
+                <img
+                  className="w-full md:w-[589px] md:h-80 object-cover"
+                  src={item.pic}
+                  alt={`image-${i}`}
+                />
 
-              <div className="w-[509px] justify-center text-5xl font-normal font-['Inter'] lowercase">
-                {item.top_text} <br />
-                <span className="justify-center text-xl font-normal font-['Inter'] capitalize">
-                  {item.bottom_text}
-                </span>
+                <div className="w-full justify-center text-3xl lg:text-5xl font-normal font-['Inter'] lowercase">
+                  {item.top_text} <br />
+                  <span className="justify-center text-lg lg:text-xl font-normal font-['Inter'] capitalize">
+                    {item.bottom_text}
+                  </span>
+                </div>
               </div>
 
-              <div className="text-center justify-center text-4xl font-normal font-['Inter'] lowercase">
+              <div className="text-center justify-center text-2xl lg:text-4xl font-normal font-['Inter'] lowercase">
                 {`0${i + 1}`}
               </div>
             </div>

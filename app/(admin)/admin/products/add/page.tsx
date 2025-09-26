@@ -4,26 +4,10 @@ import ComponentCard from "@/components/admin/ComponentCard";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import Label from "@/components/admin/form/Label";
 import MultiSelect from "@/components/admin/form/MultiSelect";
-import CheckboxComponents from "@/components/admin/form/form-elements/CheckboxComponents";
-import DefaultInputs from "@/components/admin/form/form-elements/DefaultInputs";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
-import FileInputExample from "@/components/admin/form/form-elements/FileInputExample";
-import InputGroup from "@/components/admin/form/form-elements/InputGroup";
-import InputStates from "@/components/admin/form/form-elements/InputStates";
-import RadioButtons from "@/components/admin/form/form-elements/RadioButtons";
-import SelectInputs from "@/components/admin/form/form-elements/SelectInputs";
-import TextAreaInput from "@/components/admin/form/form-elements/TextAreaInput";
-import ToggleSwitch from "@/components/admin/form/form-elements/ToggleSwitch";
 import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
-import { Metadata } from "next";
 import React, { useState } from "react";
-
-// export const metadata: Metadata = {
-//   title: "Next.js Form Elements | TailAdmin - Next.js Dashboard Template",
-//   description:
-//     "This is Next.js Form Elements page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
-// };
 
 const multiOptions = [
   { value: "1", text: "XL", selected: false },
@@ -34,53 +18,110 @@ const multiOptions = [
 ];
 
 export default function FormElements() {
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
-  const [message, setMessage] = useState<string>("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [sizes, setSizes] = useState<string[]>(["1", "3"]);
+  const [image, setImage] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // Example Dropzone handler (adapt to your DropzoneComponent)
+  const handleDrop = (files: File[]) => {
+    setImage(files[0]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccess(null);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("price", price);
+      formData.append("sizes", JSON.stringify(sizes));
+      if (image) formData.append("image", image);
+
+      // Replace with your API endpoint
+      const res = await fetch("/api/products", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to create product");
+
+      setSuccess("Product created successfully!");
+      setName("");
+      setDescription("");
+      setPrice("");
+      setSizes([]);
+      setImage(null);
+    } catch (err: any) {
+      setError(err.message || "Error creating product");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // TODO: i finished here
   return (
     <div>
       <PageBreadcrumb pageTitle="Додати Товар" />
-      <div className="flex justify-around">
-        <div className="w-1/2 p-4">
-          <ComponentCard title="Заповніть дані">
-            <Label>Назва Товару</Label>
-            <Input type="text" />
-            <Label>Опис</Label>
-            <TextArea
-              value={message}
-              onChange={(value) => setMessage(value)}
-              rows={6}
-            />
-            <Label>Ціна</Label>
-            <Input type="number" />
-            <Label>Розміри</Label>
-            <MultiSelect
-              label="Multiple Select Options"
-              options={multiOptions}
-              defaultSelected={["1", "3"]}
-              onChange={(values) => setSelectedValues(values)}
-            />
-          </ComponentCard>
+      <form onSubmit={handleSubmit}>
+        <div className="flex justify-around">
+          <div className="w-1/2 p-4">
+            <ComponentCard title="Заповніть дані">
+              <Label>Назва Товару</Label>
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Label>Опис</Label>
+              <TextArea
+                value={description}
+                onChange={setDescription}
+                rows={6}
+              />
+              <Label>Ціна</Label>
+              <Input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
+              <Label>Розміри</Label>
+              <MultiSelect
+                label="Multiple Select Options"
+                options={multiOptions}
+                defaultSelected={sizes}
+                onChange={setSizes}
+              />
+            </ComponentCard>
+          </div>
+          <div className="w-1/2 p-4">
+            <Label>Зображення</Label>
+            <DropzoneComponent onDrop={handleDrop} />
+            {image && <div className="mt-2 text-sm">{image.name}</div>}
+          </div>
         </div>
-
-        <div className="w-1/2 p-4">
-          <DropzoneComponent />
+        <div className="flex justify-center mt-6">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-6 py-2 rounded"
+            disabled={loading}
+          >
+            {loading ? "Збереження..." : "Створити Товар"}
+          </button>
         </div>
-      </div>
-      {/* <div className="space-y-6"> */}
-      {/* <DefaultInputs /> */}
-      {/* <SelectInputs />
-          <TextAreaInput />
-          <InputStates />
-        </div>
-        <div className="space-y-6">
-          <InputGroup />
-          <FileInputExample />
-          <CheckboxComponents />
-          <RadioButtons />
-          <ToggleSwitch />
-          <DropzoneComponent />
-        </div> */}
+        {success && (
+          <div className="text-green-600 text-center mt-2">{success}</div>
+        )}
+        {error && <div className="text-red-600 text-center mt-2">{error}</div>}
+      </form>
     </div>
   );
 }

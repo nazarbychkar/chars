@@ -12,11 +12,11 @@ import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 
 // Dummy options
 const multiOptions = [
-  { value: "1", text: "XL" },
-  { value: "2", text: "L" },
-  { value: "3", text: "M" },
-  { value: "4", text: "S" },
-  { value: "5", text: "XS" },
+  { value: "1", text: "XL", selected: false },
+  { value: "2", text: "L", selected: false },
+  { value: "3", text: "M", selected: false },
+  { value: "4", text: "S", selected: false },
+  { value: "5", text: "XS", selected: false },
 ];
 
 export default function EditProductPage() {

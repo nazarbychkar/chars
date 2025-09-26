@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import SidebarMenu from "@/components/layout/SidebarMenu";
 import Search from "@/components/shared/Search";
 import ShoppingBasket from "@/components/shared/ShoppingBasket";
 import { useAppContext } from "@/lib/GeneralProvider";
-import Link from "next/link";
 import SidebarBasket from "./SidebarBasket";
 
 export default function Header() {
@@ -17,103 +17,150 @@ export default function Header() {
     isBasketOpen,
     setIsBasketOpen,
   } = useAppContext();
+
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
     <>
+      {/* Header container */}
       <header
-        className={`max-w-[1920px] mx-auto flex justify-between h-20 overflow-hidden z-50 fixed top-0 left-1/2 transform -translate-x-1/2 w-full shadow-md ${
+        className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 transform -translate-x-1/2 w-full z-50 shadow-md ${
           isDark ? "bg-[#1e1e1e]" : "bg-stone-100"
         }`}
       >
-        <Link href="/">
-          <Image
-            className="m-3 mx-10"
-            height="57"
-            width="200"
-            alt="logo"
-            src={
-              isDark
-                ? "/images/dark-theme/chars-logo-header-dark.png"
-                : "/images/light-theme/chars-logo-header-light.png"
-            }
-          />
-        </Link>
+        {/* Desktop Header */}
+        <div className="hidden lg:flex justify-between items-center h-20 px-10">
+          {/* Logo */}
+          <Link href="/">
+            <Image
+              height="57"
+              width="200"
+              alt="logo"
+              src={
+                isDark
+                  ? "/images/dark-theme/chars-logo-header-dark.png"
+                  : "/images/light-theme/chars-logo-header-light.png"
+              }
+            />
+          </Link>
 
-        <div className="w-4xl inline-flex justify-start items-center gap-20">
-          <div className="w-20 h-8 relative">
-            <Link
-              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-              href="/#about"
-            >
+          {/* Navigation Links */}
+          <div className="flex items-center gap-10 text-xl font-['Inter']">
+            <Link href="/#about" className="hover:text-[#8C7461]">
               Про нас
             </Link>
-          </div>
-          <div className="w-20 h-8 relative">
             <button
-              className="cursor-pointer left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="hover:text-[#8C7461]"
             >
               Каталог
             </button>
-          </div>
-          <div className="w-48 h-8 relative">
             <Link
-              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
               href="/#payment-and-delivery"
+              className="hover:text-[#8C7461]"
             >
               Оплата і доставка
             </Link>
-          </div>
-          <div className="w-20 h-8 relative">
-            <Link
-              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-              href="/#reviews"
-            >
+            <Link href="/#reviews" className="hover:text-[#8C7461]">
               Відгуки
             </Link>
-          </div>
-          <div className="w-24 h-8 relative">
-            <Link
-              className="left-0 top-[3px] absolute justify-center text-xl font-normal font-['Inter'] hover:text-[#8C7461]"
-              href="/#contacts"
-            >
+            <Link href="/#contacts" className="hover:text-[#8C7461]">
               Контакти
             </Link>
           </div>
+
+          {/* Right Icons */}
+          <div className="flex items-center gap-5">
+            <button className="cursor-pointer" onClick={toggleTheme}>
+              <Image
+                height="32"
+                width="32"
+                alt="theme switch"
+                src={
+                  isDark
+                    ? "/images/dark-theme/theme-switch-dark.png"
+                    : "/images/light-theme/theme-switch-light.png"
+                }
+              />
+            </button>
+            <Search />
+            <button
+              className="cursor-pointer"
+              onClick={() => setIsBasketOpen(!isBasketOpen)}
+            >
+              <Image
+                height="32"
+                width="32"
+                alt="shopping basket"
+                src={
+                  isDark
+                    ? "/images/dark-theme/shopping-basket-dark.png"
+                    : "/images/light-theme/shopping-basket-light.png"
+                }
+              />
+            </button>
+          </div>
         </div>
 
-        <div className="inline-flex justify-start gap-5 m-5">
-          <button className="cursor-pointer" onClick={toggleTheme}>
+        {/* Mobile Header */}
+        <div className="lg:hidden w-full h-16 relative overflow-hidden px-4 flex items-center justify-between">
+          {/* Hamburger Icon */}
+          <div className="flex gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="relative w-12 h-12"
+            >
+              <div className="absolute w-7 h-0.5 bg-black top-[13px] left-[9px]" />
+              <div className="absolute w-7 h-0.5 bg-black top-[23px] left-[9px]" />
+              <div className="absolute w-7 h-0.5 bg-black top-[33px] left-[9px]" />
+            </button>
+            <button className="cursor-pointer" onClick={toggleTheme}>
+              <Image
+                height="32"
+                width="32"
+                alt="theme switch"
+                src={
+                  isDark
+                    ? "/images/dark-theme/theme-switch-dark.png"
+                    : "/images/light-theme/theme-switch-light.png"
+                }
+              />
+            </button>
+          </div>
+
+          {/* Mobile Logo */}
+          <Link href="/">
             <Image
-              height="32"
-              width="32"
-              alt="theme switch"
+              height="57"
+              width="200"
+              alt="logo"
               src={
                 isDark
-                  ? "/images/dark-theme/theme-switch-dark.png"
-                  : "/images/light-theme/theme-switch-light.png"
+                  ? "/images/dark-theme/chars-logo-header-dark.png"
+                  : "/images/light-theme/chars-logo-header-light.png"
               }
             />
-          </button>
-          <Search />
-          <button
-            className="cursor-pointer"
-            onClick={() => setIsBasketOpen(!isBasketOpen)}
-          >
-            <Image
-              height="32"
-              width="32"
-              alt="shopping basket"
-              src={
-                isDark
-                  ? "/images/dark-theme/shopping-basket-dark.png"
-                  : "/images/light-theme/shopping-basket-light.png"
-              }
-            />
-          </button>
+          </Link>
+          {/* Right Icons */}
+          <div className="flex gap-4">
+            <Search />
+            <button onClick={() => setIsBasketOpen(!isBasketOpen)}>
+              <Image
+                height="32"
+                width="32"
+                alt="shopping basket"
+                src={
+                  isDark
+                    ? "/images/dark-theme/shopping-basket-dark.png"
+                    : "/images/light-theme/shopping-basket-light.png"
+                }
+              />
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* Sidebars */}
       <SidebarMenu
         isDark={isDark}
         isOpen={isSidebarOpen}
