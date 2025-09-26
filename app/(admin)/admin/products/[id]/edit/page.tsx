@@ -52,7 +52,7 @@ export default function EditProductPage() {
     if (productId) fetchProduct();
   }, [productId]);
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

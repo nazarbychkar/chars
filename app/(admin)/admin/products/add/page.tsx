@@ -60,8 +60,12 @@ export default function FormElements() {
       setPrice("");
       setSizes([]);
       setImage(null);
-    } catch (err: any) {
-      setError(err.message || "Error creating product");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error creating product");
+      }
     } finally {
       setLoading(false);
     }
