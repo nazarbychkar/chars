@@ -104,7 +104,12 @@ export default function ProductsTable() {
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  <Link className="bg-green-300 rounded-xl p-1" href="/admin/products/add">Додати</Link>
+                  <Link
+                    className="bg-green-300 rounded-xl p-1"
+                    href="/admin/products/add"
+                  >
+                    Додати
+                  </Link>
                 </TableCell>
               </TableRow>
             </TableHeader>
@@ -130,9 +135,12 @@ export default function ProductsTable() {
                   </TableCell>
 
                   <TableCell className=" px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <button className="rounded-3xl bg-emerald-300 p-1">
+                    <Link
+                      href={`/admin/products/${order.id}/edit`}
+                      className="rounded-3xl bg-emerald-300 p-1"
+                    >
                       Edit
-                    </button>
+                    </Link>
                   </TableCell>
 
                   <TableCell className=" px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
