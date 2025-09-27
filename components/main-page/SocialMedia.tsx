@@ -10,7 +10,7 @@ export default function SocialMedia() {
     // h-[977px]
     <section
       id="contacts"
-      className="max-w-[1920px] mx-auto w-full relative overflow-hidden lg:m-36"
+      className="max-w-[1920px] mx-auto w-full relative overflow-hidden lg:my-36"
     >
       <div className="flex flex-col-reverse lg:flex-row justify-center">
         <div className="flex justify-center gap-4 sm:gap-7">
