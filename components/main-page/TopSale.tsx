@@ -1,20 +1,29 @@
+"use client";
+
+import React, { useRef } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 import Link from "next/link";
 
 export default function TopSale() {
+  const prevRef = useRef<HTMLButtonElement>(null);
+  const nextRef = useRef<HTMLButtonElement>(null);
+
   return (
-    <section className="max-w-[1920px] mx-auto w-full h-[977px] relative overflow-hidden flex flex-col gap-10">
-      <div className="flex justify-between mt-20 mx-10 items-center">
-        <div className=" text-center justify-center text-5xl font-normal font-['Inter'] uppercase">
+    <section className="max-w-[1920px] mx-auto w-full mb-35 relative overflow-hidden flex flex-col gap-10">
+      <div className="border-b-2 pb-10 flex flex-col lg:flex-row justify-between mt-20 mx-10 lg:items-center">
+        <div className="lg:text-center justify-center text-2xl lg:text-5xl font-normal font-['Inter'] uppercase">
           Топ продажів | CHARS
         </div>
-        <div className="opacity-70  justify-center  text-xl font-normal font-['Inter'] capitalize leading-normal">
+        <div className="text-left opacity-70 text-base lg:text-xl font-normal font-['Inter'] capitalize leading-normal">
           Улюблені образи наших клієнтів.
         </div>
       </div>
 
-      <div className="w-[1819px] h-0 mx-auto outline-1 outline-offset-[-0.50px]" />
-
-      <div className=" inline-flex justify-around items-center gap-8 mx-10">
+      {/* Desktop layout (static grid) */}
+      <div className="hidden sm:inline-flex justify-around items-center gap-8 mx-10">
         {Array.from({ length: 4 }, (_, i) => (
           <Link
             href="/product"
@@ -25,12 +34,42 @@ export default function TopSale() {
               className="w-[432px] h-[682px] group-hover:filter group-hover:brightness-90 transition brightness duration-300"
               src="https://placehold.co/432x613"
             />
-            <div className=" justify-center text-xl font-normal font-['Inter'] capitalize leading-normal">
+            <div className="justify-center text-xl font-normal font-['Inter'] capitalize leading-normal">
               шовкова сорочка без рукавів <br />
               1,780.00 ₴
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Mobile swiper carousel */}
+      <div className="sm:hidden">
+        <Swiper
+          modules={[Navigation]}
+          spaceBetween={16}
+          slidesPerView={1.5} // Display 1.5 slides on mobile
+          loop
+          centeredSlides // Center the active slide
+          grabCursor // Allow grab gesture
+        >
+          {Array.from({ length: 4 }, (_, i) => (
+            <SwiperSlide key={i}>
+              <Link
+                href="/product"
+                className="relative flex flex-col gap-3 group"
+              >
+                <img
+                  className="w-full h-[350px] group-hover:filter group-hover:brightness-90 transition brightness duration-300"
+                  src="https://placehold.co/432x613"
+                />
+                <div className="justify-center text-lg font-normal font-['Inter'] capitalize leading-normal text-center">
+                  шовкова сорочка без рукавів <br />
+                  1,780.00 ₴
+                </div>
+              </Link>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   );
