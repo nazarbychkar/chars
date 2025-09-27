@@ -22,14 +22,14 @@ export default function Reviews() {
       } px-8`}
     >
       {/* Top section */}
-      <div className="flex justify-between items-end pt-15 ">
-        <div className="w-[632.70px] text-7xl font-medium font-['Montserrat'] leading-[74.69px]">
+      <div className="flex flex-col lg:flex-row justify-between lg:items-end pt-15">
+        <div className="mb-5 lg:mb-0 text-4xl lg:text-7xl font-medium font-['Montserrat'] lg:leading-[74.69px]">
           Враження
           <br />
           наших клієнтів
         </div>
 
-        <div className="text-2xl font-normal font-['Arial'] leading-relaxed">
+        <div className="text-base lg:text-2xl font-normal font-['Arial'] leading-relaxed">
           Більше відгуків дивіться у<br />
           нашому <span className="underline italic">Instagram</span> профілі
         </div>
@@ -55,9 +55,8 @@ export default function Reviews() {
       <div className="mt-12 w-full">
         <Swiper
           modules={[Navigation]}
-          spaceBetween={24}
-          slidesPerView={4.5}
-          loop
+          spaceBetween={16}
+          slidesPerView={1.5} // Default for larger screens
           navigation={{
             prevEl: prevRef.current,
             nextEl: nextRef.current,
@@ -72,6 +71,23 @@ export default function Reviews() {
               swiper.navigation.init();
               swiper.navigation.update();
             }
+          }}
+          breakpoints={{
+            // On mobile (sm and below)
+            640: {
+              slidesPerView: 1.5, // Show 1.5 slides on small screens
+              spaceBetween: 16, // Adjust space between slides for mobile
+            },
+            // On tablets and larger
+            768: {
+              slidesPerView: 3.5, // Show 3.5 slides on medium screens
+              spaceBetween: 24,
+            },
+            // On larger screens (default settings)
+            1024: {
+              slidesPerView: 4.5, // 4.5 slides on larger screens (default)
+              spaceBetween: 24,
+            },
           }}
         >
           {[
