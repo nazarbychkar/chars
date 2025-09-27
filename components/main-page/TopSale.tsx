@@ -48,7 +48,6 @@ export default function TopSale() {
           modules={[Navigation]}
           spaceBetween={16}
           slidesPerView={1.5} // Display 1.5 slides on mobile
-          loop
           centeredSlides // Center the active slide
           grabCursor // Allow grab gesture
         >
