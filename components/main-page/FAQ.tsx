@@ -14,25 +14,25 @@ export default function FAQ() {
   return (
     <section
       id="payment-and-delivery"
-      className={`max-w-[1920px] w-full mx-auto  ${
+      className={`max-w-[1920px] w-full mx-auto ${
         isDark ? "bg-stone-900" : "bg-[#e3dfd7]"
-      } py-20`}
+      } py-10 lg:py-20`}
     >
-      <div className="flex justify-between m-10">
-        <div className="w-96 h-72 relative">
-          <div className="w-96 h-44 justify-center text-7xl font-medium font-['Montserrat'] leading-[74.69px]">
+      <div className="flex flex-col lg:flex-row justify-between m-5 lg:m-10 gap-10">
+        <div className="w-full lg:w-96 lg:h-72 relative">
+          <div className="text-4xl lg:text-7xl font-medium font-['Montserrat'] leading-snug lg:leading-[74.69px]">
             Ви часто
             <br />
             запитуєте
           </div>
-          <div className="w-96 h-14 justify-cente text-2xl font-normal font-['Arial'] leading-loose">
+          <div className="mt-4 text-lg lg:text-2xl font-normal font-['Arial'] leading-relaxed">
             Зібрали найпоширеніші
             <br />
             запитання наших відвідувачів
           </div>
         </div>
 
-        <div>
+        <div className="w-full">
           {[
             {
               number: "01",
@@ -56,19 +56,17 @@ export default function FAQ() {
             },
           ].map((item, index) => (
             <div key={index}>
-              <div className="flex justify-between items-center border-b-2 p-5">
-                <div className="flex justify-around items-center gap-10">
-                  <div className="w-10 h-8 justify-center text-4xl font-normal font-['Arial'] leading-9">
+              <div className="flex flex-row justify-between items-start sm:items-center border-b-2 p-3 sm:p-5 gap-3 sm:gap-0">
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-normal font-['Arial'] leading-8">
                     {item.number}
                   </div>
                   <div
                     onClick={() => toggleAccordion(index + 1)}
-                    className="w-[765px] h-16 justify-center text-3xl font-normal font-['Arial'] leading-loose cursor-pointer"
+                    className="text-lg sm:text-xl lg:text-3xl font-normal font-['Arial'] leading-relaxed cursor-pointer max-w-full sm:max-w-[765px]"
                   >
                     {item.title}
                   </div>
-                </div>
-                <div className="w-10 h-10 justify-center text-4xl font-normal font-['Arial'] leading-9">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-normal font-['Arial'] leading-8">
                   {openAccordion === index + 1 ? "-" : "+"}
                 </div>
               </div>
@@ -79,7 +77,7 @@ export default function FAQ() {
                   openAccordion === index + 1 ? "max-h-[500px]" : "max-h-0"
                 }`}
               >
-                <div className="p-5 w-[608px] justify-center text-xl font-normal font-['Arial'] leading-normal">
+                <div className="p-3 sm:p-5 text-base sm:text-lg lg:text-xl font-normal font-['Arial'] leading-relaxed max-w-full sm:max-w-[608px]">
                   {item.content}
                   <br />
                   Ми надаємо можливість легкого корегування штанів за талією та
