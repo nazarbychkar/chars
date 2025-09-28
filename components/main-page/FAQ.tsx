@@ -32,7 +32,7 @@ export default function FAQ() {
           </div>
         </div>
 
-        <div className="w-full">
+        <div className="max-w-4xl w-full">
           {[
             {
               number: "01",
@@ -55,17 +55,16 @@ export default function FAQ() {
               content: "Штани з корегуванням параметрів",
             },
           ].map((item, index) => (
-            <div key={index}>
-              <div className="flex flex-row justify-between items-start sm:items-center border-b-2 p-3 sm:p-5 gap-3 sm:gap-0">
+            <div key={index} className="cursor-pointer" onClick={() => toggleAccordion(index + 1)}>
+              <div className="max-w-4xl flex flex-row justify-between items-start sm:items-center border-b-2 p-3 sm:p-5 gap-3 sm:gap-0">
+                <div className="flex justify-center gap-10">
                   <div className="text-2xl sm:text-3xl lg:text-4xl font-normal font-['Arial'] leading-8">
                     {item.number}
                   </div>
-                  <div
-                    onClick={() => toggleAccordion(index + 1)}
-                    className="text-lg sm:text-xl lg:text-3xl font-normal font-['Arial'] leading-relaxed cursor-pointer max-w-full sm:max-w-[765px]"
-                  >
+                  <div className="text-lg sm:text-xl lg:text-3xl font-normal font-['Arial'] leading-relaxed max-w-full sm:max-w-[765px]">
                     {item.title}
                   </div>
+                </div>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-normal font-['Arial'] leading-8">
                   {openAccordion === index + 1 ? "-" : "+"}
                 </div>

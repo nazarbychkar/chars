@@ -115,44 +115,52 @@ export default function ProductsTable() {
             </TableHeader>
 
             {/* Table Body */}
+
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {products.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {order.name}
-                  </TableCell>
-
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {order.description}
-                  </TableCell>
-
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {order.price}
-                  </TableCell>
-
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {order.created_at.toString()}
-                  </TableCell>
-
-                  <TableCell className=" px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <Link
-                      href={`/admin/products/${order.id}/edit`}
-                      className="rounded-3xl bg-emerald-300 p-1"
-                    >
-                      Edit
-                    </Link>
-                  </TableCell>
-
-                  <TableCell className=" px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <button
-                      className="rounded-3xl bg-red-500 p-1"
-                      onClick={() => handleDelete(order.id)}
-                    >
-                      Delete
-                    </button>
+              {loading ? (
+                <TableRow>
+                  <TableCell className="text-center py-4">Loading...</TableCell>
+                </TableRow>
+              ) : products.length === 0 ? (
+                <TableRow>
+                  <TableCell className="text-center py-4">
+                    No products found.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {product.name}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {product.description}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {product.price}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {new Date(product.created_at).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <Link
+                        href={`/admin/products/${product.id}/edit`}
+                        className="rounded-3xl bg-emerald-300 p-1"
+                      >
+                        Edit
+                      </Link>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <button
+                        className="rounded-3xl bg-red-500 p-1"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        Delete
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
