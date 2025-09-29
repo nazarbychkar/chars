@@ -64,8 +64,11 @@ export async function PUT(
       name: body.name,
       description: body.description,
       price: body.price,
-      sizes: body.sizes || [],
-      media: body.media || [],
+      sizes: body.sizes.map((size: string) => ({
+        size,
+        stock: 5,
+      })),
+      media: body.media,
     });
 
     return NextResponse.json({ updated: true });

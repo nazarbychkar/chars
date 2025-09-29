@@ -83,7 +83,7 @@ export default function OrdersTable() {
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Ім'я клієнта
+                  Ім&#39;я клієнта
                 </TableCell>
                 <TableCell
                   isHeader

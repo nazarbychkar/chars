@@ -21,15 +21,15 @@ export default function FormElements() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [sizes, setSizes] = useState<string[]>(["1", "3"]);
-  const [image, setImage] = useState<File | null>(null);
+  const [sizes, setSizes] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Example Dropzone handler (adapt to your DropzoneComponent)
   const handleDrop = (files: File[]) => {
-    setImage(files[0]);
+    setImages((prevImages) => [...prevImages, ...files]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,7 +44,11 @@ export default function FormElements() {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("sizes", JSON.stringify(sizes));
-      if (image) formData.append("image", image);
+      if (images.length > 0) {
+        images.forEach((image) => {
+          formData.append("images", image); // Field name "images" can be reused
+        });
+      }
 
       // Replace with your API endpoint
       const res = await fetch("/api/products", {
@@ -59,7 +63,7 @@ export default function FormElements() {
       setDescription("");
       setPrice("");
       setSizes([]);
-      setImage(null);
+      setImages([]);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -109,7 +113,7 @@ export default function FormElements() {
           <div className="w-1/2 p-4">
             <Label>Зображення</Label>
             <DropzoneComponent onDrop={handleDrop} />
-            {image && <div className="mt-2 text-sm">{image.name}</div>}
+            {images && <div className="mt-2 text-sm">here is an image</div>}
           </div>
         </div>
         <div className="flex justify-center mt-6">

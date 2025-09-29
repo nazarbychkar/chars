@@ -108,11 +108,9 @@ export default function Header() {
           <div className="flex gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="relative w-12 h-12"
+              className="relative w-12 h-12 text-3xl"
             >
-              <div className="absolute w-7 h-0.5 bg-black top-[13px] left-[9px]" />
-              <div className="absolute w-7 h-0.5 bg-black top-[23px] left-[9px]" />
-              <div className="absolute w-7 h-0.5 bg-black top-[33px] left-[9px]" />
+              ☰
             </button>
             <button className="cursor-pointer" onClick={toggleTheme}>
               <Image
@@ -131,8 +129,8 @@ export default function Header() {
           {/* Mobile Logo */}
           <Link href="/">
             <Image
-              height="57"
-              width="200"
+              height="28"
+              width="100"
               alt="logo"
               src={
                 isDark

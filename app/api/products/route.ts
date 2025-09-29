@@ -22,24 +22,38 @@ export async function GET() {
 // =========================
 // POST /api/products
 // =========================
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const formData = await req.formData();
 
-    // ✅ Basic validation (can be replaced with zod)
-    if (!body.name || !body.price) {
+    const name = formData.get("name") as string;
+    const price = Number(formData.get("price"));
+    const description = formData.get("description") as string;
+    const sizesRaw = formData.get("sizes") as string;
+    const images = formData.getAll("images") as File[];
+
+    if (!name || !price) {
       return NextResponse.json(
         { error: "Missing required fields: name, price" },
         { status: 400 }
       );
     }
 
+    const parsedSizes = JSON.parse(sizesRaw); // ["S", "M", "L"]
+
     const product = await sqlPostProduct({
-      name: body.name,
-      description: body.description,
-      price: body.price,
-      sizes: body.sizes, // expected: [{ size: "M", stock: 5 }]
-      media: body.media, // expected: [{ type: "image", url: "..." }]
+      name,
+      description,
+      price,
+      sizes: parsedSizes.map((size: string) => ({
+        size,
+        stock: 5,
+      })),
+      media: images.map((file) => ({
+        type: "photo",
+        url: "/public/images/hero-bg.png",  // TODO: change to real url
+      })),
     });
 
     return NextResponse.json(product, { status: 201 });
