@@ -5,22 +5,19 @@ import { useRouter, useParams } from "next/navigation";
 import ComponentCard from "@/components/admin/ComponentCard";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import Label from "@/components/admin/form/Label";
-import MultiSelect from "@/components/admin/form/MultiSelect";
 import Input from "@/components/admin/form/input/InputField";
-import TextArea from "@/components/admin/form/input/TextArea";
-import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
-
-// Dummy options
-const multiOptions = [
-  { value: "1", text: "pending", selected: false },
-  { value: "2", text: "delivering", selected: false },
-  { value: "3", text: "fulfilled", selected: false },
-];
+import Select from "@/components/admin/form/Select";
 
 export default function EditOrderPage() {
-  const params = useParams(); // Next.js 13+ route params
+  const params = useParams();
   const orderId = params?.id;
   const router = useRouter();
+
+  const options = [
+    { value: "pending", label: "Очікується" },
+    { value: "delivering", label: "Доставляємо" },
+    { value: "complete", label: "Завершено" },
+  ];
 
   const [formData, setFormData] = useState({
     customer_name: "",
@@ -30,6 +27,7 @@ export default function EditOrderPage() {
     city: "",
     post_office: "",
     status: "",
+    items: [],
   });
 
   useEffect(() => {
@@ -46,6 +44,7 @@ export default function EditOrderPage() {
           city: data.city || "",
           post_office: data.post_office || "",
           status: data.status || "",
+          items: data.items || [],
         });
       } catch (err) {
         console.error("Failed to fetch order", err);
@@ -55,7 +54,7 @@ export default function EditOrderPage() {
     if (orderId) fetchOrder();
   }, [orderId]);
 
-  const handleChange = (field: string, value: string | string[]) => {
+  const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -69,76 +68,172 @@ export default function EditOrderPage() {
     router.push("/admin/orders");
   };
 
+  const calculateTotal = () => {
+    return formData.items
+      .reduce((total, item: any) => {
+        const subtotal = parseFloat(item.price) * item.quantity;
+        return total + subtotal;
+      }, 0)
+      .toFixed(2);
+  };
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageBreadcrumb pageTitle="Редагувати Замовлення" />
-      <div className="flex w-full flex-col md:flex-row">
-        <div className="w-full md:w-1/2 p-4">
-          <ComponentCard title="Редагувати дані">
-            <Label>Ім'я клієнта</Label>
-            <Input
-              type="text"
-              value={formData.customer_name}
-              onChange={(e) => handleChange("customer_name", e.target.value)}
-            />
 
-            <Label>Номер телефону</Label>
-            <Input
-              type="text"
-              value={formData.phone_number}
-              onChange={(e) => handleChange("phone_number", e.target.value)}
-            />
-
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-            />
-
-            <Label>Метод доставки</Label>
-            <Input
-              type="text"
-              value={formData.delivery_method}
-              onChange={(e) => handleChange("delivery_method", e.target.value)}
-            />
-
-            <Label>Місто</Label>
-            <Input
-              type="text"
-              value={formData.city}
-              onChange={(e) => handleChange("city", e.target.value)}
-            />
-
-            <Label>Відділення Нової Пошти</Label>
-            <Input
-              type="text"
-              value={formData.post_office}
-              onChange={(e) => handleChange("post_office", e.target.value)}
-            />
-
-            <Label>Статус</Label>
-            <Input
-              type="text"
-              value={formData.status}
-              onChange={(e) => handleChange("status", e.target.value)}
-            />
-          </ComponentCard>
-        </div>
-
-        <div className="w-full md:w-1/2 p-4">
-          <ComponentCard title="Файли">
-            <DropzoneComponent />
-          </ComponentCard>
-        </div>
+      {/* Customer Info */}
+      <div className="px-4">
+        <ComponentCard title="Інформація про замовлення">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Ім'я клієнта</Label>
+              <Input
+                type="text"
+                value={formData.customer_name}
+                onChange={(e) => handleChange("customer_name", e.target.value)}
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Номер телефону</Label>
+              <Input
+                type="phone"
+                value={formData.phone_number}
+                onChange={(e) => handleChange("phone_number", e.target.value)}
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Метод доставки</Label>
+              <Input
+                type="text"
+                value={formData.delivery_method}
+                onChange={(e) =>
+                  handleChange("delivery_method", e.target.value)
+                }
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Місто</Label>
+              <Input
+                type="text"
+                value={formData.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Відділення Нової Пошти</Label>
+              <Input
+                type="text"
+                value={formData.post_office}
+                onChange={(e) => handleChange("post_office", e.target.value)}
+                disabled
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label>Статус</Label>
+              <div className="relative">
+                <Select
+                  options={options}
+                  placeholder="Select Option"
+                  value={formData.status}
+                  onChange={(value: string) => handleChange("status", value)}
+                  className="dark:bg-dark-900"
+                />
+              </div>
+            </div>
+          </div>
+        </ComponentCard>
       </div>
 
-      <div className="p-4">
+      {/* Order Items Table */}
+      <div className="px-4">
+        <ComponentCard title="Товари у замовленні">
+          {formData.items.length === 0 ? (
+            <p className="text-gray-500">Немає товарів у цьому замовленні.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Назва продукту
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Розмір
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Кількість
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Ціна (₴)
+                    </th>
+                    <th className="px-4 py-3 text-left font-semibold">
+                      Сума (₴)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {formData.items.map((item: any) => (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    >
+                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                        {item.product_name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        {item.size}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        {item.quantity}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        {parseFloat(item.price).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                        {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50 dark:bg-gray-900">
+                    <td
+                      colSpan={4}
+                      className="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200"
+                    >
+                      Загальна сума:
+                    </td>
+                    <td className="px-4 py-3 font-bold text-green-600 dark:text-green-400">
+                      {calculateTotal()} ₴
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </ComponentCard>
+      </div>
+
+      {/* Submit Button */}
+      <div className="px-4 pb-10">
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow transition-all duration-200"
           onClick={handleSubmit}
         >
-          Зберегти Зміни
+          💾 Зберегти Зміни
         </button>
       </div>
     </div>

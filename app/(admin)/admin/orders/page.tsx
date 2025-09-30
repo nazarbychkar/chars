@@ -16,9 +16,7 @@ export default function BasicTables() {
     <div>
       <PageBreadcrumb pageTitle="Таблиця Замовлень" />
       <div className="space-y-6">
-        <ComponentCard title="Таблиця Замовлень">
-          <OrdersTable />
-        </ComponentCard>
+        <OrdersTable />
       </div>
     </div>
   );

@@ -26,21 +26,14 @@ export default function OrdersTable() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  function handleEdit(order: Order) {
-    // Implement edit logic here, e.g., open a modal or navigate to edit page
-    console.log("Edit order:", order);
-  }
-
   async function handleDelete(orderId: number) {
-    if (!confirm("Are you sure you want to delete this order?")) return;
+    if (!confirm("Ви впевнені, що хочете видалити це замовлення?")) return;
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        throw new Error("Failed to delete order");
-      }
-      setOrders((prev) => prev.filter((p) => p.id !== orderId));
+      if (!res.ok) throw new Error("Failed to delete order");
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
     } catch (error) {
       console.error("Error deleting order:", error);
     }
@@ -50,13 +43,9 @@ export default function OrdersTable() {
     async function fetchOrders() {
       try {
         const res = await fetch("/api/orders");
-        if (!res.ok) {
-          throw new Error("Failed to fetch orders");
-        }
-
+        if (!res.ok) throw new Error("Failed to fetch orders");
         const data = await res.json();
         setOrders(data);
-        // console.log(data)
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
@@ -67,139 +56,144 @@ export default function OrdersTable() {
     fetchOrders();
   }, []);
 
-  //   useEffect(() => {
-  //   console.log("Updated products:", products);
-  // }, [products]);
-
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[1102px]">
+      <div className="overflow-x-auto">
+        <div className="min-w-[1200px]">
+          {/* Header with title and add button */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+              Замовлення
+            </h2>
+            <Link
+              href="/admin/orders/add"
+              className="inline-block rounded-md bg-green-400 px-4 py-2 text-white text-sm hover:bg-green-600 transition"
+            >
+              + Додати замовлення
+            </Link>
+          </div>
+
           <Table>
-            {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+            <TableHeader>
               <TableRow>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Ім&#39;я клієнта
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Номер телефону
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Е-пошта
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Спосіб доставки
                 </TableCell>
-
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Місто
                 </TableCell>
-
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Відділення
                 </TableCell>
-
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Статус
                 </TableCell>
-
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Створено
                 </TableCell>
-
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
-                  <Link
-                    className="bg-green-300 rounded-xl p-1"
-                    href="/admin/orders/add"
-                  >
-                    Додати
-                  </Link>
+                  Дії
                 </TableCell>
               </TableRow>
             </TableHeader>
 
-            {/* Table Body */}
-
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {loading ? (
                 <TableRow>
-                  <TableCell className="text-center py-4">Loading...</TableCell>
+                  <TableCell
+                    colSpan={9}
+                    className="text-center py-6 text-gray-500 dark:text-gray-400"
+                  >
+                    Завантаження...
+                  </TableCell>
                 </TableRow>
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell className="text-center py-4">
-                    No orders found.
+                  <TableCell
+                    colSpan={9}
+                    className="text-center py-6 text-gray-500 dark:text-gray-400"
+                  >
+                    Замовлень не знайдено.
                   </TableCell>
                 </TableRow>
               ) : (
                 orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                  <TableRow
+                    key={order.id}
+                    className="hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                  >
+                    <TableCell className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {order.customer_name}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.phone_number}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.email}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.delivery_method}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.city}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.post_office}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.status}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {new Date(order.created_at).toLocaleString()}
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(order.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 space-x-2">
                       <Link
                         href={`/admin/orders/${order.id}/edit`}
-                        className="rounded-3xl bg-emerald-300 p-1"
+                        className="inline-block rounded-md bg-blue-400 px-3 py-1 text-white text-sm hover:bg-blue-600 transition"
                       >
-                        Edit
+                        Редагувати
                       </Link>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       <button
-                        className="rounded-3xl bg-red-500 p-1"
                         onClick={() => handleDelete(order.id)}
+                        className="inline-block rounded-md bg-red-400 px-3 py-1 text-white text-sm hover:bg-red-600 transition"
                       >
-                        Delete
+                        Видалити
                       </button>
                     </TableCell>
                   </TableRow>
