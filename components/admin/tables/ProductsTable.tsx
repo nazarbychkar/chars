@@ -10,32 +10,34 @@ import {
 } from "../ui/table";
 import Link from "next/link";
 
+const SIZE_MAP: Record<string, string> = {
+  "1": "XL",
+  "2": "L",
+  "3": "M",
+  "4": "S",
+  "5": "XS",
+};
+
 interface Product {
   id: number;
   name: string;
   description: string;
   price: number;
   created_at: Date;
+  sizes: { size: string }[]; // ⬅️ Додаємо тип для розмірів
 }
 
 export default function ProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  function handleEdit(product: Product) {
-    // Implement edit logic here, e.g., open a modal or navigate to edit page
-    console.log("Edit product:", product);
-  }
-
   async function handleDelete(productId: number) {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    if (!confirm("Ви впевнені, що хочете видалити цей продукт?")) return;
     try {
       const res = await fetch(`/api/products/${productId}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        throw new Error("Failed to delete product");
-      }
+      if (!res.ok) throw new Error("Failed to delete product");
       setProducts((prev) => prev.filter((p) => p.id !== productId));
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -46,118 +48,132 @@ export default function ProductsTable() {
     async function fetchProducts() {
       try {
         const res = await fetch("/api/products");
-        if (!res.ok) {
-          throw new Error("Failed to fetch products");
-        }
-
+        if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data);
-        // console.log(data)
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
         setLoading(false);
       }
     }
-
     fetchProducts();
   }, []);
 
-  //   useEffect(() => {
-  //   console.log("Updated products:", products);
-  // }, [products]);
-
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[1102px]">
+      <div className="overflow-x-auto">
+        <div className="min-w-[1200px]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+              Продукти
+            </h2>
+            <Link
+              href="/admin/products/add"
+              className="inline-block rounded-md bg-green-400 px-4 py-2 text-white text-sm hover:bg-green-600 transition"
+            >
+              + Додати продукт
+            </Link>
+          </div>
+
           <Table>
-            {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+            <TableHeader>
               <TableRow>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
-                  Назва продукту
+                  Назва
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Опис
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Ціна
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
-                  Дата створення
+                  Розміри
                 </TableCell>
-
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
-                  <Link
-                    className="bg-green-300 rounded-xl p-1"
-                    href="/admin/products/add"
-                  >
-                    Додати
-                  </Link>
+                  Створено
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
+                  Дії
                 </TableCell>
               </TableRow>
             </TableHeader>
 
-            {/* Table Body */}
-
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {loading ? (
                 <TableRow>
-                  <TableCell className="text-center py-4">Loading...</TableCell>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-6 text-gray-500 dark:text-gray-400"
+                  >
+                    Завантаження...
+                  </TableCell>
                 </TableRow>
               ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell className="text-center py-4">
-                    No products found.
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-6 text-gray-500 dark:text-gray-400"
+                  >
+                    Продуктів не знайдено.
                   </TableCell>
                 </TableRow>
               ) : (
                 products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {/* <Link href={`/admin/products/${product.id}`}> */}
+                  <TableRow
+                    key={product.id}
+                    className="hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                  >
+                    <TableCell className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {product.name}
-                      {/* </Link> */}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {product.description}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {product.price}
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.price} ₴
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {new Date(product.created_at).toLocaleString()}
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.sizes && product.sizes.length > 0
+                        ? product.sizes
+                            .map((s) => SIZE_MAP[s.size] || s.size)
+                            .join(", ")
+                        : "—"}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(product.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 space-x-2">
                       <Link
                         href={`/admin/products/${product.id}/edit`}
-                        className="rounded-3xl bg-emerald-300 p-1"
+                        className="inline-block rounded-md bg-blue-400 px-3 py-1 text-white text-sm hover:bg-blue-600 transition"
                       >
-                        Edit
+                        Редагувати
                       </Link>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       <button
-                        className="rounded-3xl bg-red-500 p-1"
                         onClick={() => handleDelete(product.id)}
+                        className="inline-block rounded-md bg-red-400 px-3 py-1 text-white text-sm hover:bg-red-600 transition"
                       >
-                        Delete
+                        Видалити
                       </button>
                     </TableCell>
                   </TableRow>

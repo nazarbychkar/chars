@@ -41,7 +41,6 @@ export async function POST(req: Request) {
     }
 
     const parsedSizes = JSON.parse(sizesRaw); // ["S", "M", "L"]
-
     const product = await sqlPostProduct({
       name,
       description,
@@ -52,7 +51,7 @@ export async function POST(req: Request) {
       })),
       media: images.map((file) => ({
         type: "photo",
-        url: "/public/images/hero-bg.png",  // TODO: change to real url
+        url: "/images/hero-bg.png",  // TODO: change to real url
       })),
     });
 

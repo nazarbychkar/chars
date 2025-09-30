@@ -74,7 +74,7 @@ export default function CreateOrderForm() {
         <div className="flex flex-col md:flex-row justify-around">
           <div className="w-full md:w-1/2 p-4">
             <ComponentCard title="Інформація про замовлення">
-              <Label>Ім'я клієнта</Label>
+              <Label>Ім&#39;я клієнта</Label>
               <Input
                 type="text"
                 value={customerName}

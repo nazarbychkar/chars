@@ -7,7 +7,7 @@ import MultiSelect from "@/components/admin/form/MultiSelect";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const multiOptions = [
   { value: "1", text: "XL", selected: false },
@@ -31,6 +31,7 @@ export default function FormElements() {
   const handleDrop = (files: File[]) => {
     setImages((prevImages) => [...prevImages, ...files]);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

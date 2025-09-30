@@ -42,23 +42,27 @@ export async function sqlGetProduct(id: number) {
   return await sql`
     SELECT
       p.*,
-      COALESCE(
-        JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('size', s.size, 'stock', s.stock))
-        FILTER (WHERE s.id IS NOT NULL),
-        '[]'
-      ) AS sizes,
-      COALESCE(
-        JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url))
-        FILTER (WHERE m.id IS NOT NULL),
-        '[]'
-      ) AS media
+      COALESCE(s.sizes, '[]') AS sizes,
+      COALESCE(m.media, '[]') AS media
     FROM products p
-    LEFT JOIN product_sizes s ON p.id = s.product_id
-    LEFT JOIN product_media m ON p.id = m.product_id
-    WHERE p.id = ${id}
-    GROUP BY p.id;
+    LEFT JOIN LATERAL (
+      SELECT JSON_AGG(
+        JSONB_BUILD_OBJECT('size', s.size, 'stock', s.stock)
+      ) AS sizes
+      FROM product_sizes s
+      WHERE s.product_id = p.id
+    ) s ON true
+    LEFT JOIN LATERAL (
+      SELECT JSON_AGG(
+        JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
+      ) AS media
+      FROM product_media m
+      WHERE m.product_id = p.id
+    ) m ON true
+    WHERE p.id = ${id};
   `;
 }
+
 
 // Create new product
 export async function sqlPostProduct(product: {
