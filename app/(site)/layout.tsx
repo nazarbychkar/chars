@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AppProvider } from "@/lib/GeneralProvider";
+import { BasketProvider } from "@/lib/BasketProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +25,11 @@ export default function RootLayout({
     <html lang="uk" className={inter.className}>
       <body>
         <AppProvider>
-          <Header />
-          <main className="mt-20">{children}</main>
-          <Footer />
+          <BasketProvider>
+            <Header />
+            <main className="mt-20">{children}</main>
+            <Footer />
+          </BasketProvider>
         </AppProvider>
       </body>
     </html>

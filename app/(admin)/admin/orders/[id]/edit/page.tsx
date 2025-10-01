@@ -70,10 +70,21 @@ export default function EditOrderPage() {
 
   const calculateTotal = () => {
     return formData.items
-      .reduce((total, item: any) => {
-        const subtotal = parseFloat(item.price) * item.quantity;
-        return total + subtotal;
-      }, 0)
+      .reduce(
+        (
+          total,
+          item: {
+            product_id: number;
+            size: string;
+            quantity: number;
+            price: string;
+          }
+        ) => {
+          const subtotal = parseFloat(item.price) * item.quantity;
+          return total + subtotal;
+        },
+        0
+      )
       .toFixed(2);
   };
 
@@ -86,7 +97,7 @@ export default function EditOrderPage() {
         <ComponentCard title="Інформація про замовлення">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Ім'я клієнта</Label>
+              <Label>Ім&#39;я клієнта</Label>
               <Input
                 type="text"
                 value={formData.customer_name}
@@ -185,28 +196,36 @@ export default function EditOrderPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {formData.items.map((item: any) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    >
-                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                        {item.product_name}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        {item.size}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        {item.quantity}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        {parseFloat(item.price).toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        {(parseFloat(item.price) * item.quantity).toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
+                  {formData.items.map(
+                    (item: {
+                      id: number;
+                      product_name: string
+                      size: string;
+                      quantity: number;
+                      price: string;
+                    }) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      >
+                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">
+                          {item.product_name}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                          {item.size}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                          {item.quantity}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                          {parseFloat(item.price).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                          {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-50 dark:bg-gray-900">

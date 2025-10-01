@@ -10,7 +10,7 @@ interface SelectProps {
   placeholder?: string;
   onChange: (value: string) => void;
   className?: string;
-  value: string; // ✅ Use controlled value instead of defaultValue
+  value?: string; // ✅ Use controlled value instead of defaultValue
 }
 
 const Select: React.FC<SelectProps> = ({

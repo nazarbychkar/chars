@@ -192,7 +192,7 @@ export default function EditProductPage() {
               const previewUrl = URL.createObjectURL(file);
               return (
                 <div key={`new-${i}`} className="relative inline-block">
-                  <img
+                  <Image
                     src={previewUrl}
                     alt={file.name}
                     className="rounded max-w-[200px] max-h-[200px]"

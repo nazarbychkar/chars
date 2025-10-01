@@ -64,7 +64,7 @@ export default function SidebarMenu({
             "Джинси",
           ].map((text, idx) => (
             <Link
-              href="/catalog"
+              href={`/catalog?category=${encodeURIComponent(text)}`}
               key={idx}
               className="hover:text-[#8C7461]"
               onClick={() => setIsOpen(false)}

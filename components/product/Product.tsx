@@ -1,30 +1,117 @@
 "use client";
 
 import { useAppContext } from "@/lib/GeneralProvider";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useBasket } from "@/lib/BasketProvider";
+
+const SIZE_MAP: Record<string, string> = {
+  "1": "XL",
+  "2": "L",
+  "3": "M",
+  "4": "S",
+  "5": "XS",
+};
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  media: { url: string; type: string }[];
+  description: string;
+  sizes?: { size: string; stock: string }[];
+}
 
 export default function Product() {
+  const { addItem } = useBasket();
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
   const { isDark } = useAppContext();
+  const { id } = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const res = await fetch(`/api/products/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch product");
+        const data = await res.json();
+        console.log(data);
+        setProduct(data);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (id) fetchProduct();
+  }, [id]);
+
+  if (loading) return <div className="p-10">Loading product...</div>;
+  if (error || !product)
+    return <div className="p-10">Error: {error || "Product not found"}</div>;
+
+  const images = product.media.filter((m) => m.type === "photo");
+  const sizes = product.sizes?.map((s) => s.size) || [
+    "xs",
+    "s",
+    "m",
+    "l",
+    "xl",
+  ];
 
   return (
     <section className="max-w-[1920px] w-full mx-auto">
       <div className="flex flex-col lg:flex-row justify-around p-4 md:p-10 gap-10">
         {/* Image Section */}
-        <div className="relative flex justify-center">
+        <div className="relative flex justify-center w-full lg:w-1/2">
           <img
-            className="w-full "
-            src="https://placehold.co/800x1160"
-            alt="product"
+            className="w-full max-w-[800px] max-h-[1160px] object-cover"
+            src={
+              images[activeImageIndex]?.url || "https://placehold.co/800x1160"
+            }
+            alt={product.name}
           />
-          <button className="text-4xl md:text-6xl absolute top-4 left-4">
-            {"<"}
-          </button>
-          <button className="text-4xl md:text-6xl absolute top-4 right-4">
-            {">"}
-          </button>
+
+          {images.length > 1 && (
+            <>
+              {/* Prev */}
+              <button
+                className="text-4xl md:text-6xl absolute top-4 left-4 bg-white rounded-full p-2 shadow-md"
+                onClick={() =>
+                  setActiveImageIndex((prev) =>
+                    prev === 0 ? images.length - 1 : prev - 1
+                  )
+                }
+              >
+                {"<"}
+              </button>
+
+              {/* Next */}
+              <button
+                className="text-4xl md:text-6xl absolute top-4 right-4 bg-white rounded-full p-2 shadow-md"
+                onClick={() =>
+                  setActiveImageIndex((prev) =>
+                    prev === images.length - 1 ? 0 : prev + 1
+                  )
+                }
+              >
+                {">"}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Info Section */}
-        <div className="flex flex-col gap-6 md:gap-10 px-4 md:px-0">
+        <div className="flex flex-col gap-6 md:gap-10 px-4 md:px-0 w-full lg:w-1/2">
           {/* Availability */}
           <div className="text-lg md:text-xl font-normal font-['Helvetica'] leading-relaxed tracking-wide">
             В наявності
@@ -32,16 +119,13 @@ export default function Product() {
 
           {/* Product Name */}
           <div className="text-4xl md:text-6xl lg:text-7xl font-normal font-['Inter'] capitalize leading-tight">
-            Спортивні штани(039)
+            {product.name}
           </div>
 
-          {/* Price Section */}
+          {/* Price */}
           <div className="w-full flex flex-col sm:flex-row justify-start border-b p-2 sm:p-5 gap-2">
             <div className="text-red-500 text-xl md:text-2xl font-['Helvetica']">
-              3,380.00 ₴
-            </div>
-            <div className="text-xl md:text-2xl font-['Helvetica'] line-through">
-              3,380.00 ₴
+              {product.price} ₴
             </div>
           </div>
 
@@ -52,21 +136,41 @@ export default function Product() {
 
           {/* Size Options */}
           <div className="flex flex-wrap gap-3">
-            {["xl", "l", "m", "s", "xs"].map((size) => (
+            {sizes.map((size) => (
               <div
                 key={size}
-                className="w-16 sm:w-20 md:w-24 p-2 sm:p-4 border flex justify-center text-lg md:text-xl font-['Inter'] uppercase"
+                onClick={() => setSelectedSize(size)}
+                className={`w-16 sm:w-20 md:w-24 p-2 sm:p-4 border flex justify-center text-lg md:text-xl font-['Inter'] uppercase cursor-pointer ${
+                  selectedSize === size
+                    ? "border-black font-bold"
+                    : "border-gray-300"
+                }`}
               >
-                {size}
+                {SIZE_MAP[size] || size}
               </div>
             ))}
           </div>
 
           {/* Add to Cart Button */}
+          {/* Add to Cart Button */}
           <div
+            onClick={() => {
+              if (!selectedSize) {
+                alert("Оберіть розмір");
+                return;
+              }
+              addItem({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                size: selectedSize,
+                quantity,
+                imageUrl: images[0]?.url || "",
+              });
+            }}
             className={`w-full sm:w-auto text-center ${
               isDark ? "bg-white text-black" : "bg-black text-white"
-            } p-3 text-xl md:text-2xl font-medium font-['Inter'] uppercase tracking-tight`}
+            } p-3 text-xl md:text-2xl font-medium font-['Inter'] uppercase tracking-tight cursor-pointer`}
           >
             в кошик
           </div>
@@ -77,9 +181,7 @@ export default function Product() {
               опис
             </div>
             <div className="text-base md:text-2xl font-['Inter'] leading-relaxed tracking-wide">
-              Базова сорочка з шифону на ґудзиках. Колір шоколадний. Склад
-              тканини: 80% віскоза, 20% шовк. Розміри S,M,L,XL. Виготовлено в
-              Україні. Сезоність: літо, осінь, весна, зима
+              {product.description}
             </div>
           </div>
         </div>
