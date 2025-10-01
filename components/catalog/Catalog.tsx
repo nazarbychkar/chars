@@ -13,12 +13,13 @@ export default function Catalog() {
 
   return (
     <>
-      <section className="max-w-[1824px] mx-auto m-20 mt-30">
-        <div className="flex justify-between text-3xl">
-          <div className="flex justify-start">
+      <section className="max-w-[1824px] mx-auto px-4 sm:px-6 lg:px-8 pt-5 mt-10 mb-20">
+        {/* Top Controls */}
+        <div className="flex justify-between items-center text-xl sm:text-2xl md:text-3xl mb-6">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="cursor-pointer"
+              className="cursor-pointer text-2xl sm:text-3xl"
             >
               {"<"}
             </button>
@@ -26,37 +27,30 @@ export default function Catalog() {
           </div>
 
           <button
-            className="cursor-pointer"
+            className="cursor-pointer text-base sm:text-lg"
             onClick={() => setIsFilterOpen(true)}
           >
             Фільтри
           </button>
         </div>
 
-        <div className="flex flex-col"></div>
-        {Array.from({ length: 3 }, (_, i) => (
-          <div className="flex justify-between my-10" key={i}>
-            {Array.from({ length: 4 }, (_, q) => (
-              <Link href="/product" key={q} className="flex flex-col gap-5 group">
-                {/* <Image
-                  className="w-96 h-[613px] left-0 top-0 absolute"
-                  width={384}
-                  height={613}
-                  src="https://placehold.co/432x613"
-                  alt="photo of a product"
-                ></Image> */}
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 12 }, (_, i) => (
+            <Link href="/product" key={i} className="flex flex-col gap-4 group">
+              {/* Image Placeholder */}
+              <div className="w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300" />
 
-                <div className="w-103 h-[613px] bg-gray-200 group-hover:filter group-hover:brightness-90 transition brightness duration-300" />
-
-                <span className="text-xl">
-                  Шовкова Сорочка Без рукавів<br /> 1780.00₴
-                </span>
-              </Link>
-            ))}
-          </div>
-        ))}
+              {/* Product Title + Price */}
+              <span className="text-base sm:text-lg">
+                Шовкова Сорочка Без рукавів<br /> 1780.00₴
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
 
+      {/* Filters Sidebar */}
       <SidebarFilter
         isDark={isDark}
         isOpen={isFilterOpen}
@@ -65,6 +59,7 @@ export default function Catalog() {
         setOpenAccordion={setOpenAccordion}
       />
 
+      {/* Menu Sidebar */}
       <SidebarMenu
         isDark={isDark}
         isOpen={isSidebarOpen}

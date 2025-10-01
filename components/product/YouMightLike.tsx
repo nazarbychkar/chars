@@ -1,31 +1,35 @@
 export default function YouMightLike() {
   return (
-    <section className="max-w-[1920px] w-full mx-auto">
+    <section className="max-w-[1920px] w-full mx-auto px-4 md:px-0">
       <div className="flex flex-col gap-10">
-        <div className="mx-10 justify-center text-neutral-900 text-7xl font-normal font-['Inter'] leading-[84.91px]">
+        {/* Title */}
+        <div className="mx-0 md:mx-10 text-neutral-900 text-4xl md:text-7xl font-normal font-['Inter'] leading-tight md:leading-[84.91px] text-center md:text-left">
           Вам може сподобатися
         </div>
 
-        <div className="flex justify-around">
+        {/* Products list */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center sm:justify-around gap-8">
           {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="w-96 h-[682px] relative">
+            <div key={i} className="w-full sm:w-96 relative mx-auto">
               <img
-                className="w-96 h-[613px]"
+                className="w-full h-auto  sm:h-[613px] object-cover"
                 src="https://placehold.co/432x613"
+                alt={`product-${i}`}
               />
-              <div className="justify-center text-xl font-normal font-['Inter'] capitalize leading-normal">
+              <div className="mt-2 text-lg sm:text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
                 шовкова сорочка без рукавів
               </div>
-              <div className="w-24 h-4 justify-center text-xl font-normal font-['Inter'] leading-none">
+              <div className="mt-1 w-24 h-4 mx-auto text-lg sm:text-xl font-normal font-['Inter'] leading-none text-center">
                 1,780.00 ₴
               </div>
             </div>
           ))}
         </div>
 
-        <div className="w-[1824px] h-[679px] bg-gray-300 relative overflow-hidden mx-auto">
-          <div className="w-80 h-16 p-2 left-[738px] top-[502px] absolute bg-white inline-flex justify-center items-center gap-2">
-            <div className="text-center justify-center text-black text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
+                {/* More products button container */}
+        <div className="w-full max-w-full sm:max-w-[1824px] h-[300px] sm:h-[679px] bg-gray-300 relative overflow-hidden mx-auto">
+          <div className="absolute bg-white inline-flex justify-center items-center gap-2 px-4 py-2 rounded-md left-1/2 transform -translate-x-1/2 bottom-30 w-max sm:w-80 h-auto sm:h-16">
+            <div className="text-center justify-center text-black text-base sm:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
               більше товарів
             </div>
           </div>

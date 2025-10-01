@@ -15,6 +15,7 @@ export default function SidebarMenu({
 }: SidebarMenuProps) {
   return (
     <div className="relative z-50">
+      {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30"
@@ -22,107 +23,55 @@ export default function SidebarMenu({
         />
       )}
 
+      {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-128 ${
+        className={`fixed top-0 left-0 h-full w-full sm:w-4/5 sm:max-w-md ${
           isDark ? "bg-stone-900" : "bg-stone-100"
-        }  shadow-md z-40 transform transition-transform duration-300 ${
+        } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } overflow-y-auto`}
       >
-        <nav className="flex flex-col p-6 m-5 space-y-4 text-3xl gap-3">
-          <div className="flex justify-between">
+        <nav className="flex flex-col px-4 py-6 space-y-4 text-xl sm:text-2xl md:text-3xl">
+          {/* Header with close */}
+          <div className="flex justify-between items-center mb-2">
             <Link
               href="/catalog"
-              className=" hover:text-[#8C7461]"
+              className="hover:text-[#8C7461]"
               onClick={() => setIsOpen(false)}
             >
               Усі
             </Link>
             <button
-              className="cursor-pointer hover:text-[#8C7461]"
+              className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
               onClick={() => setIsOpen(false)}
             >
-              x
+              ×
             </button>
           </div>
 
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Сезон -&gt;
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Жилетки
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Головні убори
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Пальта
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Лімітований одяг
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Спортивний одяг
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Футболки
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Майки
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Штани
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Сорочки
-          </Link>
-          <Link
-            href="/catalog"
-            className=" hover:text-[#8C7461]"
-            onClick={() => setIsOpen(false)}
-          >
-            Джинси
-          </Link>
+          {/* Links */}
+          {[
+            "Сезон ->",
+            "Жилетки",
+            "Головні убори",
+            "Пальта",
+            "Лімітований одяг",
+            "Спортивний одяг",
+            "Футболки",
+            "Майки",
+            "Штани",
+            "Сорочки",
+            "Джинси",
+          ].map((text, idx) => (
+            <Link
+              href="/catalog"
+              key={idx}
+              className="hover:text-[#8C7461]"
+              onClick={() => setIsOpen(false)}
+            >
+              {text}
+            </Link>
+          ))}
         </nav>
       </div>
     </div>

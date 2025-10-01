@@ -12,9 +12,14 @@ export default function Footer() {
   return (
     <footer className="max-w-[1858px] mx-auto lg:mt-10 m-6 h-auto relative overflow-hidden flex flex-col justify-between">
       <div
-        className={`${montserrat.className} mx-auto mt-25 my-10 lg:my-15 justify-center text-[45px] md:text-[212.7px] leading-[60px] md:leading-[207.94px] tracking-[7px] md:tracking-[50px] border-b`}
+        className={`${montserrat.className} w-full text-center my-10 border-b overflow-hidden whitespace-nowrap`}
       >
-        CHARS KYIV
+        <h1
+          className="leading-none tracking-widest text-[13vw]"
+          style={{ wordBreak: "keep-all" }}
+        >
+          CHARS KYIV
+        </h1>
       </div>
 
       {/* On larger screens (PC view) */}
@@ -153,7 +158,7 @@ export default function Footer() {
             </Link>
           </div>
         </div>
-        
+
         <div className="flex justify-between gap-4 md:gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex justify-start gap-4">

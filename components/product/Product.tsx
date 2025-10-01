@@ -7,68 +7,76 @@ export default function Product() {
 
   return (
     <section className="max-w-[1920px] w-full mx-auto">
-      <div className="flex justify-around p-10">
-        <div className="relative">
+      <div className="flex flex-col lg:flex-row justify-around p-4 md:p-10 gap-10">
+        {/* Image Section */}
+        <div className="relative flex justify-center">
           <img
-            className="w-[800px] h-[1160px]"
+            className="w-full "
             src="https://placehold.co/800x1160"
+            alt="product"
           />
-          <button className="text-7xl absolute top-1/24 left-1/8">{"<"}</button>
-          <button className="text-7xl absolute top-1/24 right-1/8">
+          <button className="text-4xl md:text-6xl absolute top-4 left-4">
+            {"<"}
+          </button>
+          <button className="text-4xl md:text-6xl absolute top-4 right-4">
             {">"}
           </button>
         </div>
 
-        <div className="flex flex-col gap-10">
-          <div className="justify-center text-xl font-normal font-['Helvetica'] leading-relaxed tracking-wide">
+        {/* Info Section */}
+        <div className="flex flex-col gap-6 md:gap-10 px-4 md:px-0">
+          {/* Availability */}
+          <div className="text-lg md:text-xl font-normal font-['Helvetica'] leading-relaxed tracking-wide">
             В наявності
           </div>
-          <div className="w-[467px] justify-center text-7xl font-normal font-['Inter'] capitalize leading-[84.91px]">
+
+          {/* Product Name */}
+          <div className="text-4xl md:text-6xl lg:text-7xl font-normal font-['Inter'] capitalize leading-tight">
             Спортивні штани(039)
           </div>
-          <div className="w-full flex justify-start border-b p-5">
-            <div className="w-36 h-6 justify-center text-red-500 text-2xl font-normal font-['Helvetica'] leading-relaxed tracking-wide">
+
+          {/* Price Section */}
+          <div className="w-full flex flex-col sm:flex-row justify-start border-b p-2 sm:p-5 gap-2">
+            <div className="text-red-500 text-xl md:text-2xl font-['Helvetica']">
               3,380.00 ₴
             </div>
-            <div className="w-32 h-6 justify-center text-2xl font-normal font-['Helvetica'] line-through leading-relaxed tracking-wide">
+            <div className="text-xl md:text-2xl font-['Helvetica'] line-through">
               3,380.00 ₴
             </div>
           </div>
 
-          <div className="w-52 h-3.5 justify-center text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
+          {/* Size Picker Title */}
+          <div className="text-lg md:text-2xl font-['Inter'] uppercase tracking-tight">
             Оберіть розмір
           </div>
-          <div className="flex justify-around gap-3">
-            <div className="w-24 p-4 border  flex text-center justify-center text-xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
-              xl
-            </div>
-            <div className="w-24 p-4 border  flex text-center justify-center text-xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
-              l
-            </div>
-            <div className="w-24 p-4 border  flex text-center justify-center text-xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
-              m
-            </div>
-            <div className="w-24 p-4 border  flex text-center justify-center text-xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
-              s
-            </div>
-            <div className="w-24 p-4 border  flex text-center justify-center text-xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
-              xs
-            </div>
+
+          {/* Size Options */}
+          <div className="flex flex-wrap gap-3">
+            {["xl", "l", "m", "s", "xs"].map((size) => (
+              <div
+                key={size}
+                className="w-16 sm:w-20 md:w-24 p-2 sm:p-4 border flex justify-center text-lg md:text-xl font-['Inter'] uppercase"
+              >
+                {size}
+              </div>
+            ))}
           </div>
 
+          {/* Add to Cart Button */}
           <div
-            className={`left-[291px] ${
+            className={`w-full sm:w-auto text-center ${
               isDark ? "bg-white text-black" : "bg-black text-white"
-            } p-3 text-center justify-center text-2xl font-medium font-['Inter'] uppercase leading-snug tracking-tight`}
+            } p-3 text-xl md:text-2xl font-medium font-['Inter'] uppercase tracking-tight`}
           >
             в кошик
           </div>
 
-          <div className="w-[522px] h-64 ">
-            <div className="mb-5 justify-center text-3xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
+          {/* Description Section */}
+          <div className="w-full md:w-[522px]">
+            <div className="mb-3 md:mb-5 text-2xl md:text-3xl font-['Inter'] uppercase tracking-tight">
               опис
             </div>
-            <div className="w-[521px] h-52 justify-center text-2xl font-normal font-['Inter'] leading-9 tracking-wide">
+            <div className="text-base md:text-2xl font-['Inter'] leading-relaxed tracking-wide">
               Базова сорочка з шифону на ґудзиках. Колір шоколадний. Склад
               тканини: 80% віскоза, 20% шовк. Розміри S,M,L,XL. Виготовлено в
               Україні. Сезоність: літо, осінь, весна, зима
