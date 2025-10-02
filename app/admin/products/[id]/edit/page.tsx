@@ -80,7 +80,7 @@ export default function EditProductPage() {
     setImages((prevImages) => [...prevImages, ...files]);
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

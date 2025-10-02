@@ -6,9 +6,9 @@ import { sqlGetCategory, sqlPutCategory, sqlDeleteCategory } from "@/lib/sql";
 // ========================
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(params.id);
+  const id = Number((await params).id);
   if (isNaN(id)) {
     return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });
   }
@@ -37,9 +37,9 @@ export async function GET(
 // ========================
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(params.id);
+  const id = Number((await params).id);
   if (isNaN(id)) {
     return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });
   }
@@ -71,9 +71,9 @@ export async function PUT(
 // ========================
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const id = Number(params.id);
+  const id = Number((await params).id);
   if (isNaN(id)) {
     return NextResponse.json({ error: "Invalid category ID" }, { status: 400 });
   }
