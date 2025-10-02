@@ -2,6 +2,9 @@
 
 import { NextResponse } from "next/server";
 import { sqlGetAllProducts, sqlPostProduct } from "@/lib/sql";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+import crypto from "crypto";
 
 // =========================
 // GET /api/products
@@ -22,7 +25,6 @@ export async function GET() {
 // =========================
 // POST /api/products
 // =========================
-
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -40,7 +42,31 @@ export async function POST(req: Request) {
       );
     }
 
+    const uploadDir = path.join(process.cwd(), "public", "product-images");
+
+    // Ensure the upload directory exists
+    await mkdir(uploadDir, { recursive: true });
+
+    const savedImageUrls = [];
+
+    for (const image of images) {
+      const arrayBuffer = await image.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Generate a unique filename
+      const ext = image.name.split(".").pop();
+      const uniqueName = `${crypto.randomUUID()}.${ext}`;
+      const filePath = path.join(uploadDir, uniqueName);
+
+      // Save file
+      await writeFile(filePath, buffer);
+
+      // Add public URL
+      savedImageUrls.push(`/product-images/${uniqueName}`);
+    }
+
     const parsedSizes = JSON.parse(sizesRaw); // ["S", "M", "L"]
+
     const product = await sqlPostProduct({
       name,
       description,
@@ -49,9 +75,9 @@ export async function POST(req: Request) {
         size,
         stock: 5,
       })),
-      media: images.map((file) => ({
+      media: savedImageUrls.map((url) => ({
         type: "photo",
-        url: "/images/hero-bg.png",  // TODO: change to real url
+        url,
       })),
     });
 

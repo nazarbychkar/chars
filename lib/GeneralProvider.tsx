@@ -9,6 +9,8 @@ interface ContextType {
   setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isBasketOpen: boolean;
   setIsBasketOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isSeasonOpen: boolean;
+  setIsSeasonOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AppContext = createContext<ContextType>({
@@ -18,6 +20,8 @@ const AppContext = createContext<ContextType>({
   setIsSidebarOpen: () => {},
   isBasketOpen: false,
   setIsBasketOpen: () => {},
+  isSeasonOpen: false,
+  setIsSeasonOpen: () => {},
 });
 
 import { ReactNode } from "react";
@@ -26,6 +30,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isDark, setIsDark] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isBasketOpen, setIsBasketOpen] = useState(false);
+  const [isSeasonOpen, setIsSeasonOpen] = useState(false);
+
 
   useEffect(() => {
     // Get saved theme from localStorage
@@ -50,7 +56,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AppContext.Provider
-      value={{ isDark, setIsDark, isSidebarOpen, setIsSidebarOpen, isBasketOpen, setIsBasketOpen }}
+      value={{ isDark, setIsDark, isSidebarOpen, setIsSidebarOpen, isBasketOpen, setIsBasketOpen, isSeasonOpen, setIsSeasonOpen }}
     >
       {children}
     </AppContext.Provider>

@@ -87,15 +87,26 @@ export default function EditProductPage() {
     setError(null);
 
     try {
-      // TODO: Upload new images and get their URLs here
-      // For example:
-      // const uploadedUrls = await uploadImages(images);
+      let uploadedUrls: string[] = [];
 
-      // For now, just pretend uploadedUrls are dummy URLs
-      const uploadedUrls = images.map(() => "/images/hero-bg.png");
+      // Upload new images if any
+      if (images.length > 0) {
+        const uploadForm = new FormData();
+        images.forEach((img) => uploadForm.append("images", img));
+
+        const uploadRes = await fetch("/api/images", {
+          method: "POST",
+          body: uploadForm,
+        });
+
+        if (!uploadRes.ok) throw new Error("Image upload failed");
+
+        const uploadData = await uploadRes.json();
+        uploadedUrls = uploadData.urls;
+      }
 
       const updatedMedia = [
-        ...formData.media, // existing images
+        ...formData.media, // existing image URLs
         ...uploadedUrls.map((url) => ({ type: "photo", url })),
       ];
 
@@ -195,6 +206,8 @@ export default function EditProductPage() {
                   <Image
                     src={previewUrl}
                     alt={file.name}
+                    width={200}
+                    height={200}
                     className="rounded max-w-[200px] max-h-[200px]"
                     onLoad={() => URL.revokeObjectURL(previewUrl)} // free memory
                   />

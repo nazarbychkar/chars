@@ -1,6 +1,8 @@
 "use client";
 
+import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
+import SidebarSeason from "./SidebarSeason";
 
 interface SidebarMenuProps {
   isOpen: boolean;
@@ -13,6 +15,8 @@ export default function SidebarMenu({
   setIsOpen,
   isDark,
 }: SidebarMenuProps) {
+  const { isSeasonOpen, setIsSeasonOpen } = useAppContext();
+
   return (
     <div className="relative z-50">
       {/* Overlay */}
@@ -48,10 +52,15 @@ export default function SidebarMenu({
               ×
             </button>
           </div>
+          <button
+            className="text-2xl text-start sm:text-3xl cursor-pointer hover:text-[#8C7461]"
+            onClick={() => setIsSeasonOpen(true)}
+          >
+            Сезон -{">"}
+          </button>
 
           {/* Links */}
           {[
-            "Сезон ->",
             "Жилетки",
             "Головні убори",
             "Пальта",
@@ -74,6 +83,12 @@ export default function SidebarMenu({
           ))}
         </nav>
       </div>
+
+      <SidebarSeason
+        isDark={isDark}
+        isOpen={isSeasonOpen}
+        setIsOpen={setIsSeasonOpen}
+      />
     </div>
   );
 }

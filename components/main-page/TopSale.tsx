@@ -6,7 +6,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import Link from "next/link";
-
+// TODO: add boolean in products to mark TopSale or not
 export default function TopSale() {
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
@@ -23,18 +23,22 @@ export default function TopSale() {
       </div>
 
       {/* Desktop layout (static grid) */}
-      <div className="hidden sm:inline-flex justify-around items-center gap-8 mx-10">
+      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 px-6">
         {Array.from({ length: 4 }, (_, i) => (
           <Link
             href="/product"
             key={i}
-            className="w-[432px] h-[682px] relative flex flex-col gap-3 group"
+            className="flex flex-col gap-3 group w-full"
           >
-            <img
-              className="w-[432px] h-[682px] group-hover:filter group-hover:brightness-90 transition brightness duration-300"
-              src="https://placehold.co/432x613"
-            />
-            <div className="justify-center text-xl font-normal font-['Inter'] capitalize leading-normal">
+            <div className="aspect-[2/3] w-full overflow-hidden">
+              <img
+                className="w-full h-full object-cover group-hover:brightness-90 transition duration-300"
+                src="https://placehold.co/432x613"
+                alt={`Product ${i}`}
+              />
+            </div>
+
+            <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
               шовкова сорочка без рукавів <br />
               1,780.00 ₴
             </div>
