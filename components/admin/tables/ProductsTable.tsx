@@ -24,7 +24,11 @@ interface Product {
   description: string;
   price: number;
   created_at: Date;
-  sizes: { size: string }[]; // ⬅️ Додаємо тип для розмірів
+  sizes: { size: string }[];
+  top_sale?: boolean;
+  limited_edition?: boolean;
+  season?: string;
+  category_name?: string;
 }
 
 export default function ProductsTable() {
@@ -107,6 +111,30 @@ export default function ProductsTable() {
                   isHeader
                   className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
+                  Категорія
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
+                  Сезон
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
+                  Топ продаж?
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
+                  Лімітована серія?
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
                   Створено
                 </TableCell>
                 <TableCell
@@ -158,6 +186,18 @@ export default function ProductsTable() {
                             .map((s) => SIZE_MAP[s.size] || s.size)
                             .join(", ")
                         : "—"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.category_name || "—"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.season || "—"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.top_sale ? "✅" : "—"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.limited_edition ? "✅" : "—"}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {new Date(product.created_at).toLocaleDateString()}

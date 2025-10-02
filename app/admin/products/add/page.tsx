@@ -1,21 +1,29 @@
 "use client";
 
-import ComponentCard from "@/components/admin/ComponentCard";
+import React, { useEffect, useState } from "react";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
+import ComponentCard from "@/components/admin/ComponentCard";
 import Label from "@/components/admin/form/Label";
 import MultiSelect from "@/components/admin/form/MultiSelect";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
-import React, { useEffect, useState } from "react";
+import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
+
+const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
 
 const multiOptions = [
-  { value: "1", text: "XL", selected: false },
-  { value: "2", text: "L", selected: false },
-  { value: "3", text: "M", selected: false },
-  { value: "4", text: "S", selected: false },
-  { value: "5", text: "XS", selected: false },
+  { value: "XL", text: "XL", selected: false },
+  { value: "L", text: "L", selected: false },
+  { value: "M", text: "M", selected: false },
+  { value: "S", text: "S", selected: false },
+  { value: "XS", text: "XS", selected: false },
 ];
+
+interface Category {
+  id: number;
+  name: string;
+}
 
 export default function FormElements() {
   const [name, setName] = useState("");
@@ -23,15 +31,34 @@ export default function FormElements() {
   const [price, setPrice] = useState("");
   const [sizes, setSizes] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
+  const [topSale, setTopSale] = useState(false);
+  const [limitedEdition, setLimitedEdition] = useState(false);
+  const [season, setSeason] = useState("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Example Dropzone handler (adapt to your DropzoneComponent)
-  const handleDrop = (files: File[]) => {
-    setImages((prevImages) => [...prevImages, ...files]);
-  };
+  // Fetch categories on mount
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/categories");
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const data: Category[] = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      }
+    }
+    fetchCategories();
+  }, []);
 
+  const handleDrop = (files: File[]) => {
+    setImages((prev) => [...prev, ...files]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,91 +72,155 @@ export default function FormElements() {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("sizes", JSON.stringify(sizes));
-      if (images.length > 0) {
-        images.forEach((image) => {
-          formData.append("images", image); // Field name "images" can be reused
-        });
+      formData.append("top_sale", String(topSale));
+      formData.append("limited_edition", String(limitedEdition));
+      formData.append("season", season);
+      if (categoryId !== null) {
+        formData.append("category_id", categoryId.toString());
       }
+      images.forEach((img) => formData.append("images", img));
 
-      // Replace with your API endpoint
       const res = await fetch("/api/products", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Failed to create product");
+      if (!res.ok) {
+        const errBody = await res.json();
+        throw new Error(errBody.error || "Failed to create product");
+      }
 
-      setSuccess("Product created successfully!");
+      setSuccess("Товар успішно створено!");
       setName("");
       setDescription("");
       setPrice("");
       setSizes([]);
       setImages([]);
+      setTopSale(false);
+      setLimitedEdition(false);
+      setSeason("");
+      setCategoryId(null);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error creating product");
-      }
+      setError(err instanceof Error ? err.message : "Помилка при створенні товару");
     } finally {
       setLoading(false);
     }
   };
 
-  // TODO: i finished here
   return (
     <div>
       <PageBreadcrumb pageTitle="Додати Товар" />
-      <form onSubmit={handleSubmit}>
-        <div className="flex justify-around">
-          <div className="w-1/2 p-4">
-            <ComponentCard title="Заповніть дані">
-              <Label>Назва Товару</Label>
-              <Input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <Label>Опис</Label>
-              <TextArea
-                value={description}
-                onChange={setDescription}
-                rows={6}
-              />
-              <Label>Ціна</Label>
-              <Input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-              <Label>Розміри</Label>
-              <MultiSelect
-                label="Multiple Select Options"
-                options={multiOptions}
-                defaultSelected={sizes}
-                onChange={setSizes}
-              />
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left side: inputs */}
+          <div className="p-4">
+            <ComponentCard title="Дані Товару">
+              <div className="space-y-5">
+                <div>
+                  <Label>Назва Товару</Label>
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Опис</Label>
+                  <TextArea value={description} onChange={setDescription} rows={6} />
+                </div>
+                <div>
+                  <Label>Ціна</Label>
+                  <Input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Розміри</Label>
+                  <MultiSelect
+                    label="Розміри"
+                    options={multiOptions}
+                    defaultSelected={sizes}
+                    onChange={setSizes}
+                  />
+                </div>
+                <div>
+                  <Label>Категорія</Label>
+                  <select
+                    value={categoryId ?? ""}
+                    onChange={(e) => setCategoryId(Number(e.target.value))}
+                    className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+                  >
+                    <option value="">Виберіть категорію</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label>Сезон</Label>
+                  <select
+                    value={season}
+                    onChange={(e) => setSeason(e.target.value)}
+                    className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+                  >
+                    <option value="">Виберіть сезон</option>
+                    {seasonOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <Label className="mb-0">Топ продаж?</Label>
+                  <ToggleSwitch
+                    enabled={topSale}
+                    setEnabled={setTopSale}
+                    label="Top Sale"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="mb-0">Лімітована серія?</Label>
+                  <ToggleSwitch
+                    enabled={limitedEdition}
+                    setEnabled={setLimitedEdition}
+                    label="Limited Edition"
+                  />
+                </div>
+              </div>
             </ComponentCard>
           </div>
-          <div className="w-1/2 p-4">
-            <Label>Зображення</Label>
-            <DropzoneComponent onDrop={handleDrop} />
-            {images && <div className="mt-2 text-sm">here is an image</div>}
+
+          {/* Right side: images */}
+          <div className="p-4">
+            <ComponentCard title="Зображення товару">
+              <DropzoneComponent onDrop={handleDrop} />
+              {images.length > 0 && (
+                <div className="mt-2 text-sm text-gray-600">
+                  {images.length} зображень обрано
+                </div>
+              )}
+            </ComponentCard>
           </div>
         </div>
-        <div className="flex justify-center mt-6">
+
+        {/* Submit button */}
+        <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded"
+            className="bg-blue-600 hover:bg-blue-700 transition text-white px-8 py-3 rounded-lg text-sm disabled:opacity-50"
             disabled={loading}
           >
             {loading ? "Збереження..." : "Створити Товар"}
           </button>
         </div>
-        {success && (
-          <div className="text-green-600 text-center mt-2">{success}</div>
-        )}
-        {error && <div className="text-red-600 text-center mt-2">{error}</div>}
+
+        {success && <div className="text-green-600 text-center">{success}</div>}
+        {error && <div className="text-red-600 text-center">{error}</div>}
       </form>
     </div>
   );

@@ -18,7 +18,16 @@ const sql = await sqlConnect();
 export async function sqlGetAllProducts() {
   return await sql`
     SELECT
-      p.*,
+      p.id,
+      p.name,
+      p.description,
+      p.price,
+      p.top_sale,
+      p.limited_edition,
+      p.season,
+      p.category_id,
+      c.name AS category_name,
+      p.created_at,
       COALESCE(
         JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('size', s.size, 'stock', s.stock))
         FILTER (WHERE s.id IS NOT NULL),
@@ -30,9 +39,10 @@ export async function sqlGetAllProducts() {
         '[]'
       ) AS media
     FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN product_sizes s ON p.id = s.product_id
     LEFT JOIN product_media m ON p.id = m.product_id
-    GROUP BY p.id
+    GROUP BY p.id, c.name
     ORDER BY p.id DESC;
   `;
 }
@@ -41,10 +51,19 @@ export async function sqlGetAllProducts() {
 export async function sqlGetProduct(id: number) {
   return await sql`
     SELECT
-      p.*,
+      p.id,
+      p.name,
+      p.description,
+      p.price,
+      p.top_sale,
+      p.limited_edition,
+      p.season,
+      p.category_id,
+      c.name AS category_name,
       COALESCE(s.sizes, '[]') AS sizes,
       COALESCE(m.media, '[]') AS media
     FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
     LEFT JOIN LATERAL (
       SELECT JSON_AGG(
         JSONB_BUILD_OBJECT('size', s.size, 'stock', s.stock)
@@ -63,18 +82,29 @@ export async function sqlGetProduct(id: number) {
   `;
 }
 
-
 // Create new product
 export async function sqlPostProduct(product: {
   name: string;
   description?: string;
   price: number;
+  top_sale?: boolean;
+  limited_edition?: boolean;
+  season?: string;
+  category_id?: number | null;
   sizes?: { size: string; stock: number }[];
   media?: { type: string; url: string }[];
 }) {
   const inserted = await sql`
-    INSERT INTO products (name, description, price)
-    VALUES (${product.name}, ${product.description || null}, ${product.price})
+    INSERT INTO products (name, description, price, top_sale, limited_edition, season, category_id)
+    VALUES (
+      ${product.name},
+      ${product.description || null},
+      ${product.price},
+      ${product.top_sale || false},
+      ${product.limited_edition || false},
+      ${product.season || null},
+      ${product.category_id || null}
+    )
     RETURNING id;
   `;
 
@@ -108,15 +138,24 @@ export async function sqlPutProduct(
     name: string;
     description?: string;
     price: number;
+    top_sale?: boolean;
+    limited_edition?: boolean;
+    season?: string;
+    category_id?: number | null;
     sizes?: { size: string; stock: number }[];
     media?: { type: string; url: string }[];
   }
 ) {
   await sql`
     UPDATE products
-    SET name = ${update.name},
-        description = ${update.description || null},
-        price = ${update.price}
+    SET 
+      name = ${update.name},
+      description = ${update.description || null},
+      price = ${update.price},
+      top_sale = ${update.top_sale || false},
+      limited_edition = ${update.limited_edition || false},
+      season = ${update.season || null},
+      category_id = ${update.category_id || null}
     WHERE id = ${id};
   `;
 
@@ -295,5 +334,55 @@ export async function sqlPutOrderItem(
 // ❌ Delete order item
 export async function sqlDeleteOrderItem(id: number) {
   await sql`DELETE FROM order_items WHERE id = ${id};`;
+  return { deleted: true };
+}
+
+// =====================
+// 📦 CATEGORIES
+// =====================
+
+// Get all categories
+export async function sqlGetAllCategories() {
+  return await sql`
+    SELECT * FROM categories
+    ORDER BY id;
+  `;
+}
+
+// Get a single category by ID
+export async function sqlGetCategory(id: number) {
+  return await sql`
+    SELECT * FROM categories
+    WHERE id = ${id};
+  `;
+}
+
+// Create a new category
+export async function sqlPostCategory(name: string) {
+  const result = await sql`
+    INSERT INTO categories (name)
+    VALUES (${name})
+    RETURNING *;
+  `;
+  return result[0];
+}
+
+// Update a category by ID
+export async function sqlPutCategory(id: number, name: string) {
+  const result = await sql`
+    UPDATE categories
+    SET name = ${name}
+    WHERE id = ${id}
+    RETURNING *;
+  `;
+  return result[0];
+}
+
+// Delete a category by ID
+export async function sqlDeleteCategory(id: number) {
+  await sql`
+    DELETE FROM categories
+    WHERE id = ${id};
+  `;
   return { deleted: true };
 }

@@ -6,7 +6,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import Link from "next/link";
-// TODO: add boolean in products to mark TopSale or not
+// TODO: add boolean in products to mark TopSale or not. and season category
 export default function TopSale() {
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);

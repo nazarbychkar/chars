@@ -35,6 +35,12 @@ export async function POST(req: Request) {
     const sizesRaw = formData.get("sizes") as string;
     const images = formData.getAll("images") as File[];
 
+    // New fields
+    const topSale = formData.get("top_sale") === "true";
+    const limitedEdition = formData.get("limited_edition") === "true";
+    const season = formData.get("season") as string;
+    const categoryId = formData.get("category_id") ? Number(formData.get("category_id")) : null;
+
     if (!name || !price) {
       return NextResponse.json(
         { error: "Missing required fields: name, price" },
@@ -43,25 +49,19 @@ export async function POST(req: Request) {
     }
 
     const uploadDir = path.join(process.cwd(), "public", "product-images");
-
-    // Ensure the upload directory exists
     await mkdir(uploadDir, { recursive: true });
 
-    const savedImageUrls = [];
+    const savedImageUrls: string[] = [];
 
     for (const image of images) {
       const arrayBuffer = await image.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      // Generate a unique filename
       const ext = image.name.split(".").pop();
       const uniqueName = `${crypto.randomUUID()}.${ext}`;
       const filePath = path.join(uploadDir, uniqueName);
 
-      // Save file
       await writeFile(filePath, buffer);
-
-      // Add public URL
       savedImageUrls.push(`/product-images/${uniqueName}`);
     }
 
@@ -71,6 +71,10 @@ export async function POST(req: Request) {
       name,
       description,
       price,
+      top_sale: topSale,
+      limited_edition: limitedEdition,
+      season,
+      category_id: categoryId,
       sizes: parsedSizes.map((size: string) => ({
         size,
         stock: 5,

@@ -10,6 +10,7 @@ import MultiSelect from "@/components/admin/form/MultiSelect";
 import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
+import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
 
 const multiOptions = [
   { value: "1", text: "XL", selected: false },
@@ -18,6 +19,14 @@ const multiOptions = [
   { value: "4", text: "S", selected: false },
   { value: "5", text: "XS", selected: false },
 ];
+
+const categoryOptions = [
+  { id: 1, name: "Чоловічий одяг" },
+  { id: 2, name: "Жіночий одяг" },
+  { id: 3, name: "Аксесуари" },
+];
+
+const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
 
 export default function EditProductPage() {
   const params = useParams();
@@ -30,6 +39,10 @@ export default function EditProductPage() {
     price: "",
     sizes: [] as string[],
     media: [] as { type: string; url: string }[],
+    topSale: false,
+    limitedEdition: false,
+    season: "",
+    categoryId: null as number | null,
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -48,7 +61,11 @@ export default function EditProductPage() {
           description: data.description,
           price: String(data.price),
           sizes: data.sizes.map((s: { size: string }) => s.size),
-          media: data.media, // Keep as array of { type, url }
+          media: data.media,
+          topSale: data.topSale,
+          limitedEdition: data.limitedEdition,
+          season: data.season,
+          categoryId: data.categoryId,
         });
       } catch (err) {
         console.error("Failed to fetch product", err);
@@ -63,11 +80,10 @@ export default function EditProductPage() {
     setImages((prevImages) => [...prevImages, ...files]);
   };
 
-  const handleChange = (field: string, value: string | string[]) => {
+  const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Delete existing image from media array
   const handleDeleteImage = (indexToRemove: number) => {
     setFormData((prev) => ({
       ...prev,
@@ -75,7 +91,6 @@ export default function EditProductPage() {
     }));
   };
 
-  // Delete new uploaded image from images array
   const handleDeleteNewImage = (indexToRemove: number) => {
     setImages((prev) => prev.filter((_, i) => i !== indexToRemove));
   };
@@ -89,7 +104,6 @@ export default function EditProductPage() {
     try {
       let uploadedUrls: string[] = [];
 
-      // Upload new images if any
       if (images.length > 0) {
         const uploadForm = new FormData();
         images.forEach((img) => uploadForm.append("images", img));
@@ -106,7 +120,7 @@ export default function EditProductPage() {
       }
 
       const updatedMedia = [
-        ...formData.media, // existing image URLs
+        ...formData.media,
         ...uploadedUrls.map((url) => ({ type: "photo", url })),
       ];
 
@@ -121,6 +135,10 @@ export default function EditProductPage() {
           price: Number(formData.price),
           sizes: formData.sizes,
           media: updatedMedia,
+          topSale: formData.topSale,
+          limitedEdition: formData.limitedEdition,
+          season: formData.season,
+          categoryId: formData.categoryId,
         }),
       });
 
@@ -170,6 +188,52 @@ export default function EditProductPage() {
               defaultSelected={formData.sizes}
               onChange={(values) => handleChange("sizes", values)}
             />
+
+            <Label>Категорія</Label>
+            <select
+              value={formData.categoryId ?? ""}
+              onChange={(e) => handleChange("categoryId", Number(e.target.value))}
+              className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+            >
+              <option value="">Виберіть категорію</option>
+              {categoryOptions.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+
+            <Label>Сезон</Label>
+            <select
+              value={formData.season}
+              onChange={(e) => handleChange("season", e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+            >
+              <option value="">Виберіть сезон</option>
+              {seasonOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center justify-between mt-4">
+              <Label className="mb-0">Топ продаж?</Label>
+              <ToggleSwitch
+                enabled={formData.topSale}
+                setEnabled={(value) => handleChange("topSale", value)}
+                label="Top Sale"
+              />
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <Label className="mb-0">Лімітована серія?</Label>
+              <ToggleSwitch
+                enabled={formData.limitedEdition}
+                setEnabled={(value) => handleChange("limitedEdition", value)}
+                label="Limited Edition"
+              />
+            </div>
           </ComponentCard>
         </div>
 
@@ -177,7 +241,6 @@ export default function EditProductPage() {
           <Label>Зображення</Label>
           <DropzoneComponent onDrop={handleDrop} />
           <div className="mt-2 flex flex-wrap gap-4 text-sm">
-            {/* Existing images */}
             {formData.media.map((item, i) => (
               <div key={`existing-${i}`} className="relative inline-block">
                 <Image
@@ -198,7 +261,6 @@ export default function EditProductPage() {
               </div>
             ))}
 
-            {/* New uploaded images previews */}
             {images.map((file, i) => {
               const previewUrl = URL.createObjectURL(file);
               return (
@@ -209,7 +271,7 @@ export default function EditProductPage() {
                     width={200}
                     height={200}
                     className="rounded max-w-[200px] max-h-[200px]"
-                    onLoad={() => URL.revokeObjectURL(previewUrl)} // free memory
+                    onLoad={() => URL.revokeObjectURL(previewUrl)}
                   />
                   <button
                     type="button"
@@ -235,9 +297,7 @@ export default function EditProductPage() {
           {loading ? "Збереження..." : "Зберегти Зміни"}
         </button>
 
-        {success && (
-          <div className="text-green-600 text-center mt-2">{success}</div>
-        )}
+        {success && <div className="text-green-600 text-center mt-2">{success}</div>}
         {error && <div className="text-red-600 text-center mt-2">{error}</div>}
       </div>
     </form>

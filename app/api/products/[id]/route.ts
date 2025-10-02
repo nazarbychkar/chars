@@ -20,7 +20,7 @@ export async function GET(
     }
 
     const product = await sqlGetProduct(id);
-    console.log(product)
+    console.log(product);
 
     if (!product || product.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -61,15 +61,27 @@ export async function PUT(
       );
     }
 
+    // Parse new fields from body, with defaults if needed
+    const topSale = body.top_sale === true;
+    const limitedEdition = body.limited_edition === true;
+    const season = typeof body.season === "string" ? body.season : null;
+    const categoryId = body.category_id ? Number(body.category_id) : null;
+
     await sqlPutProduct(id, {
       name: body.name,
       description: body.description,
       price: body.price,
-      sizes: body.sizes.map((size: string) => ({
-        size,
-        stock: 5,
-      })),
-      media: body.media,
+      top_sale: topSale,
+      limited_edition: limitedEdition,
+      season,
+      category_id: categoryId,
+      sizes: Array.isArray(body.sizes)
+        ? body.sizes.map((size: string) => ({
+            size,
+            stock: 5,
+          }))
+        : [],
+      media: Array.isArray(body.media) ? body.media : [],
     });
 
     return NextResponse.json({ updated: true });
