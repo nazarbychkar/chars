@@ -1,16 +1,61 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import Link from "next/link";
 
+// Define a fallback (template) product
+const templateProduct = {
+  id: -1,
+  name: "Шовкова сорочка без рукавів",
+  price: 1780,
+  media: [{ type: "image", url: "https://placehold.co/432x682" }],
+};
+
 export default function LimitedEdition() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        // Filter for limited edition products
+        const limitedEditionProducts = data.filter(
+          (p: any) => p.limited_edition
+        );
+
+        // If there are not enough products, fill with template products
+        if (limitedEditionProducts.length < 8) {
+          const filledProducts = [
+            ...limitedEditionProducts,
+            ...Array(8 - limitedEditionProducts.length).fill(templateProduct),
+          ];
+          setProducts(filledProducts);
+        } else {
+          setProducts(limitedEditionProducts);
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-10">Завантаження...</div>;
+  }
+
   return (
     <section className="max-w-[1920px] w-full mx-auto h-[3067px] relative overflow-hidden m-10">
       <div className="flex flex-col m-10 gap-10">
-        <div className="flex justify-between border-b-2 py-10">
-          <div className="text-center justify-center text-5xl font-normal font-['Inter'] uppercase">
+        <div className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between border-b-2 py-10">
+          <div className="text-left justify-center text-5xl font-normal font-['Inter'] uppercase">
             Лімітована колекція від CHARS
           </div>
           <div className="justify-center opacity-70 text-xl font-normal font-['Inter'] capitalize leading-normal">
@@ -22,28 +67,37 @@ export default function LimitedEdition() {
         <div className="sm:hidden">
           {/* First Slider */}
           <Swiper
-            spaceBetween={16}
-            slidesPerView={1.5} // Show 1.5 slides on mobile
-            centeredSlides // Center the first slide with part of the second visible
-            grabCursor={true} // Allow swipe action
-            initialSlide={0} // Start from the first slide
+            spaceBetween={12}
+            slidesPerView={1.5}
+            centeredSlides={true}
+            grabCursor={true}
+            initialSlide={0}
+            breakpoints={{
+              320: { slidesPerView: 1.2, spaceBetween: 8 },
+              480: { slidesPerView: 1.5, spaceBetween: 12 },
+            }}
           >
-            {Array.from({ length: 8 }, (_, i) => (
-              <SwiperSlide key={i}>
+            {products.map((product, i) => (
+              <SwiperSlide
+                key={product.id !== -1 ? product.id : `template-${i}`}
+              >
                 <Link
-                  href="/product"
-                  className="w-96 h-[682px] group space-y-5"
+                  href={`/product/${product.id}`}
+                  className="w-full group space-y-5"
                 >
                   <img
-                    className="w-96 h-[600px] group-hover:filter group-hover:brightness-90 transition brightness duration-300"
-                    src="https://placehold.co/432x682"
+                    className="w-full h-[500px] object-cover group-hover:brightness-90 transition duration-300"
+                    src={
+                      product.media?.[0]?.url || "https://placehold.co/432x682"
+                    }
+                    alt={product.name}
                   />
                   <div>
-                    <div className="justify-center text-xl font-normal font-['Inter'] capitalize leading-normal ">
-                      шовкова сорочка без рукавів
+                    <div className="text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
+                      {product.name}
                     </div>
-                    <div className="w-24 h-4 justify-center text-xl font-normal font-['Inter'] leading-none">
-                      1,780.00 ₴
+                    <div className="text-xl font-normal font-['Inter'] leading-none text-center">
+                      {product.price.toLocaleString()} ₴
                     </div>
                   </div>
                 </Link>
@@ -53,28 +107,37 @@ export default function LimitedEdition() {
 
           {/* Second Slider */}
           <Swiper
-            spaceBetween={16}
-            slidesPerView={1.5} // Show 1.5 slides on mobile
-            centeredSlides // Center the first slide with part of the second visible
-            grabCursor={true} // Allow swipe action
-            initialSlide={0} // Start from the first slide
+            spaceBetween={12}
+            slidesPerView={1.5}
+            centeredSlides={true}
+            grabCursor={true}
+            initialSlide={0}
+            breakpoints={{
+              320: { slidesPerView: 1.2, spaceBetween: 8 },
+              480: { slidesPerView: 1.5, spaceBetween: 12 },
+            }}
           >
-            {Array.from({ length: 8 }, (_, i) => (
-              <SwiperSlide key={i}>
+            {products.map((product, i) => (
+              <SwiperSlide
+                key={product.id !== -1 ? product.id : `template-${i}`}
+              >
                 <Link
-                  href="/product"
-                  className="w-96 h-[682px] group space-y-5"
+                  href={`/product/${product.id}`}
+                  className="w-full group space-y-5"
                 >
                   <img
-                    className="w-96 h-[600px] group-hover:filter group-hover:brightness-90 transition brightness duration-300"
-                    src="https://placehold.co/432x682"
+                    className="w-full h-[500px] object-cover group-hover:brightness-90 transition duration-300"
+                    src={
+                      product.media?.[0]?.url || "https://placehold.co/432x682"
+                    }
+                    alt={product.name}
                   />
                   <div>
-                    <div className="justify-center text-xl font-normal font-['Inter'] capitalize leading-normal ">
-                      шовкова сорочка без рукавів
+                    <div className="text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
+                      {product.name}
                     </div>
-                    <div className="w-24 h-4 justify-center text-xl font-normal font-['Inter'] leading-none">
-                      1,780.00 ₴
+                    <div className="text-xl font-normal font-['Inter'] leading-none text-center">
+                      {product.price.toLocaleString()} ₴
                     </div>
                   </div>
                 </Link>
@@ -83,33 +146,36 @@ export default function LimitedEdition() {
           </Swiper>
         </div>
 
+        {/* Desktop layout: 4x2 Grid */}
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
-  {Array.from({ length: 8 }, (_, i) => (
-    <div
-      key={i}
-      className="group space-y-4 sm:space-y-5 w-full"
-    >
-      <div className="aspect-[2/3] w-full overflow-hidden">
-        <img
-          className="w-full h-full object-cover group-hover:brightness-90 transition duration-300"
-          src="https://placehold.co/432x682"
-          alt={`Product ${i}`}
-        />
-      </div>
+          {products.map((product, i) => (
+            <div
+              key={product.id !== -1 ? product.id : `template-${i}`}
+              className="group space-y-4 sm:space-y-5 w-full"
+            >
+              <div className="aspect-[2/3] w-full overflow-hidden">
+                <img
+                  className="w-full h-full object-cover group-hover:brightness-90 transition duration-300"
+                  src={
+                    product.media?.[0]?.url || "https://placehold.co/432x682"
+                  }
+                  alt={product.name}
+                />
+              </div>
 
-      <div>
-        <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
-          шовкова сорочка без рукавів
+              <div>
+                <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
+                  {product.name}
+                </div>
+                <div className="text-center text-base sm:text-lg font-normal font-['Inter'] leading-none">
+                  {product.price.toLocaleString()} ₴
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="text-center text-base sm:text-lg font-normal font-['Inter'] leading-none">
-          1,780.00 ₴
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
 
-
+        {/* Call to action for more products */}
         <div className="flex flex-col lg:flex-row justify-between gap-10">
           <div className="relative w-full sm:w-[600px] md:w-[700px] lg:w-[894px] h-[600px] sm:h-[800px] md:h-[1000px] lg:h-[1279px]">
             <img
@@ -117,7 +183,6 @@ export default function LimitedEdition() {
               className="w-full h-full object-cover"
               alt="Product Background"
             />
-
             <div className="absolute bottom-1/12 left-1/2 transform -translate-x-1/2">
               <div className="px-6 py-3 bg-white flex justify-center items-center">
                 <span className="whitespace-nowrap text-black text-base sm:text-lg md:text-xl lg:text-2xl font-normal font-['Inter'] uppercase tracking-tight">
@@ -133,7 +198,6 @@ export default function LimitedEdition() {
               className="w-full h-full object-cover"
               alt="Product Background"
             />
-
             <div className="absolute bottom-1/12 left-1/2 transform -translate-x-1/2">
               <div className="px-6 py-3 bg-white flex justify-center items-center">
                 <span className="whitespace-nowrap text-black text-base sm:text-lg md:text-xl lg:text-2xl font-normal font-['Inter'] uppercase tracking-tight">

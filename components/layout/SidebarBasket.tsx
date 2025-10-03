@@ -1,3 +1,5 @@
+"use client"
+
 import { useBasket } from "@/lib/BasketProvider";
 import Link from "next/link";
 

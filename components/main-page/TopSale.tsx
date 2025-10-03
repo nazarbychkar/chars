@@ -1,15 +1,49 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import Link from "next/link";
 
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  top_sale: boolean;
+  media: { type: string; url: string }[];
+}
+
 export default function TopSale() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        setProducts(data.filter((p: Product) => p.top_sale)); // Only top_sale products
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-10">Завантаження...</div>;
+  }
+
+  if (products.length === 0) {
+    return <div className="text-center py-10">Наразі немає топових товарів.</div>;
+  }
 
   return (
     <section className="max-w-[1920px] mx-auto w-full mb-35 relative overflow-hidden flex flex-col gap-10">
@@ -22,25 +56,25 @@ export default function TopSale() {
         </div>
       </div>
 
-      {/* Desktop layout (static grid) */}
+      {/* Desktop layout */}
       <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 px-6">
-        {Array.from({ length: 4 }, (_, i) => (
+        {products.map((product) => (
           <Link
-            href="/product"
-            key={i}
+            href={`/product/${product.id}`}
+            key={product.id}
             className="flex flex-col gap-3 group w-full"
           >
             <div className="aspect-[2/3] w-full overflow-hidden">
               <img
                 className="w-full h-full object-cover group-hover:brightness-90 transition duration-300"
-                src="https://placehold.co/432x613"
-                alt={`Product ${i}`}
+                src={product.media?.[0]?.url || "https://placehold.co/432x613"}
+                alt={product.name}
               />
             </div>
 
             <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
-              шовкова сорочка без рукавів <br />
-              1,780.00 ₴
+              {product.name} <br />
+              {product.price.toLocaleString()} ₴
             </div>
           </Link>
         ))}
@@ -51,23 +85,24 @@ export default function TopSale() {
         <Swiper
           modules={[Navigation]}
           spaceBetween={16}
-          slidesPerView={1.5} // Display 1.5 slides on mobile
-          centeredSlides // Center the active slide
-          grabCursor // Allow grab gesture
+          slidesPerView={1.5}
+          centeredSlides
+          grabCursor
         >
-          {Array.from({ length: 4 }, (_, i) => (
-            <SwiperSlide key={i}>
+          {products.map((product) => (
+            <SwiperSlide key={product.id}>
               <Link
-                href="/product"
+                href={`/product/${product.id}`}
                 className="relative flex flex-col gap-3 group"
               >
                 <img
-                  className="w-full h-[350px] group-hover:filter group-hover:brightness-90 transition brightness duration-300"
-                  src="https://placehold.co/432x613"
+                  className="w-full h-[350px] object-cover group-hover:brightness-90 transition duration-300"
+                  src={product.media?.[0]?.url || "https://placehold.co/432x613"}
+                  alt={product.name}
                 />
                 <div className="justify-center text-lg font-normal font-['Inter'] capitalize leading-normal text-center">
-                  шовкова сорочка без рукавів <br />
-                  1,780.00 ₴
+                  {product.name} <br />
+                  {product.price.toLocaleString()} ₴
                 </div>
               </Link>
             </SwiperSlide>
