@@ -30,16 +30,19 @@ const BasketContext = createContext<BasketContextType | undefined>(undefined);
 const LOCAL_STORAGE_KEY = "basketItems";
 
 export function BasketProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<BasketItem[]>(() => {
-    // Load initial basket state from localStorage on first render (lazy initializer)
-    if (typeof window === "undefined") return [];
+  const [items, setItems] = useState<BasketItem[]>([]);
+
+  // Load from localStorage only on client side after hydration
+  useEffect(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        setItems(JSON.parse(saved));
+      }
     } catch {
-      return [];
+      // Handle localStorage read errors
     }
-  });
+  }, []);
 
   // Save basket items to localStorage whenever items change
   useEffect(() => {

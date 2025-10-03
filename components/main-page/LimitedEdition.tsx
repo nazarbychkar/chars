@@ -5,6 +5,15 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import Link from "next/link";
 
+type Product = {
+  id: number,
+  name: string,
+  price: number,
+  media: {type: string, url: string}[]
+  limited_edition: boolean
+}
+
+
 // Define a fallback (template) product
 const templateProduct = {
   id: -1,
@@ -14,7 +23,7 @@ const templateProduct = {
 };
 
 export default function LimitedEdition() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +33,7 @@ export default function LimitedEdition() {
         const data = await res.json();
         // Filter for limited edition products
         const limitedEditionProducts = data.filter(
-          (p: any) => p.limited_edition
+          (p: Product) => p.limited_edition
         );
 
         // If there are not enough products, fill with template products
