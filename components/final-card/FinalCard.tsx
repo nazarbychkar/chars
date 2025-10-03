@@ -200,7 +200,7 @@ export default function FinalCard() {
             onChange={(e) => setPostOffice(e.target.value)}
             required
           />
-{/* TODO: add comment later */}
+          {/* TODO: add comment later */}
           {/* <label
             htmlFor="comment"
             className="text-xl sm:text-2xl font-normal font-['Arial']"

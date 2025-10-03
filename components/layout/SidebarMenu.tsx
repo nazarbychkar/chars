@@ -3,11 +3,17 @@
 import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
 import SidebarSeason from "./SidebarSeason";
+import { useEffect, useState } from "react";
 
 interface SidebarMenuProps {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isDark: boolean;
+}
+
+interface Category {
+  id: number;
+  name: string;
 }
 
 export default function SidebarMenu({
@@ -16,6 +22,27 @@ export default function SidebarMenu({
   isDark,
 }: SidebarMenuProps) {
   const { isSeasonOpen, setIsSeasonOpen } = useAppContext();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/categories");
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCategories();
+  }, []);
 
   return (
     <div className="relative z-50">
@@ -59,28 +86,21 @@ export default function SidebarMenu({
             Сезон -{">"}
           </button>
 
-          {/* Links */}
-          {[
-            "Жилетки",
-            "Головні убори",
-            "Пальта",
-            "Лімітований одяг",
-            "Спортивний одяг",
-            "Футболки",
-            "Майки",
-            "Штани",
-            "Сорочки",
-            "Джинси",
-          ].map((text, idx) => (
-            <Link
-              href={`/catalog?category=${encodeURIComponent(text)}`}
-              key={idx}
-              className="hover:text-[#8C7461]"
-              onClick={() => setIsOpen(false)}
-            >
-              {text}
-            </Link>
-          ))}
+          {/* Render loading, error, or category links */}
+          {loading && <p>Loading categories...</p>}
+          {error && <p className="text-red-500">Error: {error}</p>}
+          {!loading &&
+            !error &&
+            categories.map((category) => (
+              <Link
+                href={`/catalog?category=${encodeURIComponent(category.name)}`}
+                key={category.id}
+                className="hover:text-[#8C7461]"
+                onClick={() => setIsOpen(false)}
+              >
+                {category.name}
+              </Link>
+            ))}
         </nav>
       </div>
 

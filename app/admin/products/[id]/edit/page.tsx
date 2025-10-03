@@ -11,7 +11,7 @@ import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
-// TODO: not finished, doesn't apply some changes
+
 const multiOptions = [
   { value: "XL", text: "XL", selected: false },
   { value: "L", text: "L", selected: false },

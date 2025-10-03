@@ -5,7 +5,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import Link from "next/link";
 
-// TODO: add to products boolean for limited. also add category
 export default function LimitedEdition() {
   return (
     <section className="max-w-[1920px] w-full mx-auto h-[3067px] relative overflow-hidden m-10">

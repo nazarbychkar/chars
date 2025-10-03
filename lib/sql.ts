@@ -82,6 +82,73 @@ export async function sqlGetProduct(id: number) {
   `;
 }
 
+export async function sqlGetProductsByCategory(categoryName: string) {
+  return await sql`
+    SELECT
+      p.id,
+      p.name,
+      p.description,
+      p.price,
+      p.top_sale,
+      p.limited_edition,
+      p.season,
+      p.category_id,
+      c.name AS category_name,
+      p.created_at,
+      COALESCE(
+        JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('size', s.size, 'stock', s.stock))
+        FILTER (WHERE s.id IS NOT NULL),
+        '[]'
+      ) AS sizes,
+      COALESCE(
+        JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url))
+        FILTER (WHERE m.id IS NOT NULL),
+        '[]'
+      ) AS media
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN product_sizes s ON p.id = s.product_id
+    LEFT JOIN product_media m ON p.id = m.product_id
+    WHERE c.name = ${categoryName}
+    GROUP BY p.id, c.name
+    ORDER BY p.id DESC;
+  `;
+}
+
+export async function sqlGetProductsBySeason(season: string) {
+  return await sql`
+    SELECT
+      p.id,
+      p.name,
+      p.description,
+      p.price,
+      p.top_sale,
+      p.limited_edition,
+      p.season,
+      p.category_id,
+      c.name AS category_name,
+      p.created_at,
+      COALESCE(
+        JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('size', s.size, 'stock', s.stock))
+        FILTER (WHERE s.id IS NOT NULL),
+        '[]'
+      ) AS sizes,
+      COALESCE(
+        JSON_AGG(DISTINCT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url))
+        FILTER (WHERE m.id IS NOT NULL),
+        '[]'
+      ) AS media
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN product_sizes s ON p.id = s.product_id
+    LEFT JOIN product_media m ON p.id = m.product_id
+    WHERE p.season = ${season}
+    GROUP BY p.id, c.name
+    ORDER BY p.id DESC;
+  `;
+}
+
+
 // Create new product
 export async function sqlPostProduct(product: {
   name: string;

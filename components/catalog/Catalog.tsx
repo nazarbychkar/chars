@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation"; // Next.js 13+ client hook for reading query params
 import SidebarFilter from "../layout/SidebarFilter";
 import { useAppContext } from "@/lib/GeneralProvider";
 import SidebarMenu from "../layout/SidebarMenu";
@@ -10,25 +11,42 @@ interface Product {
   id: number;
   name: string;
   price: number;
-  media: {url: string, type: string}[];
+  media: { url: string; type: string }[];
 }
 
 export default function Catalog() {
   const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
+  const searchParams = useSearchParams();
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Read filters from URL params
+  const category = searchParams.get("category");
+  const season = searchParams.get("season");
 
   useEffect(() => {
     async function fetchProducts() {
       try {
         setLoading(true);
-        const res = await fetch("/api/products");
+        setError(null);
+
+        let url = "/api/products";
+
+        if (category) {
+          url = `/api/products/category?category=${encodeURIComponent(category)}`;
+        } else if (season) {
+          url = `/api/products/season?season=${encodeURIComponent(season)}`;
+        }
+
+        const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
-        
+
         setProducts(data);
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -41,7 +59,7 @@ export default function Catalog() {
       }
     }
     fetchProducts();
-  }, []);
+  }, [category, season]); // refetch if URL params change
 
   if (loading) return <div>Loading products...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -58,7 +76,14 @@ export default function Catalog() {
             >
               {"<"}
             </button>
-            <span>Категорія Усі</span>
+            <span>
+              Категорія{" "}
+              {category
+                ? category
+                : season
+                ? `Сезон ${season}`
+                : "Усі"}
+            </span>
           </div>
 
           <button
