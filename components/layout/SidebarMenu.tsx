@@ -1,8 +1,6 @@
 "use client";
 
-import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
-import SidebarSeason from "./SidebarSeason";
 import { useEffect, useState } from "react";
 
 interface SidebarMenuProps {
@@ -21,10 +19,12 @@ export default function SidebarMenu({
   setIsOpen,
   isDark,
 }: SidebarMenuProps) {
-  const { isSeasonOpen, setIsSeasonOpen } = useAppContext();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // "menu" = main menu with categories, "season" = season sidebar
+  const [view, setView] = useState<"menu" | "season">("menu");
 
   useEffect(() => {
     async function fetchCategories() {
@@ -44,13 +44,40 @@ export default function SidebarMenu({
     fetchCategories();
   }, []);
 
+  const season_data = [
+    {
+      name: "Осінь",
+      image: "https://placehold.co/458x185",
+    },
+    {
+      name: "Зима",
+      image: "https://placehold.co/458x185",
+    },
+    {
+      name: "Весна",
+      image: "https://placehold.co/458x185",
+    },
+    {
+      name: "Літо",
+      image: "https://placehold.co/458x185",
+    },
+  ];
+
+  if (!isOpen) {
+    // If sidebar closed, reset view to main menu for next open
+    if (view !== "menu") setView("menu");
+  }
+
   return (
     <div className="relative z-50">
       {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            setView("menu"); // reset on close
+          }}
         />
       )}
 
@@ -62,53 +89,87 @@ export default function SidebarMenu({
           isOpen ? "translate-x-0" : "-translate-x-full"
         } overflow-y-auto`}
       >
-        <nav className="flex flex-col px-4 py-6 space-y-4 text-xl sm:text-2xl md:text-3xl">
-          {/* Header with close */}
-          <div className="flex justify-between items-center mb-2">
-            <Link
-              href="/catalog"
-              className="hover:text-[#8C7461]"
-              onClick={() => setIsOpen(false)}
-            >
-              Усі
-            </Link>
-            <button
-              className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
-              onClick={() => setIsOpen(false)}
-            >
-              ×
-            </button>
-          </div>
-          <button
-            className="text-2xl text-start sm:text-3xl cursor-pointer hover:text-[#8C7461]"
-            onClick={() => setIsSeasonOpen(true)}
-          >
-            Сезон -{">"}
-          </button>
-
-          {/* Render loading, error, or category links */}
-          {loading && <p>Loading categories...</p>}
-          {error && <p className="text-red-500">Error: {error}</p>}
-          {!loading &&
-            !error &&
-            categories.map((category) => (
+        {view === "menu" && (
+          <nav className="flex flex-col px-4 py-6 space-y-4 text-xl sm:text-2xl md:text-3xl">
+            {/* Header with close */}
+            <div className="flex justify-between items-center mb-2">
               <Link
-                href={`/catalog?category=${encodeURIComponent(category.name)}`}
-                key={category.id}
+                href="/catalog"
                 className="hover:text-[#8C7461]"
                 onClick={() => setIsOpen(false)}
               >
-                {category.name}
+                Усі
               </Link>
-            ))}
-        </nav>
-      </div>
+              <button
+                className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
+                onClick={() => {
+                  setIsOpen(false);
+                  setView("menu");
+                }}
+              >
+                ×
+              </button>
+            </div>
 
-      <SidebarSeason
-        isDark={isDark}
-        isOpen={isSeasonOpen}
-        setIsOpen={setIsSeasonOpen}
-      />
+            <button
+              className="text-2xl text-start sm:text-3xl cursor-pointer hover:text-[#8C7461]"
+              onClick={() => setView("season")}
+            >
+              Сезон -{'>'}
+            </button>
+
+            {/* Render loading, error, or category links */}
+            {loading && <p>Loading categories...</p>}
+            {error && <p className="text-red-500">Error: {error}</p>}
+            {!loading &&
+              !error &&
+              categories.map((category) => (
+                <Link
+                  href={`/catalog?category=${encodeURIComponent(category.name)}`}
+                  key={category.id}
+                  className="hover:text-[#8C7461]"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {category.name}
+                </Link>
+              ))}
+          </nav>
+        )}
+
+        {view === "season" && (
+          <div>
+            <div className="flex justify-between items-center p-4 text-xl sm:text-2xl md:text-3xl">
+              <h2 className="font-bold">Сезони</h2>
+              <button
+                className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
+                onClick={() => setView("menu")}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex flex-col px-4 pb-6 space-y-4">
+              {season_data.map((item, i) => (
+                <Link
+                  key={i}
+                  href={`/catalog?season=${item.name}`}
+                  onClick={() => setIsOpen(false)}
+                  className="block h-[120px] rounded overflow-hidden relative text-white text-xl sm:text-2xl font-bold text-center flex items-center justify-center"
+                  style={{
+                    backgroundImage: `url(${item.image})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  {/* Dark overlay on image */}
+                  <div className="absolute inset-0 bg-black/40" />
+                  <span className="relative z-10">{item.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

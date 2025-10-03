@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation"; // Next.js 13+ client hook for reading query params
 import SidebarFilter from "../layout/SidebarFilter";
 import { useAppContext } from "@/lib/GeneralProvider";
@@ -12,6 +12,7 @@ interface Product {
   name: string;
   price: number;
   media: { url: string; type: string }[];
+  sizes: { size: string; stock: string }[]; // updated
 }
 
 export default function Catalog() {
@@ -24,6 +25,30 @@ export default function Catalog() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSize =
+        selectedSizes.length === 0 ||
+        product.sizes?.some((s) => selectedSizes.includes(s.size));
+
+      const matchesMinPrice = minPrice === null || product.price >= minPrice;
+      const matchesMaxPrice = maxPrice === null || product.price <= maxPrice;
+
+      return matchesSize && matchesMinPrice && matchesMaxPrice;
+    });
+  }, [products, selectedSizes, minPrice, maxPrice]);
+
+  const sortedProducts = useMemo(() => {
+    return [...filteredProducts].sort((a, b) =>
+      sortOrder === "asc" ? a.price - b.price : b.price - a.price
+    );
+  }, [filteredProducts, sortOrder]);
 
   // Read filters from URL params
   const category = searchParams.get("category");
@@ -38,7 +63,9 @@ export default function Catalog() {
         let url = "/api/products";
 
         if (category) {
-          url = `/api/products/category?category=${encodeURIComponent(category)}`;
+          url = `/api/products/category?category=${encodeURIComponent(
+            category
+          )}`;
         } else if (season) {
           url = `/api/products/season?season=${encodeURIComponent(season)}`;
         }
@@ -78,11 +105,7 @@ export default function Catalog() {
             </button>
             <span>
               Категорія{" "}
-              {category
-                ? category
-                : season
-                ? `Сезон ${season}`
-                : "Усі"}
+              {category ? category : season ? `Сезон ${season}` : "Усі"}
             </span>
           </div>
 
@@ -96,7 +119,7 @@ export default function Catalog() {
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {sortedProducts.map((product) => (
             <Link
               href={`/product/${product.id}`}
               key={product.id}
@@ -124,13 +147,20 @@ export default function Catalog() {
         </div>
       </section>
 
-      {/* Filters Sidebar */}
       <SidebarFilter
         isDark={isDark}
         isOpen={isFilterOpen}
         setIsOpen={setIsFilterOpen}
         openAccordion={openAccordion}
         setOpenAccordion={setOpenAccordion}
+        sortOrder={sortOrder}
+        setSortOrder={setSortOrder}
+        selectedSizes={selectedSizes}
+        setSelectedSizes={setSelectedSizes}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        setMinPrice={setMinPrice}
+        setMaxPrice={setMaxPrice}
       />
 
       {/* Menu Sidebar */}

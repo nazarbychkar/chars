@@ -8,6 +8,14 @@ interface SidebarFilterProps {
   openAccordion: number | null;
   setOpenAccordion: React.Dispatch<React.SetStateAction<number | null>>;
   isDark: boolean;
+  sortOrder: "asc" | "desc";
+  setSortOrder: React.Dispatch<React.SetStateAction<"asc" | "desc">>;
+  selectedSizes: string[];
+  setSelectedSizes: React.Dispatch<React.SetStateAction<string[]>>;
+  minPrice: number | null;
+  maxPrice: number | null;
+  setMinPrice: React.Dispatch<React.SetStateAction<number | null>>;
+  setMaxPrice: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
 export default function SidebarFilter({
@@ -16,9 +24,25 @@ export default function SidebarFilter({
   openAccordion,
   setOpenAccordion,
   isDark,
+  sortOrder,
+  setSortOrder,
+  selectedSizes,
+  setSelectedSizes,
+  minPrice,
+  maxPrice,
+  setMinPrice,
+  setMaxPrice,
 }: SidebarFilterProps) {
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? null : index);
+  };
+
+  const availableSizes = ["XS", "S", "M", "L", "XL"];
+
+  const toggleSize = (size: string) => {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+    );
   };
 
   return (
@@ -51,42 +75,104 @@ export default function SidebarFilter({
             </button>
           </div>
 
-          {/* Accordion Items */}
-          {[
-            { title: "Сортувати за", items: ["Item 1", "Item 2", "Item 3"] },
-            { title: "Розмір", items: ["Item 4", "Item 5", "Item 6"] },
-            { title: "Колір", items: ["Item 7", "Item 8", "Item 9"] },
-            { title: "Вартість", items: ["Item 10", "Item 11", "Item 12"] },
-          ].map((section, index) => {
-            const sectionIndex = index + 1;
-            const isOpenAccordion = openAccordion === sectionIndex;
+          {/* Accordion: Sorting */}
+          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => toggleAccordion(1)}
+            >
+              <span className="text-xl sm:text-2xl uppercase">
+                Сортувати за
+              </span>
+              <span className="font-semibold text-xl sm:text-2xl">
+                {openAccordion === 1 ? "−" : "+"}
+              </span>
+            </div>
 
+            {openAccordion === 1 && (
+              <div className="pl-4 mt-2 space-y-2">
+                <button
+                  className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
+                    sortOrder === "asc" ? "font-semibold text-[#8C7461]" : ""
+                  }`}
+                  onClick={() => setSortOrder("asc")}
+                >
+                  За зростанням ціни
+                </button>
+                <button
+                  className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
+                    sortOrder === "desc" ? "font-semibold text-[#8C7461]" : ""
+                  }`}
+                  onClick={() => setSortOrder("desc")}
+                >
+                  За спаданням ціни
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Accordion: Size */}
+          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => toggleAccordion(2)}
+            >
+              <span className="text-xl sm:text-2xl uppercase">Розмір</span>
+              <span className="font-semibold text-xl sm:text-2xl">
+                {openAccordion === 2 ? "−" : "+"}
+              </span>
+            </div>
+
+            {openAccordion === 2 && (
+              <div className="pl-4 mt-2 space-y-2">
+                {availableSizes.map((size) => (
+                  <label
+                    key={size}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSizes.includes(size)}
+                      onChange={() => toggleSize(size)}
+                      className="form-checkbox h-4 w-4 text-[#8C7461]"
+                    />
+                    <span className="text-base sm:text-lg">{size}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Other Accordions (Optional placeholders) */}
+          {[["Колір"]].map((section, i) => {
+            const index = i + 2; // Start at 2
             return (
               <div
-                key={sectionIndex}
+                key={index}
                 className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition"
               >
                 <div
                   className="flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleAccordion(sectionIndex)}
+                  onClick={() => toggleAccordion(index)}
                 >
                   <span className="text-xl sm:text-2xl uppercase">
-                    {section.title}
+                    {section[0]}
                   </span>
                   <span className="font-semibold text-xl sm:text-2xl">
-                    {isOpenAccordion ? "−" : "+"}
+                    {openAccordion === index ? "−" : "+"}
                   </span>
                 </div>
 
-                {isOpenAccordion && (
+                {openAccordion === index && (
                   <div className="pl-4 mt-2 space-y-2">
-                    {section.items.map((item, itemIndex) => (
+                    {/* Placeholder items */}
+                    {[1, 2, 3].map((n) => (
                       <Link
-                        key={itemIndex}
-                        href={`#item${sectionIndex}-${itemIndex}`}
+                        key={n}
+                        href="#"
                         className="block hover:text-[#8C7461] text-base sm:text-lg"
                       >
-                        {item}
+                        {section[0]} {n}
                       </Link>
                     ))}
                   </div>
@@ -94,6 +180,57 @@ export default function SidebarFilter({
               </div>
             );
           })}
+
+          {/* Accordion: Price */}
+          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => toggleAccordion(4)}
+            >
+              <span className="text-xl sm:text-2xl uppercase">Вартість</span>
+              <span className="font-semibold text-xl sm:text-2xl">
+                {openAccordion === 4 ? "−" : "+"}
+              </span>
+            </div>
+
+            {openAccordion === 4 && (
+              <div className="pl-4 mt-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Мінімальна ціна
+                  </label>
+                  <input
+                    type="number"
+                    value={minPrice ?? ""}
+                    onChange={(e) =>
+                      setMinPrice(
+                        e.target.value ? parseInt(e.target.value) : null
+                      )
+                    }
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    placeholder="від"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Максимальна ціна
+                  </label>
+                  <input
+                    type="number"
+                    value={maxPrice ?? ""}
+                    onChange={(e) =>
+                      setMaxPrice(
+                        e.target.value ? parseInt(e.target.value) : null
+                      )
+                    }
+                    className="w-full border rounded px-2 py-1 text-sm"
+                    placeholder="до"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
