@@ -11,13 +11,13 @@ import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
-
+// TODO: not finished, doesn't apply some changes
 const multiOptions = [
-  { value: "1", text: "XL", selected: false },
-  { value: "2", text: "L", selected: false },
-  { value: "3", text: "M", selected: false },
-  { value: "4", text: "S", selected: false },
-  { value: "5", text: "XS", selected: false },
+  { value: "XL", text: "XL", selected: false },
+  { value: "L", text: "L", selected: false },
+  { value: "M", text: "M", selected: false },
+  { value: "S", text: "S", selected: false },
+  { value: "XS", text: "XS", selected: false },
 ];
 
 const categoryOptions = [
@@ -47,34 +47,54 @@ export default function EditProductPage() {
 
   const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
 
   useEffect(() => {
-    async function fetchProduct() {
+    async function fetchData() {
+      setLoadingData(true);
       try {
-        const res = await fetch(`/api/products/${productId}`);
-        const data = await res.json();
+        const [productRes, categoriesRes] = await Promise.all([
+          fetch(`/api/products/${productId}`),
+          fetch(`/api/categories`),
+        ]);
+
+        const productData = await productRes.json();
+        const categoryData = await categoriesRes.json();
 
         setFormData({
-          name: data.name,
-          description: data.description,
-          price: String(data.price),
-          sizes: data.sizes.map((s: { size: string }) => s.size),
-          media: data.media,
-          topSale: data.topSale,
-          limitedEdition: data.limitedEdition,
-          season: data.season,
-          categoryId: data.categoryId,
+          name: productData.name,
+          description: productData.description,
+          price: String(productData.price),
+          sizes: productData.sizes.map((s: { size: string }) => s.size),
+          media: productData.media,
+          topSale: productData.top_sale,
+          limitedEdition: productData.limited_edition,
+          season: productData.season,
+          categoryId: productData.category_id,
         });
+
+        setCategoryOptions(categoryData);
       } catch (err) {
-        console.error("Failed to fetch product", err);
-        setError("Failed to load product data");
+        console.error("Failed to fetch product or categories", err);
+        setError("Помилка при завантаженні товару або категорій");
+      } finally {
+        setLoadingData(false);
       }
     }
 
-    if (productId) fetchProduct();
+    if (productId) {
+      fetchData();
+    }
   }, [productId]);
+
+  useEffect(() => {
+    console.log("formData", formData);
+  }, [formData]);
 
   const handleDrop = (files: File[]) => {
     setImages((prevImages) => [...prevImages, ...files]);
@@ -135,10 +155,10 @@ export default function EditProductPage() {
           price: Number(formData.price),
           sizes: formData.sizes,
           media: updatedMedia,
-          topSale: formData.topSale,
-          limitedEdition: formData.limitedEdition,
+          top_sale: formData.topSale,
+          limited_edition: formData.limitedEdition,
           season: formData.season,
-          categoryId: formData.categoryId,
+          category_id: formData.categoryId,
         }),
       });
 
@@ -155,151 +175,165 @@ export default function EditProductPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <PageBreadcrumb pageTitle="Редагувати Товар" />
-      <div className="flex w-full h-auto">
-        <div className="w-1/2 p-4">
-          <ComponentCard title="Редагувати дані">
-            <Label>Назва Товару</Label>
-            <Input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-            />
-
-            <Label>Опис</Label>
-            <TextArea
-              value={formData.description}
-              onChange={(value) => handleChange("description", value)}
-              rows={6}
-            />
-
-            <Label>Ціна</Label>
-            <Input
-              type="number"
-              value={formData.price}
-              onChange={(e) => handleChange("price", e.target.value)}
-            />
-
-            <Label>Розміри</Label>
-            <MultiSelect
-              label="Розміри"
-              options={multiOptions}
-              defaultSelected={formData.sizes}
-              onChange={(values) => handleChange("sizes", values)}
-            />
-
-            <Label>Категорія</Label>
-            <select
-              value={formData.categoryId ?? ""}
-              onChange={(e) => handleChange("categoryId", Number(e.target.value))}
-              className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
-            >
-              <option value="">Виберіть категорію</option>
-              {categoryOptions.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-
-            <Label>Сезон</Label>
-            <select
-              value={formData.season}
-              onChange={(e) => handleChange("season", e.target.value)}
-              className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
-            >
-              <option value="">Виберіть сезон</option>
-              {seasonOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex items-center justify-between mt-4">
-              <Label className="mb-0">Топ продаж?</Label>
-              <ToggleSwitch
-                enabled={formData.topSale}
-                setEnabled={(value) => handleChange("topSale", value)}
-                label="Top Sale"
-              />
-            </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <Label className="mb-0">Лімітована серія?</Label>
-              <ToggleSwitch
-                enabled={formData.limitedEdition}
-                setEnabled={(value) => handleChange("limitedEdition", value)}
-                label="Limited Edition"
-              />
-            </div>
-          </ComponentCard>
-        </div>
-
-        <div className="w-1/2 p-4">
-          <Label>Зображення</Label>
-          <DropzoneComponent onDrop={handleDrop} />
-          <div className="mt-2 flex flex-wrap gap-4 text-sm">
-            {formData.media.map((item, i) => (
-              <div key={`existing-${i}`} className="relative inline-block">
-                <Image
-                  src={item.url}
-                  width={200}
-                  height={200}
-                  alt={`image-${i}`}
-                  className="rounded"
+    <div>
+      {loadingData ? (
+        <div className="p-4 text-center text-lg">Завантаження даних...</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <PageBreadcrumb pageTitle="Редагувати Товар" />
+          <div className="flex w-full h-auto">
+            <div className="w-1/2 p-4">
+              <ComponentCard title="Редагувати дані">
+                <Label>Назва Товару</Label>
+                <Input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
                 />
-                <button
-                  type="button"
-                  onClick={() => handleDeleteImage(i)}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                  title="Видалити зображення"
+
+                <Label>Опис</Label>
+                <TextArea
+                  value={formData.description}
+                  onChange={(value) => handleChange("description", value)}
+                  rows={6}
+                />
+
+                <Label>Ціна</Label>
+                <Input
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => handleChange("price", e.target.value)}
+                />
+
+                <Label>Розміри</Label>
+                <MultiSelect
+                  label="Розміри"
+                  options={multiOptions}
+                  defaultSelected={formData.sizes}
+                  onChange={(values) => handleChange("sizes", values)}
+                />
+
+                <Label>Категорія</Label>
+                <select
+                  value={formData.categoryId ?? ""}
+                  onChange={(e) =>
+                    handleChange("categoryId", Number(e.target.value))
+                  }
+                  className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
                 >
-                  ✕
-                </button>
-              </div>
-            ))}
+                  <option value="">Виберіть категорію</option>
+                  {categoryOptions.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
 
-            {images.map((file, i) => {
-              const previewUrl = URL.createObjectURL(file);
-              return (
-                <div key={`new-${i}`} className="relative inline-block">
-                  <Image
-                    src={previewUrl}
-                    alt={file.name}
-                    width={200}
-                    height={200}
-                    className="rounded max-w-[200px] max-h-[200px]"
-                    onLoad={() => URL.revokeObjectURL(previewUrl)}
+                <Label>Сезон</Label>
+                <select
+                  value={formData.season}
+                  onChange={(e) => handleChange("season", e.target.value)}
+                  className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Виберіть сезон</option>
+                  {seasonOptions.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="flex items-center justify-between mt-4">
+                  <Label className="mb-0">Топ продаж?</Label>
+                  <ToggleSwitch
+                    enabled={formData.topSale}
+                    setEnabled={(value) => handleChange("topSale", value)}
+                    label="Top Sale"
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteNewImage(i)}
-                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                    title="Видалити зображення"
-                  >
-                    ✕
-                  </button>
                 </div>
-              );
-            })}
+
+                <div className="flex items-center justify-between mt-4">
+                  <Label className="mb-0">Лімітована серія?</Label>
+                  <ToggleSwitch
+                    enabled={formData.limitedEdition}
+                    setEnabled={(value) =>
+                      handleChange("limitedEdition", value)
+                    }
+                    label="Limited Edition"
+                  />
+                </div>
+              </ComponentCard>
+            </div>
+
+            <div className="w-1/2 p-4">
+              <Label>Зображення</Label>
+              <DropzoneComponent onDrop={handleDrop} />
+              <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                {formData.media.map((item, i) => (
+                  <div key={`existing-${i}`} className="relative inline-block">
+                    <Image
+                      src={item.url}
+                      width={200}
+                      height={200}
+                      alt={`image-${i}`}
+                      className="rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(i)}
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                      title="Видалити зображення"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+
+                {images.map((file, i) => {
+                  const previewUrl = URL.createObjectURL(file);
+                  return (
+                    <div key={`new-${i}`} className="relative inline-block">
+                      <Image
+                        src={previewUrl}
+                        alt={file.name}
+                        width={200}
+                        height={200}
+                        className="rounded max-w-[200px] max-h-[200px]"
+                        onLoad={() => URL.revokeObjectURL(previewUrl)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteNewImage(i)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                        title="Видалити зображення"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="p-4">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-          disabled={loading}
-        >
-          {loading ? "Збереження..." : "Зберегти Зміни"}
-        </button>
+          <div className="p-4">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              disabled={loading}
+            >
+              {loading ? "Збереження..." : "Зберегти Зміни"}
+            </button>
 
-        {success && <div className="text-green-600 text-center mt-2">{success}</div>}
-        {error && <div className="text-red-600 text-center mt-2">{error}</div>}
-      </div>
-    </form>
+            {success && (
+              <div className="text-green-600 text-center mt-2">{success}</div>
+            )}
+            {error && (
+              <div className="text-red-600 text-center mt-2">{error}</div>
+            )}
+          </div>
+        </form>
+      )}
+    </div>
   );
 }

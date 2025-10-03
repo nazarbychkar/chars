@@ -20,7 +20,6 @@ export async function GET(
     }
 
     const product = await sqlGetProduct(id);
-    console.log(product);
 
     if (!product || product.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
