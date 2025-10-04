@@ -7,6 +7,7 @@ import Search from "@/components/shared/Search";
 import ShoppingBasket from "@/components/shared/ShoppingBasket";
 import { useAppContext } from "@/lib/GeneralProvider";
 import SidebarBasket from "./SidebarBasket";
+import SidebarSearch from "./SidebarSearch";
 
 export default function Header() {
   const {
@@ -16,6 +17,8 @@ export default function Header() {
     setIsSidebarOpen,
     isBasketOpen,
     setIsBasketOpen,
+    isSearchOpen,
+    setIsSearchOpen,
   } = useAppContext();
 
   const toggleTheme = () => setIsDark((prev) => !prev);
@@ -83,7 +86,19 @@ export default function Header() {
                 }
               />
             </button>
-            <Search />
+            <button onClick={() => setIsSearchOpen(true)}>
+              <Image
+                className="cursor-pointer"
+                height="32"
+                width="32"
+                alt="search icon"
+                src={
+                  isDark
+                    ? "/images/dark-theme/search-dark.png"
+                    : "/images/light-theme/search-light.png"
+                }
+              />
+            </button>
             <button
               className="cursor-pointer"
               onClick={() => setIsBasketOpen(!isBasketOpen)}
@@ -141,7 +156,19 @@ export default function Header() {
           </Link>
           {/* Right Icons */}
           <div className="flex gap-4">
-            <Search />
+            <button onClick={() => setIsSearchOpen(true)}>
+              <Image
+                height="32"
+                width="32"
+                alt="search icon"
+                src={
+                  isDark
+                    ? "/images/dark-theme/search-dark.png"
+                    : "/images/light-theme/search-light.png"
+                }
+              />
+            </button>
+
             <button onClick={() => setIsBasketOpen(!isBasketOpen)}>
               <Image
                 height="32"
@@ -168,6 +195,12 @@ export default function Header() {
         isDark={isDark}
         isOpen={isBasketOpen}
         setIsOpen={setIsBasketOpen}
+      />
+
+      <SidebarSearch
+        isDark={isDark}
+        isOpen={isSearchOpen}
+        setIsOpen={setIsSearchOpen}
       />
     </>
   );

@@ -279,6 +279,7 @@ export default function FinalCard() {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
+                autoComplete="name"
               />
 
               <label
@@ -294,6 +295,7 @@ export default function FinalCard() {
                 className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
               />
 
               <label
@@ -306,10 +308,13 @@ export default function FinalCard() {
                 type="tel"
                 id="phone"
                 placeholder="Ваш телефон"
+                pattern="^\+?\d{10,15}$"
+                title="Введіть номер телефону у форматі +380xxxxxxxxx"
                 className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 required
+                autoComplete="tel"
               />
 
               {/* Add delivery method, city, and post office fields */}
@@ -345,6 +350,7 @@ export default function FinalCard() {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 required
+                autoComplete="address-level2"
               />
 
               <label
@@ -392,7 +398,7 @@ export default function FinalCard() {
               {success && <p className="text-green-600 mt-2">{success}</p>}
             </form>
 
-            <div className="flex flex-col gap-4 w-1/4">
+            <div className="w-full sm:w-1/4 px-4 sm:px-0 flex flex-col gap-4">
               {items.length === 0 ? (
                 <p>Ваш кошик порожній</p>
               ) : (

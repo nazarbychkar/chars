@@ -26,10 +26,10 @@ export default function SidebarBasket({
       )}
 
       <div
-        className={`fixed top-0 left-0 h-full w-full sm:w-4/5 sm:max-w-md ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-4/5 sm:max-w-md ${
           isDark ? "bg-stone-900" : "bg-stone-100"
         } shadow-md z-40 transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "translate-x-full"
         } overflow-y-auto`}
       >
         <nav className="flex flex-col p-4 sm:p-6 space-y-6 text-base sm:text-lg">

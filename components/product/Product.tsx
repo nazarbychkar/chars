@@ -32,6 +32,28 @@ export default function Product() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showToast, setShowToast] = useState(false);
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert("Оберіть розмір");
+      return;
+    }
+    if (!product) {
+      alert("Product not loaded");
+      return;
+    }
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      size: selectedSize,
+      quantity,
+      imageUrl: images[0]?.url || "",
+    });
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   useEffect(() => {
     async function fetchProduct() {
@@ -154,26 +176,20 @@ export default function Product() {
           {/* Add to Cart Button */}
           {/* Add to Cart Button */}
           <div
-            onClick={() => {
-              if (!selectedSize) {
-                alert("Оберіть розмір");
-                return;
-              }
-              addItem({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                size: selectedSize,
-                quantity,
-                imageUrl: images[0]?.url || "",
-              });
-            }}
+            onClick={handleAddToCart}
             className={`w-full sm:w-auto text-center ${
               isDark ? "bg-white text-black" : "bg-black text-white"
             } p-3 text-xl md:text-2xl font-medium font-['Inter'] uppercase tracking-tight cursor-pointer`}
           >
             в кошик
           </div>
+
+          {/* Toast */}
+          {showToast && (
+            <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-black text-white px-5 py-3 rounded shadow-lg z-50">
+              Товар додано до кошика!
+            </div>
+          )}
 
           {/* Description Section */}
           <div className="w-full md:w-[522px]">
