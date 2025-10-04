@@ -1,28 +1,45 @@
 "use client";
-// TODO: edit final card when order is pushed
+
 import { useState } from "react";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import Image from "next/image";
+import Link from "next/link";
+import { Swiper, SwiperSlide } from "swiper/react";
+// import { Navigation } from "swiper";
+import "swiper/css";
+import "swiper/css/navigation";
+import { Navigation } from "swiper/modules";
+import { Mousewheel } from "swiper/modules";
+import "swiper/css/scrollbar";
 
 export default function FinalCard() {
   const { isDark } = useAppContext();
-  const { items, updateQuantity, removeItem } = useBasket();
+  const { items, updateQuantity, removeItem, clearBasket } = useBasket();
 
-  // State for form fields
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  // const [comment, setComment] = useState("");
-
-  // For required delivery fields - adjust as needed
-  const [deliveryMethod, setDeliveryMethod] = useState("pickup"); // example default
+  const [deliveryMethod, setDeliveryMethod] = useState("pickup");
   const [city, setCity] = useState("");
   const [postOffice, setPostOffice] = useState("");
+  const [comment, setComment] = useState("");
 
-  // Optional: Loading / error / success states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const [submittedOrder, setSubmittedOrder] = useState<{
+    items: typeof items;
+    customer: {
+      name: string;
+      email?: string;
+      phone: string;
+      city: string;
+      postOffice: string;
+      comment?: string;
+    };
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +65,6 @@ export default function FinalCard() {
       return;
     }
 
-    // Prepare items for API (mapping to product_id etc.)
     const apiItems = items.map((item) => ({
       product_id: item.id,
       size: item.size,
@@ -67,8 +83,8 @@ export default function FinalCard() {
           delivery_method: deliveryMethod,
           city,
           post_office: postOffice,
+          comment,
           items: apiItems,
-          // comment, // if your API supports comment, add it
         }),
       });
 
@@ -77,8 +93,21 @@ export default function FinalCard() {
         setError(data.error || "Помилка при оформленні замовлення.");
       } else {
         const data = await response.json();
+
+        setSubmittedOrder({
+          items: [...items],
+          customer: {
+            name: customerName,
+            email,
+            phone: phoneNumber,
+            city,
+            postOffice,
+            // comment, // якщо буде
+          },
+        });
+
         setSuccess(`Замовлення успішно створено! Номер: ${data.orderId}`);
-        // Optionally clear basket and form here
+        clearBasket();
       }
     } catch (err) {
       setError("Помилка мережі. Спробуйте пізніше.");
@@ -87,121 +116,254 @@ export default function FinalCard() {
     }
   };
 
-  return (
-    <section className="max-w-[1922px] w-full mx-auto relative overflow-hidden px-4 sm:px-6 lg:px-8">
-      <div className="flex flex-col sm:flex-row justify-center gap-10 sm:gap-50">
-        <div className="mt-10 text-center sm:text-left text-3xl sm:text-6xl font-normal font-['Inter'] leading-snug sm:leading-[64.93px] mb-5">
-          Заповніть всі поля
+  // ⬇️ When order is completed
+  if (success && submittedOrder) {
+    const { items: orderItems, customer } = submittedOrder;
+
+    return (
+      <section className="max-w-[1280px] w-full mx-auto p-6 flex flex-col items-center gap-10">
+        {/* Heading */}
+        <div className="text-center">
+          <h1 className="text-5xl sm:text-6xl font-normal leading-tight">
+            <span className="text-stone-500">Дякуємо за </span>
+            <span className="text-neutral-900">ваше замовлення!</span>
+          </h1>
         </div>
 
-        <div className="w-full sm:w-1/4"></div>
-      </div>
+        {/* Layout container */}
+        <div className="flex flex-col md:flex-row justify-around gap-10 w-full">
+          {/* Vertical Swiper */}
+          <div className="w-full md:w-1/2 h-[450px]">
+            <Swiper
+              direction="vertical"
+              modules={[Mousewheel]}
+              mousewheel
+              spaceBetween={0}
+              slidesPerView={2.5}
+              className="h-full"
+            >
+              {orderItems.map((item: any, idx: number) => (
+                <SwiperSlide key={`${item.id}-${item.size}-${idx}`}>
+                  <div className="flex gap-4 items-start p-4 border border-stone-200 rounded">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-20 h-28 object-cover rounded"
+                    />
+                    <div className="flex flex-col flex-1 gap-1">
+                      <div className="text-base font-['Inter'] text-stone-900">
+                        {item.name}
+                      </div>
+                      <div className="text-base text-stone-900 font-['Helvetica']">
+                        {item.size}
+                      </div>
+                      <div className="text-base text-stone-900 font-['Helvetica']">
+                        Кількість: {item.quantity}x
+                      </div>
+                      <div className="text-base text-zinc-600 font-['Helvetica']">
+                        {(item.price * item.quantity).toFixed(2)} ₴
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
 
-      <div className="flex flex-col sm:flex-row justify-center gap-10 sm:gap-50">
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-5 w-full sm:w-1/3"
-          noValidate
-        >
-          <label
-            htmlFor="name"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Ім’я *
-          </label>
-          <input
-            type="text"
-            id="name"
-            placeholder="Ваше імʼя"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            required
+          {/* Customer Info */}
+          {/* Title */}
+          <div className="flex flex-col justify-between gap-3">
+            <div className="text-3xl text-stone-900 font-normal text-center">
+              Дані клієнта
+            </div>
+            <div className="text-xl font-normal leading-loose w-full md:w-1/3 text-left">
+              <p className="flex justify-start gap-3">
+                <span className="text-stone-900">Ім’я: </span>
+                <span className="text-neutral-400">{customer.name}</span>
+              </p>
+              {customer.email && (
+                <p className="flex justify-start gap-3">
+                  <span className="text-stone-900">Email: </span>
+                  <span className="text-neutral-400">{customer.email}</span>
+                </p>
+              )}
+              <p className="flex justify-start gap-3">
+                <span className="text-stone-900">Телефон: </span>
+                <span className="text-neutral-400">{customer.phone}</span>
+              </p>
+              <p className="flex justify-start gap-3">
+                <span className="text-stone-900">Місто: </span>
+                <span className="text-neutral-400">{customer.city}</span>
+              </p>
+              <p className="flex justify-start gap-3">
+                <span className="text-stone-900">Відділення: </span>
+                <span className="text-neutral-400">{customer.postOffice}</span>
+              </p>
+              {customer.comment && (
+                <p className="flex justify-start gap-3">
+                  <span className="text-stone-900">Коментар: </span>
+                  <span className="text-neutral-400">{customer.comment}</span>
+                </p>
+              )}
+            </div>
+            {/* Back to home */}
+            <Link
+              href="/"
+              className="w-80 h-16 bg-stone-900 inline-flex justify-center items-center gap-2.5 p-2.5 rounded"
+            >
+              <span className="text-white text-xl font-medium font-['Inter'] tracking-tight leading-snug">
+                На головну
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="max-w-[1922px] w-full mx-auto relative overflow-hidden px-4 sm:px-6 lg:px-8">
+      {items.length == 0 ? (
+        <div className="py-12 px-4 sm:py-20 flex flex-col items-center gap-10 sm:gap-14 w-full max-w-2xl mx-auto">
+          <Image
+            src={`${
+              isDark
+                ? "/images/dark-theme/big-basket-dark.png"
+                : "/images/light-theme/big-basket-light.png"
+            }`}
+            alt="shopping basket icon"
+            width={200}
+            height={200}
           />
+          <span className="text-center text-2xl sm:text-4xl md:text-6xl font-normal font-['Inter'] leading-tight sm:leading-[64.93px]">
+            Ваш кошик порожній
+          </span>
+          <Link
+            href="/catalog"
+            className={`${
+              isDark
+                ? "bg-stone-100 text-stone-900"
+                : "bg-stone-900 text-stone-100"
+            } w-full sm:w-80 h-14 sm:h-16 px-6 py-3 inline-flex items-center justify-center gap-2.5 text-base sm:text-xl text-center `}
+          >
+            Продовжити покупки
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col sm:flex-row justify-center gap-10 sm:gap-50">
+            <div className="mt-10 text-center sm:text-left text-3xl sm:text-6xl font-normal font-['Inter'] leading-snug sm:leading-[64.93px] mb-5">
+              Заповніть всі поля
+            </div>
 
-          <label
-            htmlFor="email"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            placeholder="Ваш Email"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            <div className="w-full sm:w-1/4"></div>
+          </div>
 
-          <label
-            htmlFor="phone"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Телефон *
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            placeholder="Ваш телефон"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            required
-          />
+          <div className="flex flex-col sm:flex-row justify-center gap-10 sm:gap-50">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-5 w-full sm:w-1/3"
+              noValidate
+            >
+              <label
+                htmlFor="name"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Ім’я *
+              </label>
+              <input
+                type="text"
+                id="name"
+                placeholder="Ваше імʼя"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                required
+              />
 
-          {/* Add delivery method, city, and post office fields */}
-          <label
-            htmlFor="deliveryMethod"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Спосіб доставки *
-          </label>
-          <select
-            id="deliveryMethod"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={deliveryMethod}
-            onChange={(e) => setDeliveryMethod(e.target.value)}
-            required
-          >
-            <option value="">Оберіть спосіб доставки</option>
-            <option value="nova_poshta">Нова Пошта</option>
-            <option value="ukrposhta">Укрпошта</option>
-          </select>
+              <label
+                htmlFor="email"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                placeholder="Ваш Email"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
 
-          <label
-            htmlFor="city"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Місто *
-          </label>
-          <input
-            type="text"
-            id="city"
-            placeholder="Ваше місто"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            required
-          />
+              <label
+                htmlFor="phone"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Телефон *
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                placeholder="Ваш телефон"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                required
+              />
 
-          <label
-            htmlFor="postOffice"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Відділення пошти *
-          </label>
-          <input
-            type="text"
-            id="postOffice"
-            placeholder="Номер відділення"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={postOffice}
-            onChange={(e) => setPostOffice(e.target.value)}
-            required
-          />
-          {/* TODO: add comment later */}
-          {/* <label
+              {/* Add delivery method, city, and post office fields */}
+              <label
+                htmlFor="deliveryMethod"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Спосіб доставки *
+              </label>
+              <select
+                id="deliveryMethod"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={deliveryMethod}
+                onChange={(e) => setDeliveryMethod(e.target.value)}
+                required
+              >
+                <option value="">Оберіть спосіб доставки</option>
+                <option value="nova_poshta">Нова Пошта</option>
+                <option value="ukrposhta">Укрпошта</option>
+              </select>
+
+              <label
+                htmlFor="city"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Місто *
+              </label>
+              <input
+                type="text"
+                id="city"
+                placeholder="Ваше місто"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                required
+              />
+
+              <label
+                htmlFor="postOffice"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Відділення пошти *
+              </label>
+              <input
+                type="text"
+                id="postOffice"
+                placeholder="Номер відділення"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={postOffice}
+                onChange={(e) => setPostOffice(e.target.value)}
+                required
+              />
+              {/* TODO: add comment later */}
+              {/* <label
             htmlFor="comment"
             className="text-xl sm:text-2xl font-normal font-['Arial']"
           >
@@ -216,92 +378,105 @@ export default function FinalCard() {
             onChange={(e) => setComment(e.target.value)}
           /> */}
 
-          <button
-            className={`${
-              isDark ? "bg-white text-black" : "bg-black text-white"
-            } p-4 sm:p-5 rounded mt-3 font-semibold`}
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Відправка..." : "Відправити"}
-          </button>
-
-          {error && <p className="text-red-500 mt-2">{error}</p>}
-          {success && <p className="text-green-600 mt-2">{success}</p>}
-        </form>
-
-        <div className="flex flex-col gap-4 w-1/4">
-          {items.length === 0 ? (
-            <p>Ваш кошик порожній</p>
-          ) : (
-            items.map((item) => (
-              <div
-                key={`${item.id}-${item.size}`}
-                className="w-full rounded p-4 flex flex-col sm:flex-row gap-4 sm:gap-3 items-center"
+              <button
+                className={`${
+                  isDark ? "bg-white text-black" : "bg-black text-white"
+                } p-4 sm:p-5 rounded mt-3 font-semibold`}
+                type="submit"
+                disabled={loading}
               >
-                <img
-                  className="w-24 h-32 sm:w-28 sm:h-40 object-cover rounded"
-                  src={item.imageUrl}
-                  alt={item.name}
-                />
-                <div className="flex flex-col flex-1 gap-1">
-                  <div className="text-base font-normal font-['Inter'] leading-normal">
-                    {item.name}
-                  </div>
-                  <div className="text-zinc-600 text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-                    {item.price} ₴
-                  </div>
-                  <div className="text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-                    {item.size}
-                  </div>
+                {loading ? "Відправка..." : "Відправити"}
+              </button>
 
-                  <div className="flex justify-start items-center gap-3 mt-auto">
-                    <div className="w-20 h-9 border border-neutral-400/60 flex justify-around items-center rounded">
-                      <button
-                        className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
-                        onClick={() =>
-                          updateQuantity(item.id, item.size, item.quantity + 1)
-                        }
-                      >
-                        +
-                      </button>
+              {error && <p className="text-red-500 mt-2">{error}</p>}
+              {success && <p className="text-green-600 mt-2">{success}</p>}
+            </form>
+
+            <div className="flex flex-col gap-4 w-1/4">
+              {items.length === 0 ? (
+                <p>Ваш кошик порожній</p>
+              ) : (
+                items.map((item) => (
+                  <div
+                    key={`${item.id}-${item.size}`}
+                    className="w-full rounded p-4 flex flex-col sm:flex-row gap-4 sm:gap-3 items-center"
+                  >
+                    <img
+                      className="w-24 h-32 sm:w-28 sm:h-40 object-cover rounded"
+                      src={item.imageUrl}
+                      alt={item.name}
+                    />
+                    <div className="flex flex-col flex-1 gap-1">
                       <div className="text-base font-normal font-['Inter'] leading-normal">
-                        {item.quantity}
+                        {item.name}
                       </div>
-                      <button
-                        className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
-                        onClick={() =>
-                          updateQuantity(item.id, item.size, item.quantity - 1)
-                        }
-                        disabled={item.quantity <= 1}
-                      >
-                        -
-                      </button>
+                      <div className="text-zinc-600 text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
+                        {item.price} ₴
+                      </div>
+                      <div className="text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
+                        {item.size}
+                      </div>
+
+                      <div className="flex justify-start items-center gap-3 mt-auto">
+                        <div className="w-20 h-9 border border-neutral-400/60 flex justify-around items-center rounded">
+                          <button
+                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
+                            onClick={() =>
+                              updateQuantity(
+                                item.id,
+                                item.size,
+                                item.quantity + 1
+                              )
+                            }
+                          >
+                            +
+                          </button>
+                          <div className="text-base font-normal font-['Inter'] leading-normal">
+                            {item.quantity}
+                          </div>
+                          <button
+                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
+                            onClick={() =>
+                              updateQuantity(
+                                item.id,
+                                item.size,
+                                item.quantity - 1
+                              )
+                            }
+                            disabled={item.quantity <= 1}
+                          >
+                            -
+                          </button>
+                        </div>
+                        <button
+                          className="text-red-500 font-semibold"
+                          onClick={() => removeItem(item.id, item.size)}
+                        >
+                          Видалити
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      className="text-red-500 font-semibold"
-                      onClick={() => removeItem(item.id, item.size)}
-                    >
-                      Видалити
-                    </button>
                   </div>
+                ))
+              )}
+
+              {/* Total price container */}
+              <div className="p-5 border-t flex justify-between text-base sm:text-2xl font-normal font-['Arial'] mt-4">
+                <div>Всього</div>
+                <div className="font-['Helvetica'] leading-relaxed tracking-wide">
+                  {items
+                    .reduce(
+                      (total, item) => total + item.price * item.quantity,
+                      0
+                    )
+                    .toFixed(2)}{" "}
+                  ₴
                 </div>
               </div>
-            ))
-          )}
-
-          {/* Total price container */}
-          <div className="p-5 border-t flex justify-between text-base sm:text-2xl font-normal font-['Arial'] mt-4">
-            <div>Всього</div>
-            <div className="font-['Helvetica'] leading-relaxed tracking-wide">
-              {items
-                .reduce((total, item) => total + item.price * item.quantity, 0)
-                .toFixed(2)}{" "}
-              ₴
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </section>
   );
 }

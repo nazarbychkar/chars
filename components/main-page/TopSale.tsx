@@ -7,6 +7,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import Link from "next/link";
 
+
 interface Product {
   id: number;
   name: string;
