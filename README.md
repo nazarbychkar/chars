@@ -36,3 +36,18 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 # chars
 
+TODO:
+- monopay
+- poshta
+- add comment field to order
+- add colour field to product
+- Думаю додати сортування замовлень по статусах
+- Думаю зміну статуса буде зручніше зробити модальним вікном а не окремою сторінкою. Окремою сторінкою нехай буде детальна інформація про замвлення
+- пофіксить світлини на серві
+
+.env:
+DATABASE_URL="?"
+ADMIN_USER="?"
+ADMIN_PASS="?"
+BOT_TOKEN="?"
+CHAT_ID="?"
