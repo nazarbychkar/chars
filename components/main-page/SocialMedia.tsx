@@ -16,12 +16,12 @@ export default function SocialMedia() {
         <div className="flex justify-center gap-4 sm:gap-7">
           <img
             className="w-44 h-[300px] sm:w-80 sm:h-[700.25px] rounded-[24px] sm:rounded-[46.43px]"
-            src="https://placehold.co/323x700"
+            src="/images/social-media-0.png"
             alt="image-1"
           />
           <img
             className="w-44 h-[300px] sm:w-80 sm:h-[709.92px] rounded-[24px] sm:rounded-[53.20px]"
-            src="https://placehold.co/327x710"
+            src="/images/social-media-1.png"
             alt="image-2"
           />
         </div>

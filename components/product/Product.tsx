@@ -107,26 +107,40 @@ export default function Product() {
             <>
               {/* Prev */}
               <button
-                className="text-4xl md:text-6xl absolute top-4 left-4 bg-white rounded-full p-2 shadow-md"
+                className="text-4xl md:text-6xl absolute top-1/64 left-1/16 rounded-full shadow-md cursor-pointer"
                 onClick={() =>
                   setActiveImageIndex((prev) =>
                     prev === 0 ? images.length - 1 : prev - 1
                   )
                 }
               >
-                {"<"}
+                <img
+                  src={`${
+                    isDark
+                      ? "/images/dark-theme/slider-button-left.png"
+                      : "/images/light-theme/slider-button-left.png"
+                  }`}
+                  alt="Previous"
+                />
               </button>
 
               {/* Next */}
               <button
-                className="text-4xl md:text-6xl absolute top-4 right-4 bg-white rounded-full p-2 shadow-md"
+                className="text-4xl md:text-6xl absolute top-1/64 right-1/16 rounded-full shadow-md cursor-pointer"
                 onClick={() =>
                   setActiveImageIndex((prev) =>
                     prev === images.length - 1 ? 0 : prev + 1
                   )
                 }
               >
-                {">"}
+                <img
+                  src={`${
+                    isDark
+                      ? "/images/dark-theme/slider-button-right.png"
+                      : "/images/light-theme/slider-button-right.png"
+                  }`}
+                  alt="Next"
+                />
               </button>
             </>
           )}
@@ -173,7 +187,6 @@ export default function Product() {
             ))}
           </div>
 
-          {/* Add to Cart Button */}
           {/* Add to Cart Button */}
           <div
             onClick={handleAddToCart}
