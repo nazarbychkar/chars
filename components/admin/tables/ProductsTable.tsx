@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "../ui/table";
 import Link from "next/link";
+import Pagination from "./Pagination";
 
 const SIZE_MAP: Record<string, string> = {
   "1": "XL",
@@ -34,6 +35,23 @@ interface Product {
 export default function ProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 10;
+
+  const totalPages = Math.ceil(products.length / productsPerPage);
+
+  const paginatedProducts = products.slice(
+    (currentPage - 1) * productsPerPage,
+    currentPage * productsPerPage
+  );
+  // Reset to first page if orders are changed (e.g., after deletion)
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [products]);
 
   async function handleDelete(productId: number) {
     if (!confirm("Ви впевнені, що хочете видалити цей продукт?")) return;
@@ -166,7 +184,7 @@ export default function ProductsTable() {
                   </TableCell>
                 </TableRow>
               ) : (
-                products.map((product) => (
+                paginatedProducts.map((product) => (
                   <TableRow
                     key={product.id}
                     className="hover:bg-gray-50 dark:hover:bg-white/[0.03]"
@@ -221,6 +239,17 @@ export default function ProductsTable() {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {!loading && products.length > productsPerPage && (
+            <div className="flex justify-end px-5 py-4 border-t border-gray-100 dark:border-white/[0.05]">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

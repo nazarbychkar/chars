@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "../ui/table";
 import Link from "next/link";
+import Pagination from "./Pagination";
 
 interface Order {
   id: number;
@@ -25,6 +26,23 @@ interface Order {
 export default function OrdersTable() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10;
+
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
+
+  const paginatedOrders = orders.slice(
+    (currentPage - 1) * ordersPerPage,
+    currentPage * ordersPerPage
+  );
+  // Reset to first page if orders are changed (e.g., after deletion)
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages || 1);
+    }
+  }, [orders]);
 
   async function handleDelete(orderId: number) {
     if (!confirm("Ви впевнені, що хочете видалити це замовлення?")) return;
@@ -153,7 +171,7 @@ export default function OrdersTable() {
                   </TableCell>
                 </TableRow>
               ) : (
-                orders.map((order) => (
+                paginatedOrders.map((order) => (
                   <TableRow
                     key={order.id}
                     className="hover:bg-gray-50 dark:hover:bg-white/[0.03]"
@@ -201,6 +219,17 @@ export default function OrdersTable() {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {!loading && orders.length > ordersPerPage && (
+            <div className="flex justify-end px-5 py-4 border-t border-gray-100 dark:border-white/[0.05]">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
