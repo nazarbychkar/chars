@@ -13,6 +13,20 @@ import { Navigation } from "swiper/modules";
 import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
 
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  created_at: Date;
+  sizes: { size: string }[];
+  top_sale?: boolean;
+  limited_edition?: boolean;
+  season?: string;
+  category_name?: string;
+}
+
+
 export default function FinalCard() {
   const { isDark } = useAppContext();
   const { items, updateQuantity, removeItem, clearBasket } = useBasket();
@@ -142,7 +156,7 @@ export default function FinalCard() {
               slidesPerView={2.5}
               className="h-full"
             >
-              {orderItems.map((item: any, idx: number) => (
+              {orderItems.map((item, idx) => (
                 <SwiperSlide key={`${item.id}-${item.size}-${idx}`}>
                   <div className="flex gap-4 items-start p-4 border border-stone-200 rounded">
                     <img

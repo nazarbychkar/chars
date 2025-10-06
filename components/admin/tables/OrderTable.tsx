@@ -205,7 +205,7 @@ export default function OrdersTable() {
                         href={`/admin/orders/${order.id}/edit`}
                         className="inline-block rounded-md bg-blue-400 px-3 py-1 text-white text-sm hover:bg-blue-600 transition"
                       >
-                        Редагувати
+                        Змінити статус
                       </Link>
                       <button
                         onClick={() => handleDelete(order.id)}
