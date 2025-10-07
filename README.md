@@ -37,7 +37,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # chars
 
 TODO:
-- monopay
 - poshta
 - add comment field to order
 - add colour field to product
@@ -45,9 +44,11 @@ TODO:
 - Думаю зміну статуса буде зручніше зробити модальним вікном а не окремою сторінкою. Окремою сторінкою нехай буде детальна інформація про замвлення
 - пофіксить світлини на серві
 
+
 .env:
 DATABASE_URL="?"
 ADMIN_USER="?"
 ADMIN_PASS="?"
 BOT_TOKEN="?"
 CHAT_ID="?"
+PUBLIC_MONO_TOKEN="?"

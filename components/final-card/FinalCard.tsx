@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import Image from "next/image";
@@ -26,7 +26,6 @@ interface Product {
   category_name?: string;
 }
 
-
 export default function FinalCard() {
   const { isDark } = useAppContext();
   const { items, updateQuantity, removeItem, clearBasket } = useBasket();
@@ -38,6 +37,7 @@ export default function FinalCard() {
   const [city, setCity] = useState("");
   const [postOffice, setPostOffice] = useState("");
   const [comment, setComment] = useState("");
+  const [paymentType, setPaymentType] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +52,7 @@ export default function FinalCard() {
       city: string;
       postOffice: string;
       comment?: string;
+      paymentType: string;
     };
   } | null>(null);
 
@@ -86,7 +87,60 @@ export default function FinalCard() {
       price: item.price,
     }));
 
+    // Сума до оплати
+    const fullAmount = items.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
+    const amountToPay = paymentType === "prepay" ? 300 : fullAmount;
+
+    // Конвертуємо в копійки
+    const amountInKopecks = Math.round(amountToPay * 100);
+
+    // Формуємо замовлення для інвойсу
+    const basketOrder = items.map((item) => ({
+      name: item.name,
+      qty: item.quantity,
+      sum: Math.round(item.price * item.quantity * 100),
+      total: Math.round(item.price * item.quantity * 100),
+      unit: "шт.",
+      code: `${item.id}-${item.size}`,
+    }));
+
     try {
+      const invoiceRes = await fetch(
+        "https://api.monobank.ua/api/merchant/invoice/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Token": process.env.NEXT_PUBLIC_MONO_TOKEN!, // ЗБЕРЕЖИ У ENV
+          },
+          body: JSON.stringify({
+            amount: amountInKopecks,
+            ccy: 980,
+            merchantPaymInfo: {
+              reference: crypto.randomUUID(), // або інший унікальний ID
+              destination: "Оплата за замовлення",
+              comment: "Оплата за замовлення",
+              basketOrder,
+            },
+            redirectUrl: `http://localhost:3000/final`, // після оплати
+            webHookUrl: `http://localhost:3000/api/mono-webhook`, // для статусів
+            validity: 3600, // 1 година
+            paymentType: "debit",
+          }),
+        }
+      );
+
+      const invoiceData = await invoiceRes.json();
+
+      if (!invoiceRes.ok) {
+        throw new Error(invoiceData?.message || "Помилка створення інвойсу");
+      }
+
+      const { invoiceId, pageUrl } = invoiceData;
+
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,6 +152,8 @@ export default function FinalCard() {
           city,
           post_office: postOffice,
           comment,
+          payment_type: paymentType,
+          invoice_id: invoiceId, // додаємо!
           items: apiItems,
         }),
       });
@@ -108,20 +164,30 @@ export default function FinalCard() {
       } else {
         const data = await response.json();
 
-        setSubmittedOrder({
-          items: [...items],
-          customer: {
-            name: customerName,
-            email,
-            phone: phoneNumber,
-            city,
-            postOffice,
-            // comment, // якщо буде
-          },
-        });
+        localStorage.setItem(
+          "submittedOrder",
+          JSON.stringify({
+            items,
+            customer: {
+              name: customerName,
+              email,
+              phone: phoneNumber,
+              city,
+              postOffice,
+              comment,
+              paymentType,
+            },
+            invoiceId,
+          })
+        );
+        setTimeout(() => {
+          window.location.href = pageUrl;
+        }, 5000);
 
         setSuccess(`Замовлення успішно створено! Номер: ${data.orderId}`);
         clearBasket();
+
+        window.location.href = pageUrl;
       }
     } catch (err) {
       setError("Помилка мережі. Спробуйте пізніше.");
@@ -130,8 +196,16 @@ export default function FinalCard() {
     }
   };
 
+  useEffect(() => {
+    const storedOrder = localStorage.getItem("submittedOrder");
+    if (storedOrder) {
+      setSubmittedOrder(JSON.parse(storedOrder));
+      // localStorage.removeItem("submittedOrder");
+    }
+  }, []);
+
   // ⬇️ When order is completed
-  if (success && submittedOrder) {
+  if (items.length == 0 && submittedOrder) {
     const { items: orderItems, customer } = submittedOrder;
 
     return (
@@ -383,20 +457,38 @@ export default function FinalCard() {
                 required
               />
               {/* TODO: add comment later */}
-              {/* <label
-            htmlFor="comment"
-            className="text-xl sm:text-2xl font-normal font-['Arial']"
-          >
-            Коментар
-          </label>
-          <input
-            type="text"
-            id="comment"
-            placeholder="Ваш коментар"
-            className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          /> */}
+              <label
+                htmlFor="comment"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Коментар
+              </label>
+              <input
+                type="text"
+                id="comment"
+                placeholder="Ваш коментар"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+
+              <label
+                htmlFor="paymentType"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                Спосіб оплати *
+              </label>
+              <select
+                id="paymentType"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value)}
+                required
+              >
+                <option value="">Оберіть спосіб оплати</option>
+                <option value="full">Повна оплата</option>
+                <option value="prepay">Передоплата 300 ₴</option>
+              </select>
 
               <button
                 className={`${

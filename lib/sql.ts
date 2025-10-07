@@ -148,7 +148,6 @@ export async function sqlGetProductsBySeason(season: string) {
   `;
 }
 
-
 // Create new product
 export async function sqlPostProduct(product: {
   name: string;
@@ -290,35 +289,46 @@ export async function sqlGetOrder(id: number) {
   };
 }
 
-// Create a new order
-export async function sqlPostOrder(order: {
+type OrderInput = {
   customer_name: string;
   phone_number: string;
   email?: string;
   delivery_method: string;
   city: string;
   post_office: string;
+  comment?: string;
+  payment_type: "prepay" | "full";
+  invoice_id: string;
+  payment_status: "pending" | "paid" | "canceled";
   items: {
     product_id: number;
     size: string;
     quantity: number;
     price: number;
   }[];
-}) {
+};
+
+export async function sqlPostOrder(order: OrderInput) {
+  // ⬇️ Insert into "orders" table
   const inserted = await sql`
     INSERT INTO orders (
       customer_name, phone_number, email,
-      delivery_method, city, post_office
+      delivery_method, city, post_office,
+      comment, payment_type, invoice_id, payment_status
     )
     VALUES (
       ${order.customer_name}, ${order.phone_number}, ${order.email || null},
-      ${order.delivery_method}, ${order.city}, ${order.post_office}
+      ${order.delivery_method}, ${order.city}, ${order.post_office},
+      ${order.comment || null}, ${order.payment_type}, ${order.invoice_id}, ${
+    order.payment_status
+  }
     )
     RETURNING id;
   `;
 
   const orderId = inserted[0].id;
 
+  // ⬇️ Insert each item into "order_items"
   for (const item of order.items) {
     await sql`
       INSERT INTO order_items (
@@ -402,6 +412,17 @@ export async function sqlPutOrderItem(
 export async function sqlDeleteOrderItem(id: number) {
   await sql`DELETE FROM order_items WHERE id = ${id};`;
   return { deleted: true };
+}
+
+export async function sqlUpdatePaymentStatus(
+  invoiceId: string,
+  status: string
+) {
+  await sql`
+    UPDATE orders
+    SET payment_status = ${status}
+    WHERE invoice_id = ${invoiceId};
+  `;
 }
 
 // =====================

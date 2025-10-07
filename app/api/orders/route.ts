@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sqlGetAllOrders, sqlPostOrder } from "@/lib/sql";
+import crypto from "crypto";
 
 // ==========================
 // GET /api/orders
@@ -18,21 +19,32 @@ export async function GET() {
 }
 
 // ==========================
-// Types
-// ==========================
 // POST /api/orders
 // ==========================
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
+    const {
+      customer_name,
+      phone_number,
+      email,
+      delivery_method,
+      city,
+      post_office,
+      comment,
+      payment_type, // "full" або "prepay"
+      items,
+    } = body;
+
     // ✅ Basic validation
     if (
-      !body.customer_name ||
-      !body.phone_number ||
-      !body.delivery_method ||
-      !body.city ||
-      !body.post_office
+      !customer_name ||
+      !phone_number ||
+      !delivery_method ||
+      !city ||
+      !post_office ||
+      !items?.length
     ) {
       return NextResponse.json(
         { error: "Missing required order fields" },
@@ -40,46 +52,103 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!Array.isArray(body.items) || body.items.length === 0) {
+    const fullAmount = items.reduce(
+      (total: number, item: any) => total + item.price * item.quantity,
+      0
+    );
+
+    const amountToPay = payment_type === "prepay" ? 300 : fullAmount;
+    const amountInKopecks = Math.round(amountToPay * 100);
+
+    const basketOrder = items.map((item: any) => ({
+      name: item.name,
+      qty: item.quantity,
+      sum: Math.round(item.price * item.quantity * 100),
+      total: Math.round(item.price * item.quantity * 100),
+      unit: "шт.",
+      code: `${item.product_id}-${item.size}`,
+    }));
+
+    const reference = crypto.randomUUID();
+
+    // ✅ Створення інвойсу Monobank
+    const monoRes = await fetch(
+      "https://api.monobank.ua/api/merchant/invoice/create",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Token": process.env.NEXT_PUBLIC_MONO_TOKEN!,
+        },
+        body: JSON.stringify({
+          amount: amountInKopecks,
+          ccy: 980,
+          merchantPaymInfo: {
+            reference,
+            destination: "Оплата замовлення",
+            comment: comment || "Оплата замовлення",
+            basketOrder,
+          },
+          redirectUrl: `http://localhost:3000/final`,
+          webHookUrl: `http://localhost:3000/api/mono-webhook`,
+          validity: 3600,
+          paymentType: "debit",
+        }),
+      }
+    );
+
+    const invoiceData = await monoRes.json();
+
+    if (!monoRes.ok) {
+      console.error("Monobank error:", invoiceData);
       return NextResponse.json(
-        { error: "Order must include at least one item" },
-        { status: 400 }
+        { error: "Не вдалося створити рахунок" },
+        { status: 500 }
       );
     }
 
-    // ✅ Save order to database
+    const { invoiceId, pageUrl } = invoiceData;
+
+    // ✅ Зберігання замовлення у БД
     const result = await sqlPostOrder({
-      customer_name: body.customer_name,
-      phone_number: body.phone_number,
-      email: body.email || null,
-      delivery_method: body.delivery_method,
-      city: body.city,
-      post_office: body.post_office,
-      items: body.items, // Array of { product_id, size, quantity, price }
+      customer_name,
+      phone_number,
+      email,
+      delivery_method,
+      city,
+      post_office,
+      comment,
+      payment_type,
+      invoice_id: invoiceId,
+      payment_status: "pending", // default
+      items,
     });
 
-    // ✅ Send Telegram notification
+    // ✅ Telegram повідомлення (опційно — можна перенести у webhook після оплати)
     const BOT_TOKEN = process.env.BOT_TOKEN;
     const CHAT_ID = process.env.CHAT_ID;
 
-    // Format order message
     const orderMessage = `
-🛒 <b>New Order Received!</b>
+🛒 <b>Нове замовлення (очікує оплату)</b>
 
-👤 <b>Name:</b> ${body.customer_name}
-📱 <b>Phone:</b> ${body.phone_number}
-📧 <b>Email:</b> ${body.email || "—"}
-🚚 <b>Delivery Method:</b> ${body.delivery_method}
-🏙️ <b>City:</b> ${body.city}
-🏤 <b>Post Office:</b> ${body.post_office}
+👤 <b>Ім’я:</b> ${customer_name}
+📱 <b>Тел:</b> ${phone_number}
+📧 <b>Email:</b> ${email || "—"}
+🚚 <b>Доставка:</b> ${delivery_method}
+🏙️ <b>Місто:</b> ${city}
+🏤 <b>Відділення:</b> ${post_office}
+💰 <b>Оплата:</b> ${
+      payment_type === "prepay" ? "Передплата (300 грн)" : "Повна оплата"
+    }
+🧾 <b>Сума:</b> ${amountToPay} грн
 
-📦 <b>Items:</b>
-${body.items
+📦 <b>Товари:</b>
+${items
   .map(
-    (item: { product_id: any; size: any; quantity: any; price: any; }, index: number) =>
-      `${index + 1}. Product ID: ${item.product_id}, Size: ${item.size}, Qty: ${
-        item.quantity
-      }, Price: ${item.price}`
+    (item: any, i: number) =>
+      `${i + 1}. ${item.name} | ${item.size} | x${item.quantity} | ${
+        item.price
+      } грн`
   )
   .join("\n")}
     `;
@@ -94,7 +163,7 @@ ${body.items
       }),
     });
 
-    return NextResponse.json({ orderId: result.orderId }, { status: 201 });
+    return NextResponse.json({ invoiceUrl: pageUrl, invoiceId: invoiceId });
   } catch (error) {
     console.error("[POST /orders]", error);
     return NextResponse.json(
