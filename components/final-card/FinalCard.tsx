@@ -6,10 +6,8 @@ import { useBasket } from "@/lib/BasketProvider";
 import Image from "next/image";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
-// import { Navigation } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
-import { Navigation } from "swiper/modules";
 import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
 
@@ -39,6 +37,14 @@ export default function FinalCard() {
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState("");
 
+  const [cities, setCities] = useState<string[]>([]); // Available cities
+  const [postOffices, setPostOffices] = useState<string[]>([]); // Available post offices
+  const [loadingCities, setLoadingCities] = useState<boolean>(false); // Loading state for cities
+  const [loadingPostOffices, setLoadingPostOffices] = useState<boolean>(false); // Loading state for post offices
+  const [filteredCities, setFilteredCities] = useState<string[]>([]); // Filtered cities list for autocomplete
+  const [cityListVisible, setCityListVisible] = useState(false);
+  const [postOfficeListVisible, setPostOfficeListVisible] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -55,6 +61,108 @@ export default function FinalCard() {
       paymentType: string;
     };
   } | null>(null);
+
+  useEffect(() => {
+    // Fetch available cities when delivery method changes to Nova Poshta
+    if (deliveryMethod === "nova_poshta") {
+      setLoadingCities(true);
+
+      // Fetch cities with `fetch`
+      fetch("https://api.novaposhta.ua/v2.0/json/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY,
+          modelName: "AddressGeneral",
+          calledMethod: "getCities",
+          methodProperties: {
+            FindByString: city, // Replace with a dynamic city string if necessary
+            limit: 20,
+          },
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const cityData = data.data || [];
+          setCities(cityData.map((city: any) => city.Description));
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching cities:", error);
+          setError("Failed to load cities.");
+        })
+        .finally(() => {
+          setLoadingCities(false);
+        });
+    }
+  }, [deliveryMethod]);
+
+  useEffect(() => {
+    // Filter the cities based on the current input
+    setFilteredCities(
+      cities.filter((cityOption) =>
+        cityOption.toLowerCase().includes(city.toLowerCase())
+      )
+    );
+  }, [city, cities]); // Re-filter cities whenever `city` or `cities` changes
+
+  useEffect(() => {
+    // Fetch available post offices when a city is selected
+    if (city) {
+      setLoadingPostOffices(true);
+
+      // Fetch post offices with `fetch`
+      fetch("https://api.novaposhta.ua/v2.0/json/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY, // Replace with your actual API Key
+          modelName: "AddressGeneral",
+          calledMethod: "getWarehouses",
+          methodProperties: {
+            CityName: city, // Use the selected city
+            FindByString: postOffice,
+            limit: 20,
+          },
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const postOfficeData = data.data || [];
+          setPostOffices(postOfficeData.map((post: any) => post.Description));
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching post offices:", error);
+          setError("Failed to load post offices.");
+        })
+        .finally(() => {
+          setLoadingPostOffices(false);
+        });
+    }
+  }, [city]);
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCity(e.target.value);
+    setCityListVisible(true); // Show the city list while typing
+  };
+
+    const handlePostOfficeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPostOffice(e.target.value);
+    setPostOfficeListVisible(true); // Show the post office list while typing
+  };
+   const handleCitySelect = (cityOption: string) => {
+    setCity(cityOption);
+    setCityListVisible(false); // Hide the city list after selecting an option
+  };
+  const handlePostOfficeSelect = (postOfficeOption: string) => {
+    setPostOffice(postOfficeOption);
+    setPostOfficeListVisible(false); // Hide the post office list after selecting an option
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +190,7 @@ export default function FinalCard() {
 
     const apiItems = items.map((item) => ({
       product_id: item.id,
+      product_name: item.name,
       size: item.size,
       quantity: item.quantity,
       price: item.price,
@@ -424,39 +533,87 @@ export default function FinalCard() {
                 <option value="ukrposhta">Укрпошта</option>
               </select>
 
-              <label
-                htmlFor="city"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
-              >
-                Місто *
-              </label>
-              <input
-                type="text"
-                id="city"
-                placeholder="Ваше місто"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-                autoComplete="address-level2"
-              />
+              {deliveryMethod === "nova_poshta" && (
+                <>
+                  <div>
+                    <label
+                      htmlFor="city"
+                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                    >
+                      Місто *
+                    </label>
+                    <input
+                      type="text"
+                      id="city"
+                      value={city}
+                      onChange={handleCityChange} // Update city on input change
+                      placeholder="Введіть назву міста"
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                      required
+                    />
+                    {loadingCities ? (
+                      <p>Завантаження міст...</p>
+                    ) : ( cityListVisible &&
+                      <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
+                        <ul className="list-none p-0">
+                          {filteredCities.map((cityOption, idx) => (
+                            <li
+                              key={idx}
+                              className="p-3 cursor-pointer hover:bg-gray-200"
+                              onClick={() => handleCitySelect(cityOption)} // Set city on click
+                            >
+                              {cityOption}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
-              <label
-                htmlFor="postOffice"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
-              >
-                Відділення пошти *
-              </label>
-              <input
-                type="text"
-                id="postOffice"
-                placeholder="Номер відділення"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-                value={postOffice}
-                onChange={(e) => setPostOffice(e.target.value)}
-                required
-              />
-              {/* TODO: add comment later */}
+                  {/* Post Office Input with Autocomplete */}
+                  <div>
+                    <label
+                      htmlFor="postOffice"
+                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                    >
+                      Відділення *
+                    </label>
+                    <input
+                      type="text"
+                      id="postOffice"
+                      value={postOffice}
+                      onChange={handlePostOfficeChange} // Update post office on input change
+                      placeholder="Введіть назву відділення"
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                      required
+                    />
+                    {loadingPostOffices ? (
+                      <p>Завантаження відділень...</p>
+                    ) : ( postOfficeListVisible &&
+                      <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
+                        <ul className="list-none p-0">
+                          {postOffices
+                            .filter((postOfficeOption) =>
+                              postOfficeOption
+                                .toLowerCase()
+                                .includes(postOffice.toLowerCase())
+                            )
+                            .map((postOfficeOption, idx) => (
+                              <li
+                                key={idx}
+                                className="p-3 cursor-pointer hover:bg-gray-200"
+                                onClick={() => handlePostOfficeSelect(postOfficeOption)} // Set post office on click
+                              >
+                                {postOfficeOption}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
               <label
                 htmlFor="comment"
                 className="text-xl sm:text-2xl font-normal font-['Arial']"

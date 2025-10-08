@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     const CHAT_ID = process.env.CHAT_ID;
 
     const orderMessage = `
-🛒 <b>Нове замовлення (очікує оплату)</b>
+🛒 <b>Нове замовлення (оплачено)</b>
 
 👤 <b>Ім’я:</b> ${customer_name}
 📱 <b>Тел:</b> ${phone_number}
@@ -146,12 +146,14 @@ export async function POST(req: NextRequest) {
 ${items
   .map(
     (item: any, i: number) =>
-      `${i + 1}. ${item.name} | ${item.size} | x${item.quantity} | ${
+      `${i + 1}. ${item.product_name} | ${item.size} | x${item.quantity} | ${
         item.price
       } грн`
   )
   .join("\n")}
     `;
+
+    console.log(items)
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: "POST",
