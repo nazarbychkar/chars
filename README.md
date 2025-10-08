@@ -37,12 +37,12 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # chars
 
 TODO:
-- poshta
-- add comment field to order
 - add colour field to product
 - Думаю додати сортування замовлень по статусах
 - Думаю зміну статуса буде зручніше зробити модальним вікном а не окремою сторінкою. Окремою сторінкою нехай буде детальна інформація про замвлення
 - пофіксить світлини на серві
+- пофіксить пнгшки
+- Зжалися картиники соц мережі в моб версіях
 
 
 .env:

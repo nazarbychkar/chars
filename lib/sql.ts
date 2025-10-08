@@ -26,6 +26,7 @@ export async function sqlGetAllProducts() {
       p.limited_edition,
       p.season,
       p.category_id,
+      p.color,
       c.name AS category_name,
       p.created_at,
       COALESCE(
@@ -145,6 +146,16 @@ export async function sqlGetProductsBySeason(season: string) {
     WHERE p.season = ${season}
     GROUP BY p.id, c.name
     ORDER BY p.id DESC;
+  `;
+}
+
+// Fetch all distinct colors from the database
+export async function sqlGetAllColors() {
+  return await sql`
+    SELECT DISTINCT color
+    FROM products
+    WHERE color IS NOT NULL
+    ORDER BY color;
   `;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useEffect } from "react";
 
 interface SidebarFilterProps {
   isOpen: boolean;
@@ -16,6 +16,9 @@ interface SidebarFilterProps {
   maxPrice: number | null;
   setMinPrice: React.Dispatch<React.SetStateAction<number | null>>;
   setMaxPrice: React.Dispatch<React.SetStateAction<number | null>>;
+  selectedColors: string[];
+  setSelectedColors: React.Dispatch<React.SetStateAction<string[]>>;
+  colors: string[];
 }
 
 export default function SidebarFilter({
@@ -32,6 +35,9 @@ export default function SidebarFilter({
   maxPrice,
   setMinPrice,
   setMaxPrice,
+  selectedColors,
+  setSelectedColors,
+  colors,
 }: SidebarFilterProps) {
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? null : index);
@@ -44,6 +50,16 @@ export default function SidebarFilter({
       prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
     );
   };
+
+  const toggleColor = (color: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
+  };
+
+  useEffect(() => {
+    console.log("Selected colors updated:", selectedColors);
+  }, [selectedColors]);
 
   return (
     <div className="relative z-50">
@@ -143,43 +159,37 @@ export default function SidebarFilter({
             )}
           </div>
 
-          {/* Other Accordions (Optional placeholders) */}
-          {[["Колір"]].map((section, i) => {
-            const index = i + 2; // Start at 2
-            return (
-              <div
-                key={index}
-                className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition"
-              >
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleAccordion(index)}
-                >
-                  <span className="text-xl sm:text-2xl uppercase">
-                    {section[0]}
-                  </span>
-                  <span className="font-semibold text-xl sm:text-2xl">
-                    {openAccordion === index ? "−" : "+"}
-                  </span>
-                </div>
+          {/* Accordion: Color */}
+          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => toggleAccordion(3)}
+            >
+              <span className="text-xl sm:text-2xl uppercase">Колір</span>
+              <span className="font-semibold text-xl sm:text-2xl">
+                {openAccordion === 3 ? "−" : "+"}
+              </span>
+            </div>
 
-                {openAccordion === index && (
-                  <div className="pl-4 mt-2 space-y-2">
-                    {/* Placeholder items */}
-                    {[1, 2, 3].map((n) => (
-                      <Link
-                        key={n}
-                        href="#"
-                        className="block hover:text-[#8C7461] text-base sm:text-lg"
-                      >
-                        {section[0]} {n}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+            {openAccordion === 3 && (
+              <div className="pl-4 mt-2 space-y-2">
+                {colors.map((color, index) => (
+                  <label
+                    key={index} // Use the color string as the key
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedColors.includes(color)}
+                      onChange={() => toggleColor(color)}
+                      className="form-checkbox h-4 w-4 text-[#8C7461]"
+                    />
+                    <span className="text-base sm:text-lg">{color}</span>
+                  </label>
+                ))}
               </div>
-            );
-          })}
+            )}
+          </div>
 
           {/* Accordion: Price */}
           <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">

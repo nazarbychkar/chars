@@ -13,6 +13,7 @@ interface Product {
   price: number;
   media: { url: string; type: string }[];
   sizes: { size: string; stock: string }[]; // updated
+  color: string;
 }
 
 export default function Catalog() {
@@ -23,11 +24,13 @@ export default function Catalog() {
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [colors, setColors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
@@ -37,12 +40,15 @@ export default function Catalog() {
         selectedSizes.length === 0 ||
         product.sizes?.some((s) => selectedSizes.includes(s.size));
 
+      const matchesColor =
+        selectedColors.length === 0 || selectedColors.includes(product.color);
+
       const matchesMinPrice = minPrice === null || product.price >= minPrice;
       const matchesMaxPrice = maxPrice === null || product.price <= maxPrice;
 
-      return matchesSize && matchesMinPrice && matchesMaxPrice;
+      return matchesSize && matchesMinPrice && matchesMaxPrice && matchesColor;
     });
-  }, [products, selectedSizes, minPrice, maxPrice]);
+  }, [products, selectedSizes, minPrice, maxPrice, selectedColors]);
 
   const sortedProducts = useMemo(() => {
     return [...filteredProducts].sort((a, b) =>
@@ -85,7 +91,22 @@ export default function Catalog() {
         setLoading(false);
       }
     }
+    // Fetch colors
+    async function fetchColors() {
+      try {
+        const res = await fetch("/api/colors");
+        if (!res.ok) throw new Error("Failed to fetch colors");
+        const data = await res.json();
+        const colorNames = data.map((item: { color: string }) => item.color);
+        setColors(colorNames);
+      } catch (err: unknown) {
+        console.error("Error fetching colors:", err);
+        setError("Failed to fetch colors");
+      }
+    }
+
     fetchProducts();
+    fetchColors();
   }, [category, season]); // refetch if URL params change
 
   if (loading) return <div>Loading products...</div>;
@@ -161,6 +182,9 @@ export default function Catalog() {
         maxPrice={maxPrice}
         setMinPrice={setMinPrice}
         setMaxPrice={setMaxPrice}
+        selectedColors={selectedColors}
+        setSelectedColors={setSelectedColors}
+        colors={colors}
       />
 
       {/* Menu Sidebar */}

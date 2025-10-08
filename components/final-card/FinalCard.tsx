@@ -25,9 +25,11 @@ interface Product {
 }
 
 export default function FinalCard() {
+  // GENERAL
   const { isDark } = useAppContext();
   const { items, updateQuantity, removeItem, clearBasket } = useBasket();
 
+  // CUSTOMER
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -36,19 +38,6 @@ export default function FinalCard() {
   const [postOffice, setPostOffice] = useState("");
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState("");
-
-  const [cities, setCities] = useState<string[]>([]); // Available cities
-  const [postOffices, setPostOffices] = useState<string[]>([]); // Available post offices
-  const [loadingCities, setLoadingCities] = useState<boolean>(false); // Loading state for cities
-  const [loadingPostOffices, setLoadingPostOffices] = useState<boolean>(false); // Loading state for post offices
-  const [filteredCities, setFilteredCities] = useState<string[]>([]); // Filtered cities list for autocomplete
-  const [cityListVisible, setCityListVisible] = useState(false);
-  const [postOfficeListVisible, setPostOfficeListVisible] = useState(false);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
   const [submittedOrder, setSubmittedOrder] = useState<{
     items: typeof items;
     customer: {
@@ -61,108 +50,6 @@ export default function FinalCard() {
       paymentType: string;
     };
   } | null>(null);
-
-  useEffect(() => {
-    // Fetch available cities when delivery method changes to Nova Poshta
-    if (deliveryMethod === "nova_poshta") {
-      setLoadingCities(true);
-
-      // Fetch cities with `fetch`
-      fetch("https://api.novaposhta.ua/v2.0/json/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY,
-          modelName: "AddressGeneral",
-          calledMethod: "getCities",
-          methodProperties: {
-            FindByString: city, // Replace with a dynamic city string if necessary
-            limit: 20,
-          },
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          const cityData = data.data || [];
-          setCities(cityData.map((city: any) => city.Description));
-          console.log(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching cities:", error);
-          setError("Failed to load cities.");
-        })
-        .finally(() => {
-          setLoadingCities(false);
-        });
-    }
-  }, [deliveryMethod]);
-
-  useEffect(() => {
-    // Filter the cities based on the current input
-    setFilteredCities(
-      cities.filter((cityOption) =>
-        cityOption.toLowerCase().includes(city.toLowerCase())
-      )
-    );
-  }, [city, cities]); // Re-filter cities whenever `city` or `cities` changes
-
-  useEffect(() => {
-    // Fetch available post offices when a city is selected
-    if (city) {
-      setLoadingPostOffices(true);
-
-      // Fetch post offices with `fetch`
-      fetch("https://api.novaposhta.ua/v2.0/json/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY, // Replace with your actual API Key
-          modelName: "AddressGeneral",
-          calledMethod: "getWarehouses",
-          methodProperties: {
-            CityName: city, // Use the selected city
-            FindByString: postOffice,
-            limit: 20,
-          },
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          const postOfficeData = data.data || [];
-          setPostOffices(postOfficeData.map((post: any) => post.Description));
-          console.log(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching post offices:", error);
-          setError("Failed to load post offices.");
-        })
-        .finally(() => {
-          setLoadingPostOffices(false);
-        });
-    }
-  }, [city]);
-
-  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCity(e.target.value);
-    setCityListVisible(true); // Show the city list while typing
-  };
-
-    const handlePostOfficeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPostOffice(e.target.value);
-    setPostOfficeListVisible(true); // Show the post office list while typing
-  };
-   const handleCitySelect = (cityOption: string) => {
-    setCity(cityOption);
-    setCityListVisible(false); // Hide the city list after selecting an option
-  };
-  const handlePostOfficeSelect = (postOfficeOption: string) => {
-    setPostOffice(postOfficeOption);
-    setPostOfficeListVisible(false); // Hide the post office list after selecting an option
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -312,6 +199,199 @@ export default function FinalCard() {
       // localStorage.removeItem("submittedOrder");
     }
   }, []);
+
+  // POST OFFICE
+  const [cities, setCities] = useState<string[]>([]); // Available cities
+  const [postOffices, setPostOffices] = useState<string[]>([]); // Available post offices
+  const [loadingCities, setLoadingCities] = useState<boolean>(false); // Loading state for cities
+  const [loadingPostOffices, setLoadingPostOffices] = useState<boolean>(false); // Loading state for post offices
+  const [filteredCities, setFilteredCities] = useState<string[]>([]); // Filtered cities list for autocomplete
+  const [cityListVisible, setCityListVisible] = useState(false);
+  const [postOfficeListVisible, setPostOfficeListVisible] = useState(false);
+  const [region, setRegion] = useState(""); // For Ukrposhta - область
+  const [district, setDistrict] = useState(""); // For Ukrposhta - район
+  const [regionListVisible, setRegionListVisible] = useState(false); // Controls region list visibility
+  const [districtListVisible, setDistrictListVisible] = useState(false); // Controls district list visibility
+
+  // Example useEffect for region and district fetching for Ukrposhta
+  useEffect(() => {
+    if (region) {
+      setLoadingCities(true);
+      // API call to fetch regions for Ukrposhta
+      setLoadingCities(false);
+    }
+  }, [region]);
+
+  useEffect(() => {
+    if (district) {
+      setLoadingPostOffices(true);
+      // API call to fetch districts for Ukrposhta
+      setLoadingPostOffices(false);
+    }
+  }, [district]);
+
+  useEffect(() => {
+    // Fetch available cities when delivery method changes to Nova Poshta
+    if (deliveryMethod === "nova_poshta") {
+      setLoadingCities(true);
+
+      // Fetch cities with `fetch`
+      fetch("https://api.novaposhta.ua/v2.0/json/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY,
+          modelName: "AddressGeneral",
+          calledMethod: "getCities",
+          methodProperties: {
+            FindByString: city, // Replace with a dynamic city string if necessary
+            limit: 20,
+          },
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const cityData = data.data || [];
+          setCities(cityData.map((city: any) => city.Description));
+          // console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching cities:", error);
+          setError("Failed to load cities.");
+        })
+        .finally(() => {
+          setLoadingCities(false);
+        });
+    } else if (deliveryMethod == "ukrposhta") {
+      setLoadingCities(true);
+
+      // Fetch cities with `fetch`
+      fetch("https://api.novaposhta.ua/v2.0/json/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY,
+          modelName: "AddressGeneral",
+          calledMethod: "getCities",
+          methodProperties: {
+            FindByString: city, // Replace with a dynamic city string if necessary
+            limit: 20,
+          },
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const cityData = data.data || [];
+          setCities(cityData.map((city: any) => city.Description));
+          // console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching cities:", error);
+          setError("Failed to load cities.");
+        })
+        .finally(() => {
+          setLoadingCities(false);
+        });
+    }
+  }, [deliveryMethod]);
+
+  useEffect(() => {
+    // Filter the cities based on the current input
+    setFilteredCities(
+      cities.filter((cityOption) =>
+        cityOption.toLowerCase().includes(city.toLowerCase())
+      )
+    );
+  }, [city, cities]); // Re-filter cities whenever `city` or `cities` changes
+
+  useEffect(() => {
+    // Fetch available post offices when a city is selected
+    if (city) {
+      setLoadingPostOffices(true);
+
+      // Fetch post offices with `fetch`
+      fetch("https://api.novaposhta.ua/v2.0/json/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          apiKey: process.env.NEXT_PUBLIC_NOVA_POSHTA_API_KEY, // Replace with your actual API Key
+          modelName: "AddressGeneral",
+          calledMethod: "getWarehouses",
+          methodProperties: {
+            CityName: city, // Use the selected city
+            FindByString: postOffice,
+            limit: 20,
+          },
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const postOfficeData = data.data || [];
+          setPostOffices(postOfficeData.map((post: any) => post.Description));
+          // console.log(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching post offices:", error);
+          setError("Failed to load post offices.");
+        })
+        .finally(() => {
+          setLoadingPostOffices(false);
+        });
+    }
+  }, [city]);
+
+  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCity(e.target.value);
+    setCityListVisible(true); // Show the city list while typing
+  };
+
+  const handlePostOfficeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPostOffice(e.target.value);
+    setPostOfficeListVisible(true); // Show the post office list while typing
+  };
+
+  // Handling changes for region and district (for Ukrposhta)
+  const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRegion(e.target.value);
+    setRegionListVisible(true); // Show region list while typing
+  };
+
+  const handleDistrictChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDistrict(e.target.value);
+    setDistrictListVisible(true); // Show district list while typing
+  };
+
+  const handleCitySelect = (cityOption: string) => {
+    setCity(cityOption);
+    setCityListVisible(false); // Hide the city list after selecting an option
+  };
+
+  const handlePostOfficeSelect = (postOfficeOption: string) => {
+    setPostOffice(postOfficeOption);
+    setPostOfficeListVisible(false); // Hide the post office list after selecting an option
+  };
+
+  // Handle the selection of region and district for Ukrposhta
+  const handleRegionSelect = (regionOption: string) => {
+    setRegion(regionOption);
+    setRegionListVisible(false); // Hide region list after selection
+  };
+
+  const handleDistrictSelect = (districtOption: string) => {
+    setDistrict(districtOption);
+    setDistrictListVisible(false); // Hide district list after selection
+  };
+
+  // STATE
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // ⬇️ When order is completed
   if (items.length == 0 && submittedOrder) {
@@ -530,7 +610,7 @@ export default function FinalCard() {
               >
                 <option value="">Оберіть спосіб доставки</option>
                 <option value="nova_poshta">Нова Пошта</option>
-                <option value="ukrposhta">Укрпошта</option>
+                {/* <option value="ukrposhta">Укрпошта</option> */}
               </select>
 
               {deliveryMethod === "nova_poshta" && (
@@ -553,20 +633,22 @@ export default function FinalCard() {
                     />
                     {loadingCities ? (
                       <p>Завантаження міст...</p>
-                    ) : ( cityListVisible &&
-                      <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
-                        <ul className="list-none p-0">
-                          {filteredCities.map((cityOption, idx) => (
-                            <li
-                              key={idx}
-                              className="p-3 cursor-pointer hover:bg-gray-200"
-                              onClick={() => handleCitySelect(cityOption)} // Set city on click
-                            >
-                              {cityOption}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                    ) : (
+                      cityListVisible && (
+                        <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
+                          <ul className="list-none p-0">
+                            {filteredCities.map((cityOption, idx) => (
+                              <li
+                                key={idx}
+                                className="p-3 cursor-pointer hover:bg-gray-200"
+                                onClick={() => handleCitySelect(cityOption)} // Set city on click
+                              >
+                                {cityOption}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
                     )}
                   </div>
 
@@ -589,26 +671,30 @@ export default function FinalCard() {
                     />
                     {loadingPostOffices ? (
                       <p>Завантаження відділень...</p>
-                    ) : ( postOfficeListVisible &&
-                      <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
-                        <ul className="list-none p-0">
-                          {postOffices
-                            .filter((postOfficeOption) =>
-                              postOfficeOption
-                                .toLowerCase()
-                                .includes(postOffice.toLowerCase())
-                            )
-                            .map((postOfficeOption, idx) => (
-                              <li
-                                key={idx}
-                                className="p-3 cursor-pointer hover:bg-gray-200"
-                                onClick={() => handlePostOfficeSelect(postOfficeOption)} // Set post office on click
-                              >
-                                {postOfficeOption}
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
+                    ) : (
+                      postOfficeListVisible && (
+                        <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
+                          <ul className="list-none p-0">
+                            {postOffices
+                              .filter((postOfficeOption) =>
+                                postOfficeOption
+                                  .toLowerCase()
+                                  .includes(postOffice.toLowerCase())
+                              )
+                              .map((postOfficeOption, idx) => (
+                                <li
+                                  key={idx}
+                                  className="p-3 cursor-pointer hover:bg-gray-200"
+                                  onClick={() =>
+                                    handlePostOfficeSelect(postOfficeOption)
+                                  } // Set post office on click
+                                >
+                                  {postOfficeOption}
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                      )
                     )}
                   </div>
                 </>

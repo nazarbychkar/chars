@@ -92,9 +92,9 @@ export default function EditProductPage() {
     }
   }, [productId]);
 
-  useEffect(() => {
-    console.log("formData", formData);
-  }, [formData]);
+  // useEffect(() => {
+  //   console.log("formData", formData);
+  // }, [formData]);
 
   const handleDrop = (files: File[]) => {
     setImages((prevImages) => [...prevImages, ...files]);

@@ -153,7 +153,7 @@ ${items
   .join("\n")}
     `;
 
-    console.log(items)
+    // console.log(items)
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: "POST",

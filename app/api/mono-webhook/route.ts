@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
 
     const { invoiceId, status } = data;
-    console.log("status", status)
+    // console.log("status", status)
 
     if (!invoiceId || !status) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
