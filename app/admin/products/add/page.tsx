@@ -96,26 +96,39 @@ export default function FormElements() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("price", price);
-      formData.append("old_price", oldPrice);
-      formData.append("discount_percentage", discountPercentage);
-      formData.append("priority", priority);
-      formData.append("color", color);
-      formData.append("sizes", JSON.stringify(sizes));
-      formData.append("top_sale", String(topSale));
-      formData.append("limited_edition", String(limitedEdition));
-      formData.append("season", season);
-      if (categoryId !== null) {
-        formData.append("category_id", categoryId.toString());
+      // 1) Upload images first (if any)
+      let uploadedMedia: { type: "photo" | "video"; url: string }[] = [];
+      if (images.length > 0) {
+        const uploadForm = new FormData();
+        images.forEach((img) => uploadForm.append("images", img));
+        const uploadRes = await fetch("/api/images", { method: "POST", body: uploadForm });
+        if (!uploadRes.ok) {
+          const t = await uploadRes.text();
+          throw new Error(t || "Не вдалося завантажити файли");
+        }
+        const uploadData = await uploadRes.json();
+        uploadedMedia = uploadData.media || [];
       }
-      images.forEach((img) => formData.append("images", img));
 
+      // 2) Create product via JSON body (no files)
       const res = await fetch("/api/products", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description,
+          price: Number(price),
+          old_price: oldPrice ? Number(oldPrice) : null,
+          discount_percentage: discountPercentage ? Number(discountPercentage) : null,
+          priority: Number(priority || 0),
+          color,
+          sizes,
+          top_sale: topSale,
+          limited_edition: limitedEdition,
+          season,
+          category_id: categoryId,
+          media: uploadedMedia,
+        }),
       });
 
       if (!res.ok) {

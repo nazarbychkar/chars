@@ -45,6 +45,55 @@ export async function GET() {
 // =========================
 export async function POST(req: Request) {
   try {
+    const contentType = req.headers.get("content-type") || "";
+
+    // JSON flow: expects media already uploaded via /api/images
+    if (contentType.includes("application/json")) {
+      const body = await req.json();
+      const {
+        name,
+        description,
+        price,
+        old_price,
+        discount_percentage,
+        priority = 0,
+        sizes = [],
+        media = [],
+        top_sale = false,
+        limited_ition, // backward compat typo handling (ignored)
+        limited_edition = false,
+        season,
+        color,
+        category_id = null,
+      } = body || {};
+
+      if (!name || typeof price !== "number") {
+        return NextResponse.json(
+          { error: "Missing required fields: name, price" },
+          { status: 400 }
+        );
+      }
+
+      const product = await sqlPostProduct({
+        name,
+        description,
+        price,
+        old_price,
+        discount_percentage,
+        priority,
+        sizes: (sizes as string[]).map((size) => ({ size, stock: 5 })),
+        media,
+        top_sale,
+        limited_edition: typeof limited_ition === "boolean" ? limited_ition : limited_edition,
+        season,
+        color,
+        category_id,
+      });
+
+      return NextResponse.json(product, { status: 201 });
+    }
+
+    // Multipart form fallback
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
