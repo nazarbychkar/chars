@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAppContext } from "@/lib/GeneralProvider";
 
 interface Product {
   id: number;
@@ -11,6 +12,7 @@ interface Product {
 }
 
 export default function YouMightLike() {
+  const { isDark } = useAppContext();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,9 @@ export default function YouMightLike() {
     <section className="max-w-[1920px] w-full mx-auto px-4 md:px-0">
       <div className="flex flex-col gap-10">
         {/* Title */}
-        <div className="mx-0 md:mx-10 text-neutral-900 text-4xl md:text-7xl font-normal font-['Inter'] leading-tight md:leading-[84.91px] text-center md:text-left">
+        <div
+          className={`mx-0 md:mx-10 text-4xl md:text-7xl font-normal font-['Inter'] leading-tight md:leading-[84.91px] text-center md:text-left`}
+        >
           Вам може сподобатися
         </div>
 
@@ -50,7 +54,9 @@ export default function YouMightLike() {
           {products.map((product) => {
             const firstPhoto = product.media.find((m) => m.type === "photo");
             const imageUrl = firstPhoto?.url || product.media?.[0]?.url;
-            const image = imageUrl ? `/api/images/${imageUrl}` : "https://placehold.co/432x613";
+            const image = imageUrl
+              ? `/api/images/${imageUrl}`
+              : "https://placehold.co/432x613";
             return (
               <Link
                 key={product.id}
@@ -63,7 +69,8 @@ export default function YouMightLike() {
                   alt={product.name}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = "https://placehold.co/400x600/cccccc/666666?text=No+Image";
+                    target.src =
+                      "https://placehold.co/400x600/cccccc/666666?text=No+Image";
                   }}
                 />
                 <div className="mt-2 text-lg sm:text-xl font-normal font-['Inter'] capitalize leading-normal text-center">

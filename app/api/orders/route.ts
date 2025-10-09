@@ -81,6 +81,17 @@ export async function POST(req: NextRequest) {
     const reference = crypto.randomUUID();
 
     // ✅ Створення інвойсу Monobank
+
+    // NOTE: Monobank webhooks must be able to reach your server from the public internet.
+    // If you use "localhost" in webHookUrl, Monobank cannot call it unless you tunnel (e.g. with ngrok).
+    // Use your public domain or a tunnel URL for webHookUrl and redirectUrl.
+
+    // For local development, set up a tunnel (e.g. ngrok) and use its URL here:
+    // const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
+    // Example: "https://abc123.ngrok.app"
+
+    const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
+
     const monoRes = await fetch(
       "https://api.monobank.ua/api/merchant/invoice/create",
       {
@@ -98,8 +109,8 @@ export async function POST(req: NextRequest) {
             comment: comment || "Оплата замовлення",
             basketOrder,
           },
-          redirectUrl: `http://localhost:3000/final`,
-          webHookUrl: `http://localhost:3000/api/mono-webhook`,
+          redirectUrl: `${PUBLIC_URL}/final`,
+          webHookUrl: `${PUBLIC_URL}/api/mono-webhook`,
           validity: 3600,
           paymentType: "debit",
         }),
@@ -107,7 +118,7 @@ export async function POST(req: NextRequest) {
     );
 
     const invoiceData = await monoRes.json();
-
+    console.log("invoiceData api orders", invoiceData);
     if (!monoRes.ok) {
       console.error("Monobank error:", invoiceData);
       return NextResponse.json(
@@ -118,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     const { invoiceId, pageUrl } = invoiceData;
 
-    // ✅ Зберігання замовлення у БД
+    // ✅ Зберігання замовлення у БД (статус "pending" - ще не оплачено)
     const result = await sqlPostOrder({
       customer_name,
       phone_number,
@@ -129,56 +140,12 @@ export async function POST(req: NextRequest) {
       comment,
       payment_type,
       invoice_id: invoiceId,
-      payment_status: "pending", // default
+      payment_status: "pending", // замовлення створено, але ще не оплачено
       items,
     });
 
-    // ✅ Telegram повідомлення (опційно — можна перенести у webhook після оплати)
-    const BOT_TOKEN = process.env.BOT_TOKEN;
-    const CHAT_ID = process.env.CHAT_ID;
-
-    const orderMessage = `
-🛒 <b>Нове замовлення (оплачено)</b>
-
-👤 <b>Ім’я:</b> ${customer_name}
-📱 <b>Тел:</b> ${phone_number}
-📧 <b>Email:</b> ${email || "—"}
-🚚 <b>Доставка:</b> ${delivery_method}
-🏙️ <b>Місто:</b> ${city}
-🏤 <b>Відділення:</b> ${post_office}
-💰 <b>Оплата:</b> ${
-      payment_type === "prepay" ? "Передплата (300 грн)" : "Повна оплата"
-    }
-🧾 <b>Сума:</b> ${amountToPay} грн
-
-📦 <b>Товари:</b>
-${items
-  .map(
-    (
-      item: {
-        product_name: string;
-        size: string;
-        quantity: number;
-        price: number;
-      },
-      i: number
-    ) =>
-      `${i + 1}. ${item.product_name} | ${item.size} | x${item.quantity} | ${
-        item.price
-      } грн`
-  )
-  .join("\n")}
-    `;
-
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: orderMessage,
-        parse_mode: "HTML",
-      }),
-    });
+    // ✅ НЕ відправляємо в Telegram поки не оплачено
+    // Telegram повідомлення буде відправлено в webhook після успішної оплати
 
     return NextResponse.json({ invoiceUrl: pageUrl, invoiceId: invoiceId });
   } catch (error) {

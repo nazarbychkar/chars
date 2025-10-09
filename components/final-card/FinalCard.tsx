@@ -104,39 +104,7 @@ export default function FinalCard() {
     }));
 
     try {
-      const invoiceRes = await fetch(
-        "https://api.monobank.ua/api/merchant/invoice/create",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Token": process.env.NEXT_PUBLIC_MONO_TOKEN!, // ЗБЕРЕЖИ У ENV
-          },
-          body: JSON.stringify({
-            amount: amountInKopecks,
-            ccy: 980,
-            merchantPaymInfo: {
-              reference: crypto.randomUUID(), // або інший унікальний ID
-              destination: "Оплата за замовлення",
-              comment: "Оплата за замовлення",
-              basketOrder,
-            },
-            redirectUrl: `http://localhost:3000/final`, // після оплати
-            webHookUrl: `http://localhost:3000/api/mono-webhook`, // для статусів
-            validity: 3600, // 1 година
-            paymentType: "debit",
-          }),
-        }
-      );
-
-      const invoiceData = await invoiceRes.json();
-
-      if (!invoiceRes.ok) {
-        throw new Error(invoiceData?.message || "Помилка створення інвойсу");
-      }
-
-      const { invoiceId, pageUrl } = invoiceData;
-
+      // Create order and get payment URL
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -149,7 +117,6 @@ export default function FinalCard() {
           post_office: postOffice,
           comment,
           payment_type: paymentType,
-          invoice_id: invoiceId, // додаємо!
           items: apiItems,
         }),
       });
@@ -159,6 +126,7 @@ export default function FinalCard() {
         setError(data.error || "Помилка при оформленні замовлення.");
       } else {
         const data = await response.json();
+        const { invoiceUrl, invoiceId } = data;
 
         localStorage.setItem(
           "submittedOrder",
@@ -176,14 +144,14 @@ export default function FinalCard() {
             invoiceId,
           })
         );
-        setTimeout(() => {
-          window.location.href = pageUrl;
-        }, 5000);
 
-        setSuccess(`Замовлення успішно створено! Номер: ${data.orderId}`);
+        setSuccess("Замовлення успішно створено! Переходимо до оплати...");
         clearBasket();
 
-        window.location.href = pageUrl;
+        // Redirect to payment page after 2 seconds
+        setTimeout(() => {
+          window.location.href = invoiceUrl;
+        }, 2000);
       }
     } catch (err) {
       setError("Помилка мережі. Спробуйте пізніше.");
@@ -453,7 +421,7 @@ export default function FinalCard() {
         <div className="text-center">
           <h1 className="text-5xl sm:text-6xl font-normal leading-tight">
             <span className="text-stone-500">Дякуємо за </span>
-            <span className="text-neutral-900">ваше замовлення!</span>
+            <span className="">ваше замовлення!</span>
           </h1>
         </div>
 
@@ -484,13 +452,13 @@ export default function FinalCard() {
                       </div>
                     )}
                     <div className="flex flex-col flex-1 gap-1">
-                      <div className="text-base font-['Inter'] text-stone-900">
+                      <div className="text-base font-['Inter'] ">
                         {item.name}
                       </div>
-                      <div className="text-base text-stone-900 font-['Helvetica']">
+                      <div className="text-base  font-['Helvetica']">
                         {item.size}
                       </div>
-                      <div className="text-base text-stone-900 font-['Helvetica']">
+                      <div className="text-base  font-['Helvetica']">
                         Кількість: {item.quantity}x
                       </div>
                       <div className="text-base text-zinc-600 font-['Helvetica']">
@@ -506,35 +474,35 @@ export default function FinalCard() {
           {/* Customer Info */}
           {/* Title */}
           <div className="flex flex-col justify-between gap-3">
-            <div className="text-3xl text-stone-900 font-normal text-center">
+            <div className="text-3xl  font-normal text-center">
               Дані клієнта
             </div>
             <div className="text-xl font-normal leading-loose w-full md:w-1/3 text-left">
               <p className="flex justify-start gap-3">
-                <span className="text-stone-900">Ім’я: </span>
+                <span className="">Ім’я: </span>
                 <span className="text-neutral-400">{customer.name}</span>
               </p>
               {customer.email && (
                 <p className="flex justify-start gap-3">
-                  <span className="text-stone-900">Email: </span>
+                  <span className="">Email: </span>
                   <span className="text-neutral-400">{customer.email}</span>
                 </p>
               )}
               <p className="flex justify-start gap-3">
-                <span className="text-stone-900">Телефон: </span>
+                <span className="">Телефон: </span>
                 <span className="text-neutral-400">{customer.phone}</span>
               </p>
               <p className="flex justify-start gap-3">
-                <span className="text-stone-900">Місто: </span>
+                <span className="">Місто: </span>
                 <span className="text-neutral-400">{customer.city}</span>
               </p>
               <p className="flex justify-start gap-3">
-                <span className="text-stone-900">Відділення: </span>
+                <span className="">Відділення: </span>
                 <span className="text-neutral-400">{customer.postOffice}</span>
               </p>
               {customer.comment && (
                 <p className="flex justify-start gap-3">
-                  <span className="text-stone-900">Коментар: </span>
+                  <span className="">Коментар: </span>
                   <span className="text-neutral-400">{customer.comment}</span>
                 </p>
               )}
@@ -542,9 +510,9 @@ export default function FinalCard() {
             {/* Back to home */}
             <Link
               href="/"
-              className="w-80 h-16 bg-stone-900 inline-flex justify-center items-center gap-2.5 p-2.5 rounded"
+              className={`w-80 h-16 ${isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white" } inline-flex justify-center items-center gap-2.5 p-2.5 rounded`}
             >
-              <span className="text-white text-xl font-medium font-['Inter'] tracking-tight leading-snug">
+              <span className=" text-xl font-medium font-['Inter'] tracking-tight leading-snug">
                 На головну
               </span>
             </Link>
@@ -671,7 +639,7 @@ export default function FinalCard() {
 
               {deliveryMethod === "nova_poshta" && (
                 <>
-                  <div>
+                  <div className="flex flex-col">
                     <label
                       htmlFor="city"
                       className="text-xl sm:text-2xl font-normal font-['Arial']"
@@ -691,7 +659,7 @@ export default function FinalCard() {
                       <p>Завантаження міст...</p>
                     ) : (
                       cityListVisible && (
-                        <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
+                        <div className="max-h-40 overflow-y-auto shadow-lg rounded border mt-2">
                           <ul className="list-none p-0">
                             {filteredCities.map((cityOption, idx) => (
                               <li
@@ -709,7 +677,7 @@ export default function FinalCard() {
                   </div>
 
                   {/* Post Office Input with Autocomplete */}
-                  <div>
+                  <div className="flex flex-col">
                     <label
                       htmlFor="postOffice"
                       className="text-xl sm:text-2xl font-normal font-['Arial']"
@@ -729,7 +697,7 @@ export default function FinalCard() {
                       <p>Завантаження відділень...</p>
                     ) : (
                       postOfficeListVisible && (
-                        <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
+                        <div className="max-h-40 overflow-y-auto shadow-lg rounded border mt-2">
                           <ul className="list-none p-0">
                             {filteredPostOffices.map((postOfficeOption, idx) => (
                                 <li

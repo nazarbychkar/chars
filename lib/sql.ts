@@ -527,6 +527,41 @@ export async function sqlUpdatePaymentStatus(
   `;
 }
 
+// Get order by invoice ID for webhook processing
+export async function sqlGetOrderByInvoiceId(invoiceId: string) {
+  const result = await sql`
+    SELECT 
+      o.id,
+      o.customer_name,
+      o.phone_number,
+      o.email,
+      o.delivery_method,
+      o.city,
+      o.post_office,
+      o.comment,
+      o.payment_type,
+      o.total_amount,
+      o.payment_status,
+      o.created_at,
+      COALESCE(
+        JSON_AGG(
+          JSONB_BUILD_OBJECT(
+            'product_name', oi.product_name,
+            'size', oi.size,
+            'quantity', oi.quantity,
+            'price', oi.price
+          )
+        ) FILTER (WHERE oi.id IS NOT NULL),
+        '[]'
+      ) AS items
+    FROM orders o
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.invoice_id = ${invoiceId}
+    GROUP BY o.id;
+  `;
+  return result[0];
+}
+
 // =====================
 // 📦 CATEGORIES
 // =====================
