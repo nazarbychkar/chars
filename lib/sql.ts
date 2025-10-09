@@ -1,4 +1,6 @@
 import { neon } from "@neondatabase/serverless";
+import { unlink } from "fs/promises";
+import path from "path";
 
 export async function sqlConnect() {
   if (!process.env.DATABASE_URL) {
@@ -8,7 +10,7 @@ export async function sqlConnect() {
   return sql;
 }
 
-const sql = await sqlConnect();
+export const sql = await sqlConnect();
 
 // =====================
 // 👕 PRODUCTS
@@ -213,7 +215,6 @@ export async function sqlPostProduct(product: {
   return { id: productId };
 }
 
-// Update product by ID (PUT = full update)
 export async function sqlPutProduct(
   id: number,
   update: {
@@ -229,6 +230,7 @@ export async function sqlPutProduct(
     media?: { type: string; url: string }[];
   }
 ) {
+  // Step 1: Update main product fields
   await sql`
     UPDATE products
     SET 
@@ -243,11 +245,26 @@ export async function sqlPutProduct(
     WHERE id = ${id};
   `;
 
-  // Clear old sizes & media
+  // Step 2: Fetch old media URLs before deleting from DB
+  const oldMedia = await sql`
+    SELECT url FROM product_media WHERE product_id = ${id};
+  `;
+
+  // Step 3: Clear old sizes and media
   await sql`DELETE FROM product_sizes WHERE product_id = ${id};`;
   await sql`DELETE FROM product_media WHERE product_id = ${id};`;
 
-  // Re-insert new sizes & media
+  // Step 4: Delete old image files from disk
+  for (const { url } of oldMedia) {
+    const filePath = path.join(process.cwd(), "public", url);
+    try {
+      await unlink(filePath);
+    } catch (error) {
+      console.error(`Failed to delete image: ${filePath}`, error);
+    }
+  }
+
+  // Step 5: Re-insert new sizes
   if (update.sizes?.length) {
     for (const size of update.sizes) {
       await sql`
@@ -257,6 +274,7 @@ export async function sqlPutProduct(
     }
   }
 
+  // Step 6: Re-insert new media
   if (update.media?.length) {
     for (const media of update.media) {
       await sql`
@@ -269,9 +287,25 @@ export async function sqlPutProduct(
   return { updated: true };
 }
 
-// ❌ Delete a product (auto-deletes sizes/media via ON DELETE CASCADE)
 export async function sqlDeleteProduct(id: number) {
+  // Step 1: Get media URLs
+  const media = await sql`
+    SELECT url FROM product_media WHERE product_id = ${id};
+  `;
+
+  // Step 2: Delete the product (cascade removes sizes/media)
   await sql`DELETE FROM products WHERE id = ${id};`;
+
+  // Step 3: Delete files from disk
+  for (const { url } of media) {
+    const filePath = path.join(process.cwd(), "public", url);
+    try {
+      await unlink(filePath);
+    } catch (error) {
+      console.error(`Failed to delete image: ${filePath}`, error);
+    }
+  }
+
   return { deleted: true };
 }
 
