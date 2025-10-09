@@ -60,11 +60,11 @@ export async function PUT(
       );
     }
 
-    // Parse new fields from body, with defaults if needed
     const topSale = body.top_sale === true;
     const limitedEdition = body.limited_edition === true;
     const season = typeof body.season === "string" ? body.season : null;
     const categoryId = body.category_id ? Number(body.category_id) : null;
+    const color = typeof body.color === "string" ? body.color : null;
 
     await sqlPutProduct(id, {
       name: body.name,
@@ -73,6 +73,7 @@ export async function PUT(
       top_sale: topSale,
       limited_edition: limitedEdition,
       season,
+      color,
       category_id: categoryId,
       sizes: Array.isArray(body.sizes)
         ? body.sizes.map((size: string) => ({

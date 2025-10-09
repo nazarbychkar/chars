@@ -34,12 +34,13 @@ export async function POST(req: Request) {
     const description = formData.get("description") as string;
     const sizesRaw = formData.get("sizes") as string;
     const images = formData.getAll("images") as File[];
-
-    // New fields
     const topSale = formData.get("top_sale") === "true";
     const limitedEdition = formData.get("limited_edition") === "true";
+    const color = formData.get("color")?.toString();
     const season = formData.get("season") as string;
-    const categoryId = formData.get("category_id") ? Number(formData.get("category_id")) : null;
+    const categoryId = formData.get("category_id")
+      ? Number(formData.get("category_id"))
+      : null;
 
     if (!name || !price) {
       return NextResponse.json(
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
       top_sale: topSale,
       limited_edition: limitedEdition,
       season,
+      color,
       category_id: categoryId,
       sizes: parsedSizes.map((size: string) => ({
         size,

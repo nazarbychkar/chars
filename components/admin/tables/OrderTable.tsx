@@ -23,6 +23,12 @@ interface Order {
   created_at: Date;
 }
 
+const options = [
+  { value: "pending", label: "Очікується" },
+  { value: "delivering", label: "Доставляємо" },
+  { value: "complete", label: "Завершено" },
+];
+
 export default function OrdersTable() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +43,7 @@ export default function OrdersTable() {
     (currentPage - 1) * ordersPerPage,
     currentPage * ordersPerPage
   );
+
   // Reset to first page if orders are changed (e.g., after deletion)
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -73,6 +80,24 @@ export default function OrdersTable() {
 
     fetchOrders();
   }, []);
+
+  // Handle status change
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      const updatedOrders = orders.map((order) =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      );
+      setOrders(updatedOrders); // Update the status in the UI
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -195,7 +220,17 @@ export default function OrdersTable() {
                       {order.post_office}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {order.status}
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        className="border px-2 py-1 rounded text-sm bg-white"
+                      >
+                        {options.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {new Date(order.created_at).toLocaleDateString()}
@@ -205,7 +240,7 @@ export default function OrdersTable() {
                         href={`/admin/orders/${order.id}/edit`}
                         className="inline-block rounded-md bg-blue-400 px-3 py-1 text-white text-sm hover:bg-blue-600 transition"
                       >
-                        Змінити статус
+                        Детальний огляд
                       </Link>
                       <button
                         onClick={() => handleDelete(order.id)}

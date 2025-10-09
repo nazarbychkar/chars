@@ -31,12 +31,19 @@ export default function FormElements() {
   const [price, setPrice] = useState("");
   const [sizes, setSizes] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
+
   const [topSale, setTopSale] = useState(false);
   const [limitedEdition, setLimitedEdition] = useState(false);
-  const [season, setSeason] = useState("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
 
+  const [color, setColor] = useState("");
+  const [availableColors, setAvailableColors] = useState<{ color: string }[]>(
+    []
+  );
+
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [season, setSeason] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +63,20 @@ export default function FormElements() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    async function fetchColors() {
+      try {
+        const res = await fetch("/api/colors");
+        const data = await res.json();
+        setAvailableColors(data);
+      } catch (error) {
+        console.error("Failed to fetch colors", error);
+      }
+    }
+
+    fetchColors();
+  }, []);
+
   const handleDrop = (files: File[]) => {
     setImages((prev) => [...prev, ...files]);
   };
@@ -71,6 +92,7 @@ export default function FormElements() {
       formData.append("name", name);
       formData.append("description", description);
       formData.append("price", price);
+      formData.append("color", color);
       formData.append("sizes", JSON.stringify(sizes));
       formData.append("top_sale", String(topSale));
       formData.append("limited_edition", String(limitedEdition));
@@ -94,6 +116,7 @@ export default function FormElements() {
       setName("");
       setDescription("");
       setPrice("");
+      setColor("");
       setSizes([]);
       setImages([]);
       setTopSale(false);
@@ -101,7 +124,9 @@ export default function FormElements() {
       setSeason("");
       setCategoryId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Помилка при створенні товару");
+      setError(
+        err instanceof Error ? err.message : "Помилка при створенні товару"
+      );
     } finally {
       setLoading(false);
     }
@@ -126,7 +151,11 @@ export default function FormElements() {
                 </div>
                 <div>
                   <Label>Опис</Label>
-                  <TextArea value={description} onChange={setDescription} rows={6} />
+                  <TextArea
+                    value={description}
+                    onChange={setDescription}
+                    rows={6}
+                  />
                 </div>
                 <div>
                   <Label>Ціна</Label>
@@ -174,6 +203,21 @@ export default function FormElements() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <Label htmlFor="color">Колір</Label>
+                  <Input
+                    id="color"
+                    list="color-options"
+                    type="text"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                  />
+                  <datalist id="color-options">
+                    {availableColors.map((c) => (
+                      <option key={c.color} value={c.color} />
+                    ))}
+                  </datalist>
                 </div>
                 <div className="flex items-center justify-between pt-2">
                   <Label className="mb-0">Топ продаж?</Label>

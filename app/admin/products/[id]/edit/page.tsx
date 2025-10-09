@@ -42,6 +42,7 @@ export default function EditProductPage() {
     topSale: false,
     limitedEdition: false,
     season: "",
+    color: "",
     categoryId: null as number | null,
   });
 
@@ -53,6 +54,9 @@ export default function EditProductPage() {
   const [categoryOptions, setCategoryOptions] = useState<
     { id: number; name: string }[]
   >([]);
+  const [availableColors, setAvailableColors] = useState<{ color: string }[]>(
+    []
+  );
 
   useEffect(() => {
     async function fetchData() {
@@ -75,6 +79,7 @@ export default function EditProductPage() {
           topSale: productData.top_sale,
           limitedEdition: productData.limited_edition,
           season: productData.season,
+          color: productData.color,
           categoryId: productData.category_id,
         });
 
@@ -91,6 +96,20 @@ export default function EditProductPage() {
       fetchData();
     }
   }, [productId]);
+
+  useEffect(() => {
+    async function fetchColors() {
+      try {
+        const res = await fetch("/api/colors");
+        const data = await res.json();
+        setAvailableColors(data);
+      } catch (error) {
+        console.error("Failed to fetch colors", error);
+      }
+    }
+
+    fetchColors();
+  }, []);
 
   // useEffect(() => {
   //   console.log("formData", formData);
@@ -158,6 +177,7 @@ export default function EditProductPage() {
           top_sale: formData.topSale,
           limited_edition: formData.limitedEdition,
           season: formData.season,
+          color: formData.color,
           category_id: formData.categoryId,
         }),
       });
@@ -242,6 +262,22 @@ export default function EditProductPage() {
                     </option>
                   ))}
                 </select>
+
+                <div>
+                  <Label htmlFor="color">Колір</Label>
+                  <Input
+                    id="color"
+                    list="color-options"
+                    type="text"
+                    value={formData.color}
+                    onChange={(e) => handleChange("color", e.target.value)}
+                  />
+                  <datalist id="color-options">
+                    {availableColors.map((c) => (
+                      <option key={c.color} value={c.color} />
+                    ))}
+                  </datalist>
+                </div>
 
                 <div className="flex items-center justify-between mt-4">
                   <Label className="mb-0">Топ продаж?</Label>

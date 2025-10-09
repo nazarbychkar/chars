@@ -30,6 +30,7 @@ interface Product {
   limited_edition?: boolean;
   season?: string;
   category_name?: string;
+  color: string
 }
 
 export default function ProductsTable() {
@@ -141,6 +142,12 @@ export default function ProductsTable() {
                   isHeader
                   className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
+                  Колір
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
                   Топ продаж?
                 </TableCell>
                 <TableCell
@@ -210,6 +217,9 @@ export default function ProductsTable() {
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {product.season || "—"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {product.color || "—"}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {product.top_sale ? "✅" : "—"}

@@ -59,6 +59,7 @@ export async function sqlGetProduct(id: number) {
       p.top_sale,
       p.limited_edition,
       p.season,
+      p.color,
       p.category_id,
       c.name AS category_name,
       COALESCE(s.sizes, '[]') AS sizes,
@@ -93,6 +94,7 @@ export async function sqlGetProductsByCategory(categoryName: string) {
       p.top_sale,
       p.limited_edition,
       p.season,
+      p.color,
       p.category_id,
       c.name AS category_name,
       p.created_at,
@@ -126,6 +128,7 @@ export async function sqlGetProductsBySeason(season: string) {
       p.top_sale,
       p.limited_edition,
       p.season,
+      p.color,
       p.category_id,
       c.name AS category_name,
       p.created_at,
@@ -167,12 +170,13 @@ export async function sqlPostProduct(product: {
   top_sale?: boolean;
   limited_edition?: boolean;
   season?: string;
+  color?: string;
   category_id?: number | null;
   sizes?: { size: string; stock: number }[];
   media?: { type: string; url: string }[];
 }) {
   const inserted = await sql`
-    INSERT INTO products (name, description, price, top_sale, limited_edition, season, category_id)
+    INSERT INTO products (name, description, price, top_sale, limited_edition, season, color, category_id)
     VALUES (
       ${product.name},
       ${product.description || null},
@@ -180,6 +184,7 @@ export async function sqlPostProduct(product: {
       ${product.top_sale || false},
       ${product.limited_edition || false},
       ${product.season || null},
+      ${product.color || null},
       ${product.category_id || null}
     )
     RETURNING id;
@@ -218,6 +223,7 @@ export async function sqlPutProduct(
     top_sale?: boolean;
     limited_edition?: boolean;
     season?: string;
+    color?: string;
     category_id?: number | null;
     sizes?: { size: string; stock: number }[];
     media?: { type: string; url: string }[];
@@ -232,6 +238,7 @@ export async function sqlPutProduct(
       top_sale = ${update.top_sale || false},
       limited_edition = ${update.limited_edition || false},
       season = ${update.season || null},
+      color = ${update.color || null},
       category_id = ${update.category_id || null}
     WHERE id = ${id};
   `;
