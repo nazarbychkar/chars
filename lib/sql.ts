@@ -1,16 +1,37 @@
-import { neon } from "@neondatabase/serverless";
+import { Pool } from "pg";
 import { unlink } from "fs/promises";
 import path from "path";
 
-export async function sqlConnect() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL environment variable is not set");
-  }
-  const sql = neon(process.env.DATABASE_URL);
-  return sql;
-}
+// Create a PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('sslmode=require') ? { rejectUnauthorized: false } : false,
+});
 
-export const sql = await sqlConnect();
+// Debug: Log the actual DATABASE_URL being used
+console.log("🔍 DATABASE_URL:", process.env.DATABASE_URL);
+
+// Create a template literal function that mimics Neon's API
+export const sql = Object.assign(
+  async (strings: TemplateStringsArray, ...values: any[]) => {
+    let query = strings[0];
+    for (let i = 0; i < values.length; i++) {
+      query += `$${i + 1}` + strings[i + 1];
+    }
+    const result = await pool.query(query, values);
+    return result.rows;
+  },
+  {
+    query: async (strings: TemplateStringsArray, ...values: any[]) => {
+      let query = strings[0];
+      for (let i = 0; i < values.length; i++) {
+        query += `$${i + 1}` + strings[i + 1];
+      }
+      const result = await pool.query(query, values);
+      return result.rows;
+    }
+  }
+);
 
 // =====================
 // 👕 PRODUCTS
