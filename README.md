@@ -34,12 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
 # chars
 
 TODO:
+
 - Думаю додати сортування замовлень по статусах
 - пофіксить, що на клієнті інша адреса завантаження картинок. Тут коротше білдиться сайт і нові файли ж ніяк не отримає в уже збілдженому форматі. Тому треба або перезапускать серв, або вигружати кудись.
-
 
 .env:
 DATABASE_URL="?"
@@ -47,4 +48,5 @@ ADMIN_USER="?"
 ADMIN_PASS="?"
 BOT_TOKEN="?"
 CHAT_ID="?"
-PUBLIC_MONO_TOKEN="?"
+NEXT_PUBLIC_MONO_TOKEN="?"
+NEXT_PUBLIC_NOVA_POSHTA_API_KEY="?"
