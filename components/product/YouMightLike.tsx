@@ -48,7 +48,9 @@ export default function YouMightLike() {
         {/* Products list */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center sm:justify-around gap-8">
           {products.map((product) => {
-            const image = product.media.find((m) => m.type === "photo")?.url || "https://placehold.co/432x613";
+            const firstPhoto = product.media.find((m) => m.type === "photo");
+            const imageUrl = firstPhoto?.url || product.media?.[0]?.url;
+            const image = imageUrl ? `/api/images/${imageUrl}` : "https://placehold.co/432x613";
             return (
               <Link
                 key={product.id}
@@ -59,6 +61,10 @@ export default function YouMightLike() {
                   className="w-full h-auto sm:h-[613px] object-cover"
                   src={image}
                   alt={product.name}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://placehold.co/400x600/cccccc/666666?text=No+Image";
+                  }}
                 />
                 <div className="mt-2 text-lg sm:text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
                   {product.name}

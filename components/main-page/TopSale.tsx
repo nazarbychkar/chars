@@ -68,7 +68,15 @@ export default function TopSale() {
             <div className="aspect-[2/3] w-full overflow-hidden">
               <img
                 className="w-full h-full object-cover group-hover:brightness-90 transition duration-300"
-                src={product.media?.[0]?.url || "https://placehold.co/432x613"}
+                src={(() => {
+                  const firstPhoto = product.media?.find((m) => m.type === "photo");
+                  const imageUrl = firstPhoto?.url || product.media?.[0]?.url;
+                  return imageUrl ? `/api/images/${imageUrl}` : "https://placehold.co/432x613";
+                })()}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://placehold.co/432x613/cccccc/666666?text=No+Image";
+                }}
                 alt={product.name}
               />
             </div>
@@ -98,7 +106,11 @@ export default function TopSale() {
               >
                 <img
                   className="w-full h-[350px] object-cover group-hover:brightness-90 transition duration-300"
-                  src={product.media?.[0]?.url || "https://placehold.co/432x613"}
+                  src={(() => {
+                    const firstPhoto = product.media?.find((m) => m.type === "photo");
+                    const imageUrl = firstPhoto?.url || product.media?.[0]?.url;
+                    return imageUrl ? `/api/images/${imageUrl}` : "https://placehold.co/432x613";
+                  })()}
                   alt={product.name}
                 />
                 <div className="justify-center text-lg font-normal font-['Inter'] capitalize leading-normal text-center">

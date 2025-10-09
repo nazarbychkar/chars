@@ -149,19 +149,29 @@ export default function Catalog() {
             >
               {/* Image */}
               <div className="relative w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300">
-                {product.media[0]?.url ? (
-                  <Image
-                    src={`/api/images/${product.media[0].url}`}
-                    alt={product.name}
-                    layout="fill"
-                    objectFit="cover"
-                    objectPosition="center"
-                    className="transition-all duration-300 group-hover:brightness-90"
-                    priority={false} // Lazy loading off for performance optimization
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-300"></div> // Fallback for missing image
-                )}
+                {(() => {
+                  const firstPhoto = product.media.find((m) => m.type === "photo");
+                  const imageUrl = firstPhoto?.url || product.media[0]?.url;
+                  return imageUrl ? (
+                    <img
+                      src={`/api/images/${imageUrl}`}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-all duration-300 group-hover:brightness-90"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://placehold.co/400x600/cccccc/666666?text=No+Image";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                      <img 
+                        src="https://placehold.co/400x600/cccccc/666666?text=No+Image" 
+                        alt="No Image"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Product Title + Price */}

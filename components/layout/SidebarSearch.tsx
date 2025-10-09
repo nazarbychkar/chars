@@ -113,11 +113,18 @@ export default function SearchSidebar({
                     >
                       <img
                         src={
-                          product.media.find((m) => m.type === "photo")?.url ||
-                          "https://placehold.co/64x64"
+                          product.media.find((m) => m.type === "photo")?.url 
+                            ? `/api/images/${product.media.find((m) => m.type === "photo")?.url}`
+                            : product.media?.[0]?.url 
+                            ? `/api/images/${product.media[0].url}`
+                            : "https://placehold.co/64x64"
                         }
                         alt={product.name}
                         className="w-16 h-16 object-cover rounded border"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://placehold.co/64x64/cccccc/666666?text=No+Image";
+                        }}
                       />
                       <div className="flex flex-col">
                         <span className="font-medium">{product.name}</span>

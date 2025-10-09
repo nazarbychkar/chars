@@ -52,8 +52,12 @@ export default function SidebarBasket({
                 className="flex gap-4 border-b pb-4 last:border-none"
               >
                 <img
-                  src={item.imageUrl}
+                  src={item.imageUrl ? `/api/images/${item.imageUrl}` : "https://placehold.co/100x150/cccccc/666666?text=No+Image"}
                   alt={item.name}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://placehold.co/100x150/cccccc/666666?text=No+Image";
+                  }}
                   className="w-24 h-32 object-cover"
                 />
                 <div className="flex flex-col justify-between flex-1">

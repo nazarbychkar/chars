@@ -4,6 +4,7 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useBasket } from "@/lib/BasketProvider";
+import Alert from "@/components/shared/Alert";
 
 const SIZE_MAP: Record<string, string> = {
   "1": "XL",
@@ -33,14 +34,20 @@ export default function Product() {
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showToast, setShowToast] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Оберіть розмір");
+      setAlertMessage("Оберіть розмір");
+      setAlertType("warning");
+      setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
     if (!product) {
-      alert("Product not loaded");
+      setAlertMessage("Товар не завантажений");
+      setAlertType("error");
+      setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
     addItem({
@@ -49,7 +56,7 @@ export default function Product() {
       price: product.price,
       size: selectedSize,
       quantity,
-      imageUrl: images[0]?.url || "",
+      imageUrl: media.find((m) => m.type === "photo")?.url || "",
     });
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
@@ -81,7 +88,7 @@ export default function Product() {
   if (error || !product)
     return <div className="p-10">Error: {error || "Product not found"}</div>;
 
-  const images = product.media.filter((m) => m.type === "photo");
+  const media = product.media || [];
   const sizes = product.sizes?.map((s) => s.size) || [
     "xs",
     "s",
@@ -93,24 +100,37 @@ export default function Product() {
   return (
     <section className="max-w-[1920px] w-full mx-auto">
       <div className="flex flex-col lg:flex-row justify-around p-4 md:p-10 gap-10">
-        {/* Image Section */}
+        {/* Media Section */}
         <div className="relative flex justify-center w-full lg:w-1/2">
-          <img
-            className="w-full max-w-[800px] max-h-[1160px] object-cover"
-            src={
-              `/api/images/${images[activeImageIndex]?.url}` || "https://placehold.co/800x1160"
-            }
-            alt={product.name}
-          />
+          <div className="w-full max-w-[800px] h-[600px] lg:h-[1160px] bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+            {media[activeImageIndex]?.type === "video" ? (
+              <video
+                className="w-full h-full object-contain"
+                src={`/api/images/${media[activeImageIndex]?.url}`}
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            ) : (
+              <img
+                className="w-full h-full object-contain"
+                src={
+                  `/api/images/${media[activeImageIndex]?.url}` || "https://placehold.co/800x1160"
+                }
+                alt={product.name}
+              />
+            )}
+          </div>
 
-          {images.length > 1 && (
+          {media.length > 1 && (
             <>
               {/* Prev */}
               <button
-                className="text-4xl md:text-6xl absolute top-1/64 left-1/16 rounded-full shadow-md cursor-pointer"
+                className="text-4xl md:text-6xl absolute top-1/2 -translate-y-1/2 left-4 md:left-8 rounded-full shadow-md cursor-pointer z-10"
                 onClick={() =>
                   setActiveImageIndex((prev) =>
-                    prev === 0 ? images.length - 1 : prev - 1
+                    prev === 0 ? media.length - 1 : prev - 1
                   )
                 }
               >
@@ -126,10 +146,10 @@ export default function Product() {
 
               {/* Next */}
               <button
-                className="text-4xl md:text-6xl absolute top-1/64 right-1/16 rounded-full shadow-md cursor-pointer"
+                className="text-4xl md:text-6xl absolute top-1/2 -translate-y-1/2 right-4 md:right-8 rounded-full shadow-md cursor-pointer z-10"
                 onClick={() =>
                   setActiveImageIndex((prev) =>
-                    prev === images.length - 1 ? 0 : prev + 1
+                    prev === media.length - 1 ? 0 : prev + 1
                   )
                 }
               >
@@ -203,6 +223,14 @@ export default function Product() {
               Товар додано до кошика!
             </div>
           )}
+
+          {/* Alert */}
+          <Alert
+            type={alertType}
+            message={alertMessage || ""}
+            isVisible={!!alertMessage}
+            onClose={() => setAlertMessage(null)}
+          />
 
           {/* Description Section */}
           <div className="w-full md:w-[522px]">

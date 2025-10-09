@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -18,6 +18,10 @@ const SIZE_MAP: Record<string, string> = {
   "4": "S",
   "5": "XS",
 };
+
+const CACHE_KEY = "products_cache";
+const CACHE_EXPIRY_KEY = "products_cache_expiry";
+const CACHE_DURATION = 5 * 60 * 1000; // 5 хвилин
 
 interface Product {
   id: number;
@@ -41,18 +45,33 @@ export default function ProductsTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 10;
 
-  const totalPages = Math.ceil(products.length / productsPerPage);
-
-  const paginatedProducts = products.slice(
-    (currentPage - 1) * productsPerPage,
-    currentPage * productsPerPage
+  const totalPages = useMemo(() => 
+    Math.ceil(products.length / productsPerPage), 
+    [products.length]
   );
+
+  const paginatedProducts = useMemo(() => 
+    products.slice(
+      (currentPage - 1) * productsPerPage,
+      currentPage * productsPerPage
+    ),
+    [products, currentPage, productsPerPage]
+  );
+
   // Reset to first page if orders are changed (e.g., after deletion)
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages || 1);
     }
-  }, [products]);
+  }, [products, currentPage, totalPages]);
+
+  // Функція для очищення кешу
+  const clearCache = () => {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_EXPIRY_KEY);
+    setLoading(true);
+    window.location.reload();
+  };
 
   async function handleDelete(productId: number) {
     if (!confirm("Ви впевнені, що хочете видалити цей продукт?")) return;
@@ -61,7 +80,14 @@ export default function ProductsTable() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete product");
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      
+      // Оновлюємо стан
+      const updatedProducts = products.filter((p) => p.id !== productId);
+      setProducts(updatedProducts);
+      
+      // Оновлюємо кеш
+      localStorage.setItem(CACHE_KEY, JSON.stringify(updatedProducts));
+      localStorage.setItem(CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
     } catch (error) {
       console.error("Error deleting product:", error);
     }
@@ -70,10 +96,30 @@ export default function ProductsTable() {
   useEffect(() => {
     async function fetchProducts() {
       try {
+        // Перевірка кешу
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+        const now = Date.now();
+
+        if (cachedData && cacheExpiry && now < parseInt(cacheExpiry)) {
+          // Використовуємо кешовані дані
+          console.log("Використання кешованих даних продуктів");
+          setProducts(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+
+        // Якщо кеш застарів або відсутній, завантажуємо з сервера
+        console.log("Завантаження продуктів з сервера");
         const res = await fetch("/api/products");
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
+        
         setProducts(data);
+        
+        // Зберігаємо в кеш
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -91,12 +137,21 @@ export default function ProductsTable() {
             <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
               Продукти
             </h2>
-            <Link
-              href="/admin/products/add"
-              className="inline-block rounded-md bg-green-400 px-4 py-2 text-white text-sm hover:bg-green-600 transition"
-            >
-              + Додати продукт
-            </Link>
+            <div className="flex gap-2">
+              <button
+                onClick={clearCache}
+                className="inline-block rounded-md bg-gray-400 px-4 py-2 text-white text-sm hover:bg-gray-600 transition"
+                title="Очистити кеш та перезавантажити дані"
+              >
+                🔄 Оновити
+              </button>
+              <Link
+                href="/admin/products/add"
+                className="inline-block rounded-md bg-green-400 px-4 py-2 text-white text-sm hover:bg-green-600 transition"
+              >
+                + Додати продукт
+              </Link>
+            </div>
           </div>
 
           <Table>

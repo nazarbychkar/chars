@@ -30,6 +30,9 @@ export default function FormElements() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [oldPrice, setOldPrice] = useState("");
+  const [discountPercentage, setDiscountPercentage] = useState("");
+  const [priority, setPriority] = useState("0");
   const [sizes, setSizes] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
 
@@ -97,6 +100,9 @@ export default function FormElements() {
       formData.append("name", name);
       formData.append("description", description);
       formData.append("price", price);
+      formData.append("old_price", oldPrice);
+      formData.append("discount_percentage", discountPercentage);
+      formData.append("priority", priority);
       formData.append("color", color);
       formData.append("sizes", JSON.stringify(sizes));
       formData.append("top_sale", String(topSale));
@@ -121,6 +127,9 @@ export default function FormElements() {
       setName("");
       setDescription("");
       setPrice("");
+      setOldPrice("");
+      setDiscountPercentage("");
+      setPriority("0");
       setColor("");
       setSizes([]);
       setImages([]);
@@ -168,6 +177,34 @@ export default function FormElements() {
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Поточна ціна"
+                  />
+                </div>
+                <div>
+                  <Label>Стара ціна (опціонально)</Label>
+                  <Input
+                    type="number"
+                    value={oldPrice}
+                    onChange={(e) => setOldPrice(e.target.value)}
+                    placeholder="Ціна до знижки"
+                  />
+                </div>
+                <div>
+                  <Label>Відсоток знижки (опціонально)</Label>
+                  <Input
+                    type="number"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                    placeholder="Наприклад: 20"
+                  />
+                </div>
+                <div>
+                  <Label>Пріоритет показу</Label>
+                  <Input
+                    type="number"
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    placeholder="0 - звичайний, 1 - високий"
                   />
                 </div>
                 <div>
@@ -209,19 +246,19 @@ export default function FormElements() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="color">Колір</Label>
-                  <Input
-                    id="color"
-                    list="color-options"
-                    type="text"
+                  <Label>Колір</Label>
+                  <select
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                  />
-                  <datalist id="color-options">
+                    className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+                  >
+                    <option value="">Виберіть колір</option>
                     {availableColors.map((c) => (
-                      <option key={c.color} value={c.color} />
+                      <option key={c.color} value={c.color}>
+                        {c.color}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
                 <div className="flex items-center justify-between pt-2">
                   <Label className="mb-0">Топ продаж?</Label>
@@ -243,27 +280,39 @@ export default function FormElements() {
             </ComponentCard>
           </div>
 
-          {/* Right side: images */}
+          {/* Right side: images and videos */}
           <div className="p-4">
             <DropzoneComponent onDrop={handleDrop} />
             {images.length > 0 &&
               images.map((file, i) => {
                 const previewUrl = URL.createObjectURL(file);
+                const isVideo = file.type.startsWith("video/");
                 return (
-                  <div key={`new-${i}`} className="relative inline-block">
-                    <Image
-                      src={previewUrl}
-                      alt={file.name}
-                      width={200}
-                      height={200}
-                      className="rounded max-w-[200px] max-h-[200px]"
-                      onLoad={() => URL.revokeObjectURL(previewUrl)}
-                    />
+                  <div key={`new-${i}`} className="relative inline-block mt-4">
+                    {isVideo ? (
+                      <video
+                        src={previewUrl}
+                        width={200}
+                        height={200}
+                        controls
+                        className="rounded max-w-[200px] max-h-[200px]"
+                        onLoadedData={() => URL.revokeObjectURL(previewUrl)}
+                      />
+                    ) : (
+                      <Image
+                        src={previewUrl}
+                        alt={file.name}
+                        width={200}
+                        height={200}
+                        className="rounded max-w-[200px] max-h-[200px]"
+                        onLoad={() => URL.revokeObjectURL(previewUrl)}
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => handleDeleteNewImage(i)}
                       className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                      title="Видалити зображення"
+                      title="Видалити"
                     >
                       ✕
                     </button>

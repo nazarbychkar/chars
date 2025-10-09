@@ -156,12 +156,29 @@ export async function sqlGetProductsBySeason(season: string) {
 
 // Fetch all distinct colors from the database
 export async function sqlGetAllColors() {
-  return await sql`
+  const dbColors = await sql`
     SELECT DISTINCT color
     FROM products
     WHERE color IS NOT NULL
     ORDER BY color;
   `;
+
+  // Standard color palette for fashion items
+  const standardColors = [
+    'Чорний', 'Білий', 'Сірий', 'Бежевий', 'Коричневий',
+    'Червоний', 'Рожевий', 'Помаранчевий', 'Жовтий',
+    'Зелений', 'Блакитний', 'Синій', 'Фіолетовий',
+    'Кремовий', 'Хаки', 'Бордовий', 'Темно-синій',
+    'Світло-сірий', 'Темно-сірий', 'Малиновий', 'Кораловий'
+  ];
+
+  // Combine database colors with standard colors, remove duplicates
+  const allColors = [...new Set([
+    ...dbColors.map(row => row.color),
+    ...standardColors
+  ])].sort();
+
+  return allColors.map(color => ({ color }));
 }
 
 // Create new product
@@ -169,6 +186,9 @@ export async function sqlPostProduct(product: {
   name: string;
   description?: string;
   price: number;
+  old_price?: number | null;
+  discount_percentage?: number | null;
+  priority?: number;
   top_sale?: boolean;
   limited_edition?: boolean;
   season?: string;
@@ -178,11 +198,14 @@ export async function sqlPostProduct(product: {
   media?: { type: string; url: string }[];
 }) {
   const inserted = await sql`
-    INSERT INTO products (name, description, price, top_sale, limited_edition, season, color, category_id)
+    INSERT INTO products (name, description, price, old_price, discount_percentage, priority, top_sale, limited_edition, season, color, category_id)
     VALUES (
       ${product.name},
       ${product.description || null},
       ${product.price},
+      ${product.old_price || null},
+      ${product.discount_percentage || null},
+      ${product.priority || 0},
       ${product.top_sale || false},
       ${product.limited_edition || false},
       ${product.season || null},
@@ -221,6 +244,9 @@ export async function sqlPutProduct(
     name: string;
     description?: string;
     price: number;
+    old_price?: number | null;
+    discount_percentage?: number | null;
+    priority?: number;
     top_sale?: boolean;
     limited_edition?: boolean;
     season?: string;
@@ -237,6 +263,9 @@ export async function sqlPutProduct(
       name = ${update.name},
       description = ${update.description || null},
       price = ${update.price},
+      old_price = ${update.old_price || null},
+      discount_percentage = ${update.discount_percentage || null},
+      priority = ${update.priority || 0},
       top_sale = ${update.top_sale || false},
       limited_edition = ${update.limited_edition || false},
       season = ${update.season || null},

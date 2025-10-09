@@ -63,7 +63,7 @@ export default function SocialMedia() {
 
           <div className="flex justify-start gap-10 lg:justify-between items-center w-full lg:w-115 mt-4 md:mt-0">
             <Link
-              href="https://www.instagram.com/"
+              href="https://www.instagram.com/chars_ua_brand/"
               className={`w-60 h-12 md:w-80 md:h-16 text-center flex items-center ${
                 isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
               } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
@@ -80,6 +80,28 @@ export default function SocialMedia() {
                   : "light-theme/instagram.svg"
               }`}
               alt={"instagram icon"}
+            />
+          </div>
+
+          <div className="flex justify-start gap-10 lg:justify-between items-center w-full lg:w-115 mt-4 md:mt-0">
+            <Link
+              href="https://www.tiktok.com/@chars.ua?_t=ZM-90PH0GzkTNb&_r=1"
+              className={`w-60 h-12 md:w-80 md:h-16 text-center flex items-center ${
+                isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
+              } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
+            >
+              МИ В ТІКТОК
+            </Link>
+            <Image
+              width={39}
+              height={39}
+              className="w-8 h-8 md:w-10 md:h-10"
+              src={`/images/${
+                isDark
+                  ? "dark-theme/tiktok.svg"
+                  : "light-theme/tiktok.svg"
+              }`}
+              alt={"tiktok icon"}
             />
           </div>
         </div>

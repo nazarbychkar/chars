@@ -20,6 +20,14 @@ const DropzoneComponent: React.FC<DropzoneComponentProps> = ({
       "image/jpeg": [],
       "image/webp": [],
       "image/svg+xml": [],
+      "video/mp4": [],
+      "video/webm": [],
+      "video/ogg": [],
+      "video/quicktime": [],
+      "video/x-msvideo": [],
+      "video/x-matroska": [],
+      "video/x-flv": [],
+      "video/x-ms-wmv": [],
     },
   });
 
@@ -66,7 +74,7 @@ const DropzoneComponent: React.FC<DropzoneComponentProps> = ({
             </h4>
 
             <span className=" text-center mb-5 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
-              Drag and drop your PNG, JPG, WebP, SVG images here or browse
+              Drag and drop your PNG, JPG, WebP, SVG images or MP4, WebM videos here or browse
             </span>
 
             <span className="font-medium underline text-theme-sm text-brand-500">

@@ -65,11 +65,17 @@ export async function PUT(
     const season = typeof body.season === "string" ? body.season : null;
     const categoryId = body.category_id ? Number(body.category_id) : null;
     const color = typeof body.color === "string" ? body.color : null;
+    const oldPrice = body.old_price ? Number(body.old_price) : null;
+    const discountPercentage = body.discount_percentage ? Number(body.discount_percentage) : null;
+    const priority = body.priority ? Number(body.priority) : 0;
 
     await sqlPutProduct(id, {
       name: body.name,
       description: body.description,
       price: body.price,
+      old_price: oldPrice,
+      discount_percentage: discountPercentage,
+      priority,
       top_sale: topSale,
       limited_edition: limitedEdition,
       season,

@@ -37,6 +37,9 @@ export default function EditProductPage() {
     name: "",
     description: "",
     price: "",
+    oldPrice: "",
+    discountPercentage: "",
+    priority: "0",
     sizes: [] as string[],
     media: [] as { type: string; url: string }[],
     topSale: false,
@@ -74,6 +77,9 @@ export default function EditProductPage() {
           name: productData.name,
           description: productData.description,
           price: String(productData.price),
+          oldPrice: String(productData.old_price || ""),
+          discountPercentage: String(productData.discount_percentage || ""),
+          priority: String(productData.priority || 0),
           sizes: productData.sizes.map((s: { size: string }) => s.size),
           media: productData.media,
           topSale: productData.top_sale,
@@ -141,7 +147,7 @@ export default function EditProductPage() {
     setError(null);
 
     try {
-      let uploadedUrls: string[] = [];
+      let uploadedMedia: { type: "photo" | "video"; url: string }[] = [];
 
       if (images.length > 0) {
         const uploadForm = new FormData();
@@ -152,16 +158,13 @@ export default function EditProductPage() {
           body: uploadForm,
         });
 
-        if (!uploadRes.ok) throw new Error("Image upload failed");
+        if (!uploadRes.ok) throw new Error("File upload failed");
 
         const uploadData = await uploadRes.json();
-        uploadedUrls = uploadData.urls;
+        uploadedMedia = uploadData.media;
       }
 
-      const updatedMedia = [
-        ...formData.media,
-        ...uploadedUrls.map((url) => ({ type: "photo", url })),
-      ];
+      const updatedMedia = [...formData.media, ...uploadedMedia];
 
       const res = await fetch(`/api/products/${productId}`, {
         method: "PUT",
@@ -172,6 +175,9 @@ export default function EditProductPage() {
           name: formData.name,
           description: formData.description,
           price: Number(formData.price),
+          old_price: formData.oldPrice ? Number(formData.oldPrice) : null,
+          discount_percentage: formData.discountPercentage ? Number(formData.discountPercentage) : null,
+          priority: Number(formData.priority),
           sizes: formData.sizes,
           media: updatedMedia,
           top_sale: formData.topSale,
@@ -223,6 +229,31 @@ export default function EditProductPage() {
                   type="number"
                   value={formData.price}
                   onChange={(e) => handleChange("price", e.target.value)}
+                  placeholder="Поточна ціна"
+                />
+
+                <Label>Стара ціна (опціонально)</Label>
+                <Input
+                  type="number"
+                  value={formData.oldPrice}
+                  onChange={(e) => handleChange("oldPrice", e.target.value)}
+                  placeholder="Ціна до знижки"
+                />
+
+                <Label>Відсоток знижки (опціонально)</Label>
+                <Input
+                  type="number"
+                  value={formData.discountPercentage}
+                  onChange={(e) => handleChange("discountPercentage", e.target.value)}
+                  placeholder="Наприклад: 20"
+                />
+
+                <Label>Пріоритет показу</Label>
+                <Input
+                  type="number"
+                  value={formData.priority}
+                  onChange={(e) => handleChange("priority", e.target.value)}
+                  placeholder="0 - звичайний, 1 - високий"
                 />
 
                 <Label>Розміри</Label>
@@ -264,19 +295,19 @@ export default function EditProductPage() {
                 </select>
 
                 <div>
-                  <Label htmlFor="color">Колір</Label>
-                  <Input
-                    id="color"
-                    list="color-options"
-                    type="text"
+                  <Label>Колір</Label>
+                  <select
                     value={formData.color}
                     onChange={(e) => handleChange("color", e.target.value)}
-                  />
-                  <datalist id="color-options">
+                    className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
+                  >
+                    <option value="">Виберіть колір</option>
                     {availableColors.map((c) => (
-                      <option key={c.color} value={c.color} />
+                      <option key={c.color} value={c.color}>
+                        {c.color}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
@@ -306,18 +337,28 @@ export default function EditProductPage() {
               <div className="mt-2 flex flex-wrap gap-4 text-sm">
                 {formData.media.map((item, i) => (
                   <div key={`existing-${i}`} className="relative inline-block">
-                    <Image
-                      src={`/api/images/${item.url}`}
-                      width={200}
-                      height={200}
-                      alt={`image-${i}`}
-                      className="rounded"
-                    />
+                    {item.type === "video" ? (
+                      <video
+                        src={`/api/images/${item.url}`}
+                        width={200}
+                        height={200}
+                        controls
+                        className="rounded max-w-[200px] max-h-[200px]"
+                      />
+                    ) : (
+                      <Image
+                        src={`/api/images/${item.url}`}
+                        width={200}
+                        height={200}
+                        alt={`image-${i}`}
+                        className="rounded"
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => handleDeleteImage(i)}
                       className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                      title="Видалити зображення"
+                      title="Видалити"
                     >
                       ✕
                     </button>
@@ -326,21 +367,33 @@ export default function EditProductPage() {
 
                 {images.map((file, i) => {
                   const previewUrl = URL.createObjectURL(file);
+                  const isVideo = file.type.startsWith("video/");
                   return (
                     <div key={`new-${i}`} className="relative inline-block">
-                      <Image
-                        src={previewUrl}
-                        alt={file.name}
-                        width={200}
-                        height={200}
-                        className="rounded max-w-[200px] max-h-[200px]"
-                        onLoad={() => URL.revokeObjectURL(previewUrl)}
-                      />
+                      {isVideo ? (
+                        <video
+                          src={previewUrl}
+                          width={200}
+                          height={200}
+                          controls
+                          className="rounded max-w-[200px] max-h-[200px]"
+                          onLoadedData={() => URL.revokeObjectURL(previewUrl)}
+                        />
+                      ) : (
+                        <Image
+                          src={previewUrl}
+                          alt={file.name}
+                          width={200}
+                          height={200}
+                          className="rounded max-w-[200px] max-h-[200px]"
+                          onLoad={() => URL.revokeObjectURL(previewUrl)}
+                        />
+                      )}
                       <button
                         type="button"
                         onClick={() => handleDeleteNewImage(i)}
                         className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                        title="Видалити зображення"
+                        title="Видалити"
                       >
                         ✕
                       </button>

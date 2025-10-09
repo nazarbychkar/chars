@@ -206,6 +206,7 @@ export default function FinalCard() {
   const [loadingCities, setLoadingCities] = useState<boolean>(false); // Loading state for cities
   const [loadingPostOffices, setLoadingPostOffices] = useState<boolean>(false); // Loading state for post offices
   const [filteredCities, setFilteredCities] = useState<string[]>([]); // Filtered cities list for autocomplete
+  const [filteredPostOffices, setFilteredPostOffices] = useState<string[]>([]); // Filtered post offices list for autocomplete
   const [cityListVisible, setCityListVisible] = useState(false);
   const [postOfficeListVisible, setPostOfficeListVisible] = useState(false);
   const [region, setRegion] = useState(""); // For Ukrposhta - область
@@ -300,12 +301,32 @@ export default function FinalCard() {
   }, [deliveryMethod]);
 
   useEffect(() => {
-    // Filter the cities based on the current input
-    setFilteredCities(
-      cities.filter((cityOption) =>
-        cityOption.toLowerCase().includes(city.toLowerCase())
-      )
+    // Filter and sort the cities based on the current input
+    const filtered = cities.filter((cityOption) =>
+      cityOption.toLowerCase().includes(city.toLowerCase())
     );
+    
+    // Sort: exact matches first, then starts with, then contains
+    const sorted = filtered.sort((a, b) => {
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      const searchLower = city.toLowerCase();
+      
+      // Exact match
+      if (aLower === searchLower) return -1;
+      if (bLower === searchLower) return 1;
+      
+      // Starts with
+      const aStarts = aLower.startsWith(searchLower);
+      const bStarts = bLower.startsWith(searchLower);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      
+      // Alphabetical for remaining
+      return a.localeCompare(b);
+    });
+    
+    setFilteredCities(sorted);
   }, [city, cities]); // Re-filter cities whenever `city` or `cities` changes
 
   useEffect(() => {
@@ -345,6 +366,35 @@ export default function FinalCard() {
         });
     }
   }, [city]);
+
+  useEffect(() => {
+    // Filter and sort the post offices based on the current input
+    const filtered = postOffices.filter((postOfficeOption) =>
+      postOfficeOption.toLowerCase().includes(postOffice.toLowerCase())
+    );
+    
+    // Sort: exact matches first, then starts with, then contains
+    const sorted = filtered.sort((a, b) => {
+      const aLower = a.toLowerCase();
+      const bLower = b.toLowerCase();
+      const searchLower = postOffice.toLowerCase();
+      
+      // Exact match
+      if (aLower === searchLower) return -1;
+      if (bLower === searchLower) return 1;
+      
+      // Starts with
+      const aStarts = aLower.startsWith(searchLower);
+      const bStarts = bLower.startsWith(searchLower);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      
+      // Alphabetical for remaining
+      return a.localeCompare(b);
+    });
+    
+    setFilteredPostOffices(sorted);
+  }, [postOffice, postOffices]); // Re-filter post offices whenever `postOffice` or `postOffices` changes
 
   const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCity(e.target.value);
@@ -422,11 +472,17 @@ export default function FinalCard() {
               {orderItems.map((item, idx) => (
                 <SwiperSlide key={`${item.id}-${item.size}-${idx}`}>
                   <div className="flex gap-4 items-start p-4 border border-stone-200 rounded">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-20 h-28 object-cover rounded"
-                    />
+                    {item.imageUrl ? (
+                      <img
+                        src={`/api/images/${item.imageUrl}`}
+                        alt={item.name}
+                        className="w-20 h-28 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="w-20 h-28 bg-gray-200 rounded flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">Фото</span>
+                      </div>
+                    )}
                     <div className="flex flex-col flex-1 gap-1">
                       <div className="text-base font-['Inter'] text-stone-900">
                         {item.name}
@@ -675,13 +731,7 @@ export default function FinalCard() {
                       postOfficeListVisible && (
                         <div className="max-h-40 overflow-y-auto bg-white shadow-lg rounded border mt-2">
                           <ul className="list-none p-0">
-                            {postOffices
-                              .filter((postOfficeOption) =>
-                                postOfficeOption
-                                  .toLowerCase()
-                                  .includes(postOffice.toLowerCase())
-                              )
-                              .map((postOfficeOption, idx) => (
+                            {filteredPostOffices.map((postOfficeOption, idx) => (
                                 <li
                                   key={idx}
                                   className="p-3 cursor-pointer hover:bg-gray-200"
@@ -758,8 +808,12 @@ export default function FinalCard() {
                   >
                     <img
                       className="w-24 h-32 sm:w-28 sm:h-40 object-cover rounded"
-                      src={item.imageUrl}
+                      src={item.imageUrl ? `/api/images/${item.imageUrl}` : "https://placehold.co/200x300/cccccc/666666?text=No+Image"}
                       alt={item.name}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://placehold.co/200x300/cccccc/666666?text=No+Image";
+                      }}
                     />
                     <div className="flex flex-col flex-1 gap-1">
                       <div className="text-base font-normal font-['Inter'] leading-normal">

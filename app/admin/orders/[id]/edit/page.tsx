@@ -27,6 +27,7 @@ export default function EditOrderPage() {
     city: "",
     post_office: "",
     status: "",
+    payment_type: "",
     items: [],
   });
 
@@ -44,6 +45,7 @@ export default function EditOrderPage() {
           city: data.city || "",
           post_office: data.post_office || "",
           status: data.status || "",
+          payment_type: data.payment_type || "",
           items: data.items || [],
         });
       } catch (err) {
@@ -86,6 +88,16 @@ export default function EditOrderPage() {
         0
       )
       .toFixed(2);
+  };
+
+  const calculateRemainingPayment = () => {
+    const total = parseFloat(calculateTotal());
+    if (formData.payment_type === "full") {
+      return "0.00";
+    } else if (formData.payment_type === "prepay") {
+      return Math.max(0, total - 300).toFixed(2);
+    }
+    return total.toFixed(2);
   };
 
   return (
@@ -149,6 +161,20 @@ export default function EditOrderPage() {
                 type="text"
                 value={formData.post_office}
                 onChange={(e) => handleChange("post_office", e.target.value)}
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Спосіб оплати</Label>
+              <Input
+                type="text"
+                value={
+                  formData.payment_type === "full"
+                    ? "Повна оплата"
+                    : formData.payment_type === "prepay"
+                    ? "Передоплата 300 ₴"
+                    : "Не вказано"
+                }
                 disabled
               />
             </div>
@@ -239,6 +265,19 @@ export default function EditOrderPage() {
                       {calculateTotal()} ₴
                     </td>
                   </tr>
+                  {formData.payment_type && (
+                    <tr className="bg-gray-100 dark:bg-gray-800">
+                      <td
+                        colSpan={4}
+                        className="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200"
+                      >
+                        Залишок до оплати:
+                      </td>
+                      <td className="px-4 py-3 font-bold text-blue-600 dark:text-blue-400">
+                        {calculateRemainingPayment()} ₴
+                      </td>
+                    </tr>
+                  )}
                 </tfoot>
               </table>
             </div>

@@ -6,6 +6,7 @@ import SidebarMenu from "@/components/layout/SidebarMenu";
 import Search from "@/components/shared/Search";
 import ShoppingBasket from "@/components/shared/ShoppingBasket";
 import { useAppContext } from "@/lib/GeneralProvider";
+import { useBasket } from "@/lib/BasketProvider";
 import SidebarBasket from "./SidebarBasket";
 import SidebarSearch from "./SidebarSearch";
 
@@ -20,6 +21,11 @@ export default function Header() {
     isSearchOpen,
     setIsSearchOpen,
   } = useAppContext();
+
+  const { items } = useBasket();
+  
+  // Calculate total quantity of items in basket
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const toggleTheme = () => setIsDark((prev) => !prev);
 
@@ -100,7 +106,7 @@ export default function Header() {
               />
             </button>
             <button
-              className="cursor-pointer"
+              className="cursor-pointer relative"
               onClick={() => setIsBasketOpen(!isBasketOpen)}
             >
               <Image
@@ -113,6 +119,11 @@ export default function Header() {
                     : "/images/light-theme/basket.svg"
                 }
               />
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -169,7 +180,10 @@ export default function Header() {
               />
             </button>
 
-            <button onClick={() => setIsBasketOpen(!isBasketOpen)}>
+            <button 
+              onClick={() => setIsBasketOpen(!isBasketOpen)}
+              className="relative"
+            >
               <Image
                 height="32"
                 width="32"
@@ -180,6 +194,11 @@ export default function Header() {
                     : "/images/light-theme/basket.svg"
                 }
               />
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
             </button>
           </div>
         </div>

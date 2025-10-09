@@ -3,6 +3,7 @@
 import React, { useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
+import Link from "next/link";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -31,7 +32,7 @@ export default function Reviews() {
 
         <div className="text-base lg:text-2xl font-normal font-['Arial'] leading-relaxed">
           Більше відгуків дивіться у<br />
-          нашому <span className="underline italic">Instagram</span> профілі
+          нашому <Link href="https://www.instagram.com/chars_ua_brand/" className="underline italic hover:text-blue-600 transition-colors">Instagram</Link> профілі
         </div>
 
         {/* Navigation buttons */}
@@ -71,6 +72,7 @@ export default function Reviews() {
           modules={[Navigation]}
           spaceBetween={16}
           slidesPerView={1.2}
+          loop={true}
           navigation={{
             prevEl: prevRef.current,
             nextEl: nextRef.current,

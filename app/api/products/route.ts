@@ -6,6 +6,24 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
+// Helper function to determine file type
+function getFileType(mimeType: string, filename: string): "photo" | "video" {
+  // Check MIME type first
+  if (mimeType.startsWith("video/")) {
+    return "video";
+  }
+  
+  // Fallback: check file extension if MIME type is generic or unknown
+  const ext = filename.split(".").pop()?.toLowerCase();
+  const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "mkv", "flv", "wmv"];
+  
+  if (ext && videoExtensions.includes(ext)) {
+    return "video";
+  }
+  
+  return "photo";
+}
+
 // =========================
 // GET /api/products
 // =========================
@@ -31,6 +49,9 @@ export async function POST(req: Request) {
 
     const name = formData.get("name") as string;
     const price = Number(formData.get("price"));
+    const oldPrice = formData.get("old_price") ? Number(formData.get("old_price")) : null;
+    const discountPercentage = formData.get("discount_percentage") ? Number(formData.get("discount_percentage")) : null;
+    const priority = formData.get("priority") ? Number(formData.get("priority")) : 0;
     const description = formData.get("description") as string;
     const sizesRaw = formData.get("sizes") as string;
     const images = formData.getAll("images") as File[];
@@ -52,7 +73,7 @@ export async function POST(req: Request) {
     const uploadDir = path.join(process.cwd(), "product-images");
     await mkdir(uploadDir, { recursive: true });
 
-    const savedImageUrls: string[] = [];
+    const savedMedia: { type: "photo" | "video"; url: string }[] = [];
 
     for (const image of images) {
       const arrayBuffer = await image.arrayBuffer();
@@ -63,8 +84,14 @@ export async function POST(req: Request) {
       const filePath = path.join(uploadDir, uniqueName);
 
       await writeFile(filePath, buffer);
-      savedImageUrls.push(uniqueName);
+
+      const fileType = getFileType(image.type, image.name);
+      console.log(`📁 Product file: ${image.name}, MIME: ${image.type}, Type: ${fileType}, URL: ${uniqueName}`);
+      
+      savedMedia.push({ type: fileType, url: uniqueName });
     }
+    
+    console.log("📦 Product media to save:", savedMedia);
 
     const parsedSizes = JSON.parse(sizesRaw); // ["S", "M", "L"]
 
@@ -72,6 +99,9 @@ export async function POST(req: Request) {
       name,
       description,
       price,
+      old_price: oldPrice,
+      discount_percentage: discountPercentage,
+      priority,
       top_sale: topSale,
       limited_edition: limitedEdition,
       season,
@@ -81,10 +111,7 @@ export async function POST(req: Request) {
         size,
         stock: 5,
       })),
-      media: savedImageUrls.map((url) => ({
-        type: "photo",
-        url,
-      })),
+      media: savedMedia,
     });
 
     return NextResponse.json(product, { status: 201 });

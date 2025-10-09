@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -11,6 +11,10 @@ import {
 import Link from "next/link";
 import Pagination from "./Pagination";
 
+const ORDERS_CACHE_KEY = "orders_cache";
+const ORDERS_CACHE_EXPIRY_KEY = "orders_cache_expiry";
+const CACHE_DURATION = 3 * 60 * 1000; // 3 хвилини
+
 interface Order {
   id: number;
   customer_name: string;
@@ -19,6 +23,7 @@ interface Order {
   delivery_method: string;
   city: string;
   post_office: string;
+  payment_type: string;
   status: string;
   created_at: Date;
 }
@@ -37,11 +42,17 @@ export default function OrdersTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  const totalPages = Math.ceil(orders.length / ordersPerPage);
+  const totalPages = useMemo(() => 
+    Math.ceil(orders.length / ordersPerPage), 
+    [orders.length]
+  );
 
-  const paginatedOrders = orders.slice(
-    (currentPage - 1) * ordersPerPage,
-    currentPage * ordersPerPage
+  const paginatedOrders = useMemo(() => 
+    orders.slice(
+      (currentPage - 1) * ordersPerPage,
+      currentPage * ordersPerPage
+    ),
+    [orders, currentPage, ordersPerPage]
   );
 
   // Reset to first page if orders are changed (e.g., after deletion)
@@ -49,7 +60,15 @@ export default function OrdersTable() {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages || 1);
     }
-  }, [orders]);
+  }, [orders, currentPage, totalPages]);
+
+  // Функція для очищення кешу
+  const clearCache = () => {
+    localStorage.removeItem(ORDERS_CACHE_KEY);
+    localStorage.removeItem(ORDERS_CACHE_EXPIRY_KEY);
+    setLoading(true);
+    window.location.reload();
+  };
 
   async function handleDelete(orderId: number) {
     if (!confirm("Ви впевнені, що хочете видалити це замовлення?")) return;
@@ -58,7 +77,14 @@ export default function OrdersTable() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete order");
-      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      
+      // Оновлюємо стан
+      const updatedOrders = orders.filter((o) => o.id !== orderId);
+      setOrders(updatedOrders);
+      
+      // Оновлюємо кеш
+      localStorage.setItem(ORDERS_CACHE_KEY, JSON.stringify(updatedOrders));
+      localStorage.setItem(ORDERS_CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
     } catch (error) {
       console.error("Error deleting order:", error);
     }
@@ -67,10 +93,30 @@ export default function OrdersTable() {
   useEffect(() => {
     async function fetchOrders() {
       try {
+        // Перевірка кешу
+        const cachedData = localStorage.getItem(ORDERS_CACHE_KEY);
+        const cacheExpiry = localStorage.getItem(ORDERS_CACHE_EXPIRY_KEY);
+        const now = Date.now();
+
+        if (cachedData && cacheExpiry && now < parseInt(cacheExpiry)) {
+          // Використовуємо кешовані дані
+          console.log("Використання кешованих даних замовлень");
+          setOrders(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+
+        // Якщо кеш застарів або відсутній, завантажуємо з сервера
+        console.log("Завантаження замовлень з сервера");
         const res = await fetch("/api/orders");
         if (!res.ok) throw new Error("Failed to fetch orders");
         const data = await res.json();
+        
         setOrders(data);
+        
+        // Зберігаємо в кеш
+        localStorage.setItem(ORDERS_CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(ORDERS_CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
@@ -90,10 +136,16 @@ export default function OrdersTable() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error("Failed to update status");
+      
+      // Оновлюємо стан
       const updatedOrders = orders.map((order) =>
         order.id === orderId ? { ...order, status: newStatus } : order
       );
-      setOrders(updatedOrders); // Update the status in the UI
+      setOrders(updatedOrders);
+      
+      // Оновлюємо кеш
+      localStorage.setItem(ORDERS_CACHE_KEY, JSON.stringify(updatedOrders));
+      localStorage.setItem(ORDERS_CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
     } catch (error) {
       console.error("Error updating status:", error);
     }
@@ -108,12 +160,21 @@ export default function OrdersTable() {
             <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
               Замовлення
             </h2>
-            <Link
-              href="/admin/orders/add"
-              className="inline-block rounded-md bg-green-400 px-4 py-2 text-white text-sm hover:bg-green-600 transition"
-            >
-              + Додати замовлення
-            </Link>
+            <div className="flex gap-2">
+              <button
+                onClick={clearCache}
+                className="inline-block rounded-md bg-gray-400 px-4 py-2 text-white text-sm hover:bg-gray-600 transition"
+                title="Очистити кеш та перезавантажити дані"
+              >
+                🔄 Оновити
+              </button>
+              <Link
+                href="/admin/orders/add"
+                className="inline-block rounded-md bg-green-400 px-4 py-2 text-white text-sm hover:bg-green-600 transition"
+              >
+                + Додати замовлення
+              </Link>
+            </div>
           </div>
 
           <Table>
@@ -159,6 +220,12 @@ export default function OrdersTable() {
                   isHeader
                   className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
+                  Оплата
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
                   Статус
                 </TableCell>
                 <TableCell
@@ -180,7 +247,7 @@ export default function OrdersTable() {
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={10}
                     className="text-center py-6 text-gray-500 dark:text-gray-400"
                   >
                     Завантаження...
@@ -189,7 +256,7 @@ export default function OrdersTable() {
               ) : orders.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={10}
                     className="text-center py-6 text-gray-500 dark:text-gray-400"
                   >
                     Замовлень не знайдено.
@@ -218,6 +285,13 @@ export default function OrdersTable() {
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.post_office}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {order.payment_type === "full"
+                        ? "Повна"
+                        : order.payment_type === "prepay"
+                        ? "Передоплата"
+                        : "-"}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       <select
