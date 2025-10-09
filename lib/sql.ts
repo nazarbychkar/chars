@@ -13,7 +13,7 @@ console.log("🔍 DATABASE_URL:", process.env.DATABASE_URL);
 
 // Create a template literal function that mimics Neon's API
 export const sql = Object.assign(
-  async (strings: TemplateStringsArray, ...values: any[]) => {
+  async (strings: TemplateStringsArray, ...values: unknown[]) => {
     let query = strings[0];
     for (let i = 0; i < values.length; i++) {
       query += `$${i + 1}` + strings[i + 1];
@@ -22,7 +22,7 @@ export const sql = Object.assign(
     return result.rows;
   },
   {
-    query: async (strings: TemplateStringsArray, ...values: any[]) => {
+    query: async (strings: TemplateStringsArray, ...values: unknown[]) => {
       let query = strings[0];
       for (let i = 0; i < values.length; i++) {
         query += `$${i + 1}` + strings[i + 1];
