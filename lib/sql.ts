@@ -256,7 +256,7 @@ export async function sqlPutProduct(
 
   // Step 4: Delete old image files from disk
   for (const { url } of oldMedia) {
-    const filePath = path.join(process.cwd(), "public", url);
+    const filePath = path.join(process.cwd(), "product-images", url);
     try {
       await unlink(filePath);
     } catch (error) {

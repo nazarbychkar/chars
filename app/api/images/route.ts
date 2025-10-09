@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const files = formData.getAll("images") as File[];
 
-    const uploadDir = path.join(process.cwd(), "public", "product-images");
+    const uploadDir = path.join(process.cwd(), "product-images");
     await mkdir(uploadDir, { recursive: true });
 
     const savedImageUrls: string[] = [];
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       const uniqueName = `${crypto.randomUUID()}.${ext}`;
       const filePath = path.join(uploadDir, uniqueName);
       await writeFile(filePath, buffer);
-      savedImageUrls.push(`/product-images/${uniqueName}`);
+      savedImageUrls.push(uniqueName);
     }
 
     return NextResponse.json({ urls: savedImageUrls }, { status: 201 });

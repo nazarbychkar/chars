@@ -6,6 +6,7 @@ import SidebarFilter from "../layout/SidebarFilter";
 import { useAppContext } from "@/lib/GeneralProvider";
 import SidebarMenu from "../layout/SidebarMenu";
 import Link from "next/link";
+import Image from "next/image"; // Import Image component
 
 interface Product {
   id: number;
@@ -147,16 +148,21 @@ export default function Catalog() {
               className="flex flex-col gap-4 group"
             >
               {/* Image */}
-              <div
-                className="w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300"
-                style={{
-                  backgroundImage: product.media[0]?.url
-                    ? `url(${product.media[0]?.url})`
-                    : undefined,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
+              <div className="relative w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300">
+                {product.media[0]?.url ? (
+                  <Image
+                    src={`/api/images/${product.media[0].url}`}
+                    alt={product.name}
+                    layout="fill"
+                    objectFit="cover"
+                    objectPosition="center"
+                    className="transition-all duration-300 group-hover:brightness-90"
+                    priority={false} // Lazy loading off for performance optimization
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300"></div> // Fallback for missing image
+                )}
+              </div>
 
               {/* Product Title + Price */}
               <span className="text-base sm:text-lg">

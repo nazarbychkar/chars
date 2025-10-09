@@ -98,7 +98,7 @@ export default function Product() {
           <img
             className="w-full max-w-[800px] max-h-[1160px] object-cover"
             src={
-              images[activeImageIndex]?.url || "https://placehold.co/800x1160"
+              `/api/images/${images[activeImageIndex]?.url}` || "https://placehold.co/800x1160"
             }
             alt={product.name}
           />

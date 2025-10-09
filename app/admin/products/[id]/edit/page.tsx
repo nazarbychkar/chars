@@ -302,13 +302,12 @@ export default function EditProductPage() {
             </div>
 
             <div className="w-1/2 p-4">
-              <Label>Зображення</Label>
               <DropzoneComponent onDrop={handleDrop} />
               <div className="mt-2 flex flex-wrap gap-4 text-sm">
                 {formData.media.map((item, i) => (
                   <div key={`existing-${i}`} className="relative inline-block">
                     <Image
-                      src={item.url}
+                      src={`/api/images/${item.url}`}
                       width={200}
                       height={200}
                       alt={`image-${i}`}

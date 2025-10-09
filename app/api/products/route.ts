@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "product-images");
+    const uploadDir = path.join(process.cwd(), "product-images");
     await mkdir(uploadDir, { recursive: true });
 
     const savedImageUrls: string[] = [];
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       const filePath = path.join(uploadDir, uniqueName);
 
       await writeFile(filePath, buffer);
-      savedImageUrls.push(`/product-images/${uniqueName}`);
+      savedImageUrls.push(uniqueName);
     }
 
     const parsedSizes = JSON.parse(sizesRaw); // ["S", "M", "L"]
