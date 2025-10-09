@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb", // for images, videos
+      bodySizeLimit: "100mb", // for images, videos
     },
   },
 };
