@@ -9,6 +9,7 @@ import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
+import Image from "next/image";
 
 const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
 
@@ -79,6 +80,10 @@ export default function FormElements() {
 
   const handleDrop = (files: File[]) => {
     setImages((prev) => [...prev, ...files]);
+  };
+
+  const handleDeleteNewImage = (indexToRemove: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,7 +171,6 @@ export default function FormElements() {
                   />
                 </div>
                 <div>
-                  <Label>Розміри</Label>
                   <MultiSelect
                     label="Розміри"
                     options={multiOptions}
@@ -241,14 +245,31 @@ export default function FormElements() {
 
           {/* Right side: images */}
           <div className="p-4">
-            <ComponentCard title="Зображення товару">
-              <DropzoneComponent onDrop={handleDrop} />
-              {images.length > 0 && (
-                <div className="mt-2 text-sm text-gray-600">
-                  {images.length} зображень обрано
-                </div>
-              )}
-            </ComponentCard>
+            <DropzoneComponent onDrop={handleDrop} />
+            {images.length > 0 &&
+              images.map((file, i) => {
+                const previewUrl = URL.createObjectURL(file);
+                return (
+                  <div key={`new-${i}`} className="relative inline-block">
+                    <Image
+                      src={previewUrl}
+                      alt={file.name}
+                      width={200}
+                      height={200}
+                      className="rounded max-w-[200px] max-h-[200px]"
+                      onLoad={() => URL.revokeObjectURL(previewUrl)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNewImage(i)}
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                      title="Видалити зображення"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
           </div>
         </div>
 

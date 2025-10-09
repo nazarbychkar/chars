@@ -15,8 +15,8 @@ export default function Search() {
         alt="search"
         src={
           isDark
-            ? "/images/dark-theme/search-dark.png"
-            : "/images/light-theme/search-light.png"
+            ? "/images/dark-theme/search.svg"
+            : "/images/light-theme/search.svg"
         }
       />
     </button>

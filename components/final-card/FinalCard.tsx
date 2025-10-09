@@ -505,8 +505,8 @@ export default function FinalCard() {
           <Image
             src={`${
               isDark
-                ? "/images/dark-theme/big-basket-dark.png"
-                : "/images/light-theme/big-basket-light.png"
+                ? "/images/dark-theme/basket.svg"
+                : "/images/light-theme/basket.svg"
             }`}
             alt="shopping basket icon"
             width={200}
@@ -807,7 +807,12 @@ export default function FinalCard() {
                           className="text-red-500 font-semibold"
                           onClick={() => removeItem(item.id, item.size)}
                         >
-                          Видалити
+                          <Image
+                            src={"/images/trashcan.svg"}
+                            width={30}
+                            height={30}
+                            alt={""}
+                          ></Image>
                         </button>
                       </div>
                     </div>

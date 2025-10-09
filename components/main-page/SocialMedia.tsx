@@ -2,6 +2,7 @@
 
 import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SocialMedia() {
   const { isDark } = useAppContext();
@@ -13,14 +14,14 @@ export default function SocialMedia() {
       className="max-w-[1920px] mx-auto w-full relative overflow-hidden lg:my-36"
     >
       <div className="flex flex-col-reverse lg:flex-row justify-center">
-        <div className="flex justify-center gap-4 sm:gap-7">
+        <div className="flex justify-center gap-4 sm:gap-7 overflow-x-auto">
           <img
-            className="w-44 h-[300px] sm:w-80 sm:h-[700.25px] rounded-[24px] sm:rounded-[46.43px]"
+            className="w-44 h-auto sm:w-80 sm:h-auto rounded-[24px] sm:rounded-[46.43px] max-w-full max-h-[calc(100vh-20px)]"
             src="/images/social-media-0.png"
             alt="image-1"
           />
           <img
-            className="w-44 h-[300px] sm:w-80 sm:h-[709.92px] rounded-[24px] sm:rounded-[53.20px]"
+            className="w-44 h-auto sm:w-80 sm:h-auto rounded-[24px] sm:rounded-[53.20px] max-w-full max-h-[calc(100vh-20px)]"
             src="/images/social-media-1.png"
             alt="image-2"
           />
@@ -49,9 +50,14 @@ export default function SocialMedia() {
             >
               МИ В TIKTOK
             </Link>
-            <img
+            <Image
+              width={39}
+              height={39}
               className="w-8 h-8 md:w-10 md:h-10"
-              src="https://placehold.co/39x39"
+              src={`/images/${
+                isDark ? "dark-theme/tiktok.svg" : "light-theme/tiktok.svg"
+              }`}
+              alt={"tiktok icon"}
             />
           </div>
 
@@ -64,9 +70,16 @@ export default function SocialMedia() {
             >
               МИ В ІНСТАГРАМ
             </Link>
-            <img
+            <Image
+              width={39}
+              height={39}
               className="w-8 h-8 md:w-10 md:h-10"
-              src="https://placehold.co/39x39"
+              src={`/images/${
+                isDark
+                  ? "dark-theme/instagram.svg"
+                  : "light-theme/instagram.svg"
+              }`}
+              alt={"instagram icon"}
             />
           </div>
         </div>

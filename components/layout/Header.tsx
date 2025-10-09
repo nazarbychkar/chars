@@ -81,8 +81,8 @@ export default function Header() {
                 alt="theme switch"
                 src={
                   isDark
-                    ? "/images/dark-theme/theme-switch-dark.png"
-                    : "/images/light-theme/theme-switch-light.png"
+                    ? "/images/dark-theme/theme-switch.svg"
+                    : "/images/light-theme/theme-switch.svg"
                 }
               />
             </button>
@@ -94,8 +94,8 @@ export default function Header() {
                 alt="search icon"
                 src={
                   isDark
-                    ? "/images/dark-theme/search-dark.png"
-                    : "/images/light-theme/search-light.png"
+                    ? "/images/dark-theme/search.svg"
+                    : "/images/light-theme/search.svg"
                 }
               />
             </button>
@@ -109,8 +109,8 @@ export default function Header() {
                 alt="shopping basket"
                 src={
                   isDark
-                    ? "/images/dark-theme/shopping-basket-dark.png"
-                    : "/images/light-theme/shopping-basket-light.png"
+                    ? "/images/dark-theme/basket.svg"
+                    : "/images/light-theme/basket.svg"
                 }
               />
             </button>
@@ -134,8 +134,8 @@ export default function Header() {
                 alt="theme switch"
                 src={
                   isDark
-                    ? "/images/dark-theme/theme-switch-dark.png"
-                    : "/images/light-theme/theme-switch-light.png"
+                    ? "/images/dark-theme/theme-switch.svg"
+                    : "/images/light-theme/theme-switch.svg"
                 }
               />
             </button>
@@ -176,8 +176,8 @@ export default function Header() {
                 alt="shopping basket"
                 src={
                   isDark
-                    ? "/images/dark-theme/shopping-basket-dark.png"
-                    : "/images/light-theme/shopping-basket-light.png"
+                    ? "/images/dark-theme/basket.svg"
+                    : "/images/light-theme/basket.svg"
                 }
               />
             </button>

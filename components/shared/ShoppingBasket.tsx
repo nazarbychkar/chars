@@ -16,8 +16,8 @@ const { isDark } = useAppContext();
         alt="shopping basket"
         src={
           isDark
-            ? "/images/dark-theme/shopping-basket-dark.png"
-            : "/images/light-theme/shopping-basket-light.png"
+            ? "/images/dark-theme/basket.svg"
+            : "/images/light-theme/basket.svg"
         }
       />
     </button>

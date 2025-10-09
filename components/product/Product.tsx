@@ -117,8 +117,8 @@ export default function Product() {
                 <img
                   src={`${
                     isDark
-                      ? "/images/dark-theme/slider-button-left.png"
-                      : "/images/light-theme/slider-button-left.png"
+                      ? "/images/dark-theme/slider-button-left.svg"
+                      : "/images/light-theme/slider-button-left.svg"
                   }`}
                   alt="Previous"
                 />
@@ -136,8 +136,8 @@ export default function Product() {
                 <img
                   src={`${
                     isDark
-                      ? "/images/dark-theme/slider-button-right.png"
-                      : "/images/light-theme/slider-button-right.png"
+                      ? "/images/dark-theme/slider-button-right.svg"
+                      : "/images/light-theme/slider-button-right.svg"
                   }`}
                   alt="Next"
                 />
