@@ -254,7 +254,7 @@ export default function FinalCard() {
         .then((response) => response.json())
         .then((data) => {
           const cityData = data.data || [];
-          setCities(cityData.map((city: any) => city.Description));
+          setCities(cityData.map((city: { Description: unknown }) => city.Description));
           // console.log(data);
         })
         .catch((error) => {
@@ -286,7 +286,7 @@ export default function FinalCard() {
         .then((response) => response.json())
         .then((data) => {
           const cityData = data.data || [];
-          setCities(cityData.map((city: any) => city.Description));
+          setCities(cityData.map((city: { Description: unknown }) => city.Description));
           // console.log(data);
         })
         .catch((error) => {
@@ -333,7 +333,7 @@ export default function FinalCard() {
         .then((response) => response.json())
         .then((data) => {
           const postOfficeData = data.data || [];
-          setPostOffices(postOfficeData.map((post: any) => post.Description));
+          setPostOffices(postOfficeData.map((post: { Description: unknown}) => post.Description));
           // console.log(data);
         })
         .catch((error) => {

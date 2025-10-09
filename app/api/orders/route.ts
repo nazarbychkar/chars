@@ -53,21 +53,30 @@ export async function POST(req: NextRequest) {
     }
 
     const fullAmount = items.reduce(
-      (total: number, item: any) => total + item.price * item.quantity,
+      (total: number, item: { price: number; quantity: number }) =>
+        total + item.price * item.quantity,
       0
     );
 
     const amountToPay = payment_type === "prepay" ? 300 : fullAmount;
     const amountInKopecks = Math.round(amountToPay * 100);
 
-    const basketOrder = items.map((item: any) => ({
-      name: item.name,
-      qty: item.quantity,
-      sum: Math.round(item.price * item.quantity * 100),
-      total: Math.round(item.price * item.quantity * 100),
-      unit: "шт.",
-      code: `${item.product_id}-${item.size}`,
-    }));
+    const basketOrder = items.map(
+      (item: {
+        name: string;
+        quantity: number;
+        price: number;
+        product_id: number;
+        size: number;
+      }) => ({
+        name: item.name,
+        qty: item.quantity,
+        sum: Math.round(item.price * item.quantity * 100),
+        total: Math.round(item.price * item.quantity * 100),
+        unit: "шт.",
+        code: `${item.product_id}-${item.size}`,
+      })
+    );
 
     const reference = crypto.randomUUID();
 
@@ -145,15 +154,21 @@ export async function POST(req: NextRequest) {
 📦 <b>Товари:</b>
 ${items
   .map(
-    (item: any, i: number) =>
+    (
+      item: {
+        product_name: string;
+        size: string;
+        quantity: number;
+        price: number;
+      },
+      i: number
+    ) =>
       `${i + 1}. ${item.product_name} | ${item.size} | x${item.quantity} | ${
         item.price
       } грн`
   )
   .join("\n")}
     `;
-
-    // console.log(items)
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: "POST",
