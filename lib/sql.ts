@@ -5,7 +5,9 @@ import path from "path";
 // Create a PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('sslmode=require') ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DATABASE_URL?.includes("sslmode=require")
+    ? { rejectUnauthorized: false }
+    : false,
 });
 
 // Debug: Log the actual DATABASE_URL being used
@@ -29,7 +31,7 @@ export const sql = Object.assign(
       }
       const result = await pool.query(query, values);
       return result.rows;
-    }
+    },
   }
 );
 
@@ -186,20 +188,35 @@ export async function sqlGetAllColors() {
 
   // Standard color palette for fashion items
   const standardColors = [
-    'Чорний', 'Білий', 'Сірий', 'Бежевий', 'Коричневий',
-    'Червоний', 'Рожевий', 'Помаранчевий', 'Жовтий',
-    'Зелений', 'Блакитний', 'Синій', 'Фіолетовий',
-    'Кремовий', 'Хаки', 'Бордовий', 'Темно-синій',
-    'Світло-сірий', 'Темно-сірий', 'Малиновий', 'Кораловий'
+    "Чорний",
+    "Білий",
+    "Сірий",
+    "Бежевий",
+    "Коричневий",
+    "Червоний",
+    "Рожевий",
+    "Помаранчевий",
+    "Жовтий",
+    "Зелений",
+    "Блакитний",
+    "Синій",
+    "Фіолетовий",
+    "Кремовий",
+    "Хаки",
+    "Бордовий",
+    "Темно-синій",
+    "Світло-сірий",
+    "Темно-сірий",
+    "Малиновий",
+    "Кораловий",
   ];
 
   // Combine database colors with standard colors, remove duplicates
-  const allColors = [...new Set([
-    ...dbColors.map(row => row.color),
-    ...standardColors
-  ])].sort();
+  const allColors = [
+    ...new Set([...dbColors.map((row) => row.color), ...standardColors]),
+  ].sort();
 
-  return allColors.map(color => ({ color }));
+  return allColors.map((color) => ({ color }));
 }
 
 // Create new product
@@ -545,7 +562,7 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
       COALESCE(
         JSON_AGG(
           JSONB_BUILD_OBJECT(
-            'product_name', oi.name,
+            'product_name', p.name,
             'size', oi.size,
             'quantity', oi.quantity,
             'price', oi.price
@@ -555,6 +572,7 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
       ) AS items
     FROM orders o
     LEFT JOIN order_items oi ON o.id = oi.order_id
+    LEFT JOIN products p ON oi.product_id = p.id
     WHERE o.invoice_id = ${invoiceId}
     GROUP BY o.id;
   `;
