@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
 🚚 <b>Доставка:</b> ${order.delivery_method}
 🏙️ <b>Місто:</b> ${order.city}
 🏤 <b>Відділення:</b> ${order.post_office}
+📝 <b>Коментар:</b> ${order.comment || "—"}
 💰 <b>Оплата:</b> ${
         order.payment_type === "prepay"
           ? "Передплата (300 грн)"
