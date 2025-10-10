@@ -18,7 +18,7 @@ export default function Reviews() {
   return (
     <section
       id="reviews"
-      className={`max-w-[1920px] w-full mx-auto relative ${
+      className={`scroll-mt-5 max-w-[1920px] w-full mx-auto relative ${
         isDark ? "bg-stone-900" : "bg-[#e3dfd7]"
       } px-6 py-12 md:py-20`}
     >
@@ -32,7 +32,14 @@ export default function Reviews() {
 
         <div className="text-base lg:text-2xl font-normal font-['Arial'] leading-relaxed">
           Більше відгуків дивіться у<br />
-          нашому <Link href="https://www.instagram.com/chars_ua_brand/" className="underline italic hover:text-blue-600 transition-colors">Instagram</Link> профілі
+          нашому{" "}
+          <Link
+            href="https://www.instagram.com/chars_ua_brand/"
+            className="underline italic hover:text-blue-600 transition-colors"
+          >
+            Instagram
+          </Link>{" "}
+          профілі
         </div>
 
         {/* Navigation buttons */}

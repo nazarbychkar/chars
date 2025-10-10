@@ -1,4 +1,3 @@
-import ComponentCard from "@/components/admin/ComponentCard";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import ProductsTable from "@/components/admin/tables/ProductsTable";
 import { Metadata } from "next";

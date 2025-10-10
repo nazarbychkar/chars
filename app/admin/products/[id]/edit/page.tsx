@@ -20,12 +20,6 @@ const multiOptions = [
   { value: "XS", text: "XS", selected: false },
 ];
 
-const categoryOptions = [
-  { id: 1, name: "Чоловічий одяг" },
-  { id: 2, name: "Жіночий одяг" },
-  { id: 3, name: "Аксесуари" },
-];
-
 const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
 
 export default function EditProductPage() {

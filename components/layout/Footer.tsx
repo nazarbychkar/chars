@@ -26,13 +26,15 @@ export default function Footer() {
       <div className="hidden lg:flex justify-between">
         <div className="flex flex-col gap-6">
           <div className="flex justify-start gap-6">
-            <div className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-              isDark ? "border-white" : "border-black"
-            }`}>
+            <div
+              className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                isDark ? "border-white" : "border-black"
+              }`}
+            >
               <img
                 src="/images/location-icon.svg"
                 alt="Location"
-                className="w-8 h-8 md:w-10 md:h-10"
+                className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
               />
             </div>
             <Link
@@ -47,13 +49,15 @@ export default function Footer() {
           </div>
 
           <div className="flex justify-start gap-6">
-            <div className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-              isDark ? "border-white" : "border-black"
-            }`}>
+            <div
+              className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                isDark ? "border-white" : "border-black"
+              }`}
+            >
               <img
                 src="/images/email-icon.svg"
                 alt="Email"
-                className="w-8 h-8 md:w-10 md:h-10"
+                className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
               />
             </div>
             <Link
@@ -67,13 +71,15 @@ export default function Footer() {
 
         <div className="flex flex-col gap-6">
           <div className="flex justify-start gap-6">
-            <div className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-              isDark ? "border-white" : "border-black"
-            }`}>
+            <div
+              className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                isDark ? "border-white" : "border-black"
+              }`}
+            >
               <img
                 src="/images/instagram-icon.svg"
                 alt="Instagram"
-                className="w-8 h-8 md:w-10 md:h-10"
+                className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
               />
             </div>
             <Link
@@ -86,13 +92,15 @@ export default function Footer() {
           </div>
 
           <div className="flex justify-start gap-6">
-            <div className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-              isDark ? "border-white" : "border-black"
-            }`}>
+            <div
+              className={`w-20 h-20 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                isDark ? "border-white" : "border-black"
+              }`}
+            >
               <img
                 src="/images/facebook-icon.svg"
                 alt="Facebook"
-                className="w-8 h-8 md:w-10 md:h-10"
+                className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
               />
             </div>
             <Link
@@ -123,16 +131,28 @@ export default function Footer() {
 
         <div className="flex flex-col gap-4">
           <span className="text-lg md:text-2xl">Навігація</span>
-          <Link href="/#about" className="text-sm md:text-lg">
+          <Link
+            href="/#about"
+            className="text-sm md:text-lg hover:text-[#8C7461]"
+          >
             Про нас
           </Link>
-          <Link href="/#payment-and-delivery" className="text-sm md:text-lg">
+          <Link
+            href="/#payment-and-delivery"
+            className="text-sm md:text-lg hover:text-[#8C7461]"
+          >
             Оплата і доставка
           </Link>
-          <Link href="/#reviews" className="text-sm md:text-lg">
+          <Link
+            href="/#reviews"
+            className="text-sm md:text-lg hover:text-[#8C7461]"
+          >
             Відгуки
           </Link>
-          <Link href="/#contacts" className="text-sm md:text-lg">
+          <Link
+            href="/#contacts"
+            className="text-sm md:text-lg hover:text-[#8C7461]"
+          >
             Контакти
           </Link>
         </div>
@@ -191,16 +211,28 @@ export default function Footer() {
         <div>
           <span className="text-lg md:text-2xl">Навігація</span>
           <div className="flex justify-around gap-4 md:gap-6">
-            <Link href="/#about" className="text-sm md:text-lg">
+            <Link
+              href="/#about"
+              className="text-sm md:text-lg hover:text-[#8C7461]"
+            >
               Про нас
             </Link>
-            <Link href="/#payment-and-delivery" className="text-sm md:text-lg">
+            <Link
+              href="/#payment-and-delivery"
+              className="text-sm md:text-lg hover:text-[#8C7461]"
+            >
               Оплата і доставка
             </Link>
-            <Link href="/#reviews" className="text-sm md:text-lg">
+            <Link
+              href="/#reviews"
+              className="text-sm md:text-lg hover:text-[#8C7461]"
+            >
               Відгуки
             </Link>
-            <Link href="/#contacts" className="text-sm md:text-lg">
+            <Link
+              href="/#contacts"
+              className="text-sm md:text-lg hover:text-[#8C7461]"
+            >
               Контакти
             </Link>
           </div>
@@ -209,16 +241,18 @@ export default function Footer() {
         <div className="flex justify-between gap-4 md:gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex justify-start gap-4">
-              <div className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-                isDark ? "border-white" : "border-black"
-              }`}>
+              <div
+                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                  isDark ? "border-white" : "border-black"
+                }`}
+              >
                 <img
                   src="/images/location-icon.svg"
                   alt="Location"
-                  className="w-3 h-3 md:w-4 md:h-4"
+                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
                 />
               </div>
-              <Link 
+              <Link
                 href="https://maps.google.com/?q=Київ, вул. Костянтинівська, 21"
                 target="_blank"
                 className="w-48 h-8 md:w-56 md:h-11 text-sm md:text-xl flex justify-start my-3 hover:underline"
@@ -230,16 +264,18 @@ export default function Footer() {
             </div>
 
             <div className="flex justify-start gap-4 md:gap-6">
-              <div className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-                isDark ? "border-white" : "border-black"
-              }`}>
+              <div
+                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                  isDark ? "border-white" : "border-black"
+                }`}
+              >
                 <img
                   src="/images/email-icon.svg"
                   alt="Email"
-                  className="w-3 h-3 md:w-4 md:h-4"
+                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
                 />
               </div>
-              <Link 
+              <Link
                 href="mailto:charskyiev91@gmail.com"
                 className="w-48 h-5 md:w-56 md:h-5 text-sm md:text-xl flex justify-start my-auto hover:underline"
               >
@@ -248,16 +284,18 @@ export default function Footer() {
             </div>
 
             <div className="flex justify-start gap-4 md:gap-6">
-              <div className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-                isDark ? "border-white" : "border-black"
-              }`}>
+              <div
+                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                  isDark ? "border-white" : "border-black"
+                }`}
+              >
                 <img
                   src="/images/instagram-icon.svg"
                   alt="Instagram"
-                  className="w-3 h-3 md:w-4 md:h-4"
+                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
                 />
               </div>
-              <Link 
+              <Link
                 href="https://www.instagram.com/chars_ua_brand/"
                 target="_blank"
                 className="w-28 h-8 md:w-32 md:h-11 text-sm md:text-xl flex justify-start my-auto hover:underline"
@@ -267,16 +305,18 @@ export default function Footer() {
             </div>
 
             <div className="flex justify-start gap-4 md:gap-6">
-              <div className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
-                isDark ? "border-white" : "border-black"
-              }`}>
+              <div
+                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                  isDark ? "border-white" : "border-black"
+                }`}
+              >
                 <img
                   src="/images/facebook-icon.svg"
                   alt="Facebook"
-                  className="w-3 h-3 md:w-4 md:h-4"
+                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
                 />
               </div>
-              <Link 
+              <Link
                 href="https://www.facebook.com/chars.ua"
                 target="_blank"
                 className="w-28 h-5 md:w-32 md:h-5 text-sm md:text-xl flex justify-start my-auto hover:underline"

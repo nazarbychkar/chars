@@ -47,19 +47,19 @@ export default function SidebarMenu({
   const season_data = [
     {
       name: "Осінь",
-      image: "https://placehold.co/458x185",
+      image: "/images/autumn.png",
     },
     {
       name: "Зима",
-      image: "https://placehold.co/458x185",
+      image: "/images/winter.png",
     },
     {
       name: "Весна",
-      image: "https://placehold.co/458x185",
+      image: "/images/spring.png",
     },
     {
       name: "Літо",
-      image: "https://placehold.co/458x185",
+      image: "/images/summer.png",
     },
   ];
 
@@ -162,8 +162,7 @@ export default function SidebarMenu({
                   }}
                 >
                   {/* Dark overlay on image */}
-                  <div className="absolute inset-0 bg-black/40" />
-                  <span className="relative z-10">{item.name}</span>
+                  <div className="absolute inset-0" />
                 </Link>
               ))}
             </div>

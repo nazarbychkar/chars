@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAppContext } from "@/lib/GeneralProvider";
+import Image from "next/image";
 
 interface Product {
   id: number;
@@ -12,7 +12,6 @@ interface Product {
 }
 
 export default function YouMightLike() {
-  const { isDark } = useAppContext();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,15 +62,14 @@ export default function YouMightLike() {
                 href={`/product/${product.id}`}
                 className="w-full sm:w-96 relative mx-auto"
               >
-                <img
-                  className="w-full h-auto sm:h-[613px] object-cover"
+                <Image
                   src={image}
                   alt={product.name}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src =
-                      "https://placehold.co/400x600/cccccc/666666?text=No+Image";
-                  }}
+                  width={400} // Adjust based on your layout
+                  height={600} // Adjust based on your layout
+                  className="w-full h-auto sm:h-[613px] object-cover"
+                  placeholder="blur"
+                  blurDataURL="https://placehold.co/400x600/cccccc/666666?text=No+Image"
                 />
                 <div className="mt-2 text-lg sm:text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
                   {product.name}

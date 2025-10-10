@@ -14,7 +14,7 @@ export default function FAQ() {
   return (
     <section
       id="payment-and-delivery"
-      className={`max-w-[1920px] w-full mx-auto ${
+      className={`scroll-mt-20 max-w-[1920px] w-full mx-auto ${
         isDark ? "bg-stone-900" : "bg-[#e3dfd7]"
       } py-10 lg:py-20`}
     >
@@ -55,7 +55,11 @@ export default function FAQ() {
               content: "Штани з корегуванням параметрів",
             },
           ].map((item, index) => (
-            <div key={index} className="cursor-pointer" onClick={() => toggleAccordion(index + 1)}>
+            <div
+              key={index}
+              className="cursor-pointer"
+              onClick={() => toggleAccordion(index + 1)}
+            >
               <div className="max-w-4xl flex flex-row justify-between items-start sm:items-center border-b-2 p-3 sm:p-5 gap-3 sm:gap-0">
                 <div className="flex justify-center gap-10">
                   <div className="text-2xl sm:text-3xl lg:text-4xl font-normal font-['Arial'] leading-8">

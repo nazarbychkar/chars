@@ -6,7 +6,6 @@ import SidebarFilter from "../layout/SidebarFilter";
 import { useAppContext } from "@/lib/GeneralProvider";
 import SidebarMenu from "../layout/SidebarMenu";
 import Link from "next/link";
-import Image from "next/image"; // Import Image component
 
 interface Product {
   id: number;

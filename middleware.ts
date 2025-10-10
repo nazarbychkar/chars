@@ -25,8 +25,8 @@ export function middleware(request: NextRequest) {
       if (user === validUser && password === validPass) {
         isAuthenticated = true;
       }
-    } catch (error) {
-      // Invalid token
+    } catch (e) {
+      return NextResponse.json(`INVALID TOKEN ${e}`);
     }
   }
 

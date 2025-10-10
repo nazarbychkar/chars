@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import React from "react";
 import { EcommerceMetrics } from "@/components/admin/EcommerceMetrics";
 import MonthlySalesChart from "@/components/admin/MonthlySalesChart";
-import MonthlyTarget from "@/components/admin/MonthlyTarget";
-import StatisticsChart from "@/components/admin/StatisticsChart";
 import RecentOrders from "@/components/admin/RecentOrders";
 
 export const metadata: Metadata = {

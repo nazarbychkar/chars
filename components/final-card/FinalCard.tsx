@@ -11,18 +11,18 @@ import "swiper/css/navigation";
 import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
 
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  created_at: Date;
-  sizes: { size: string }[];
-  top_sale?: boolean;
-  limited_edition?: boolean;
-  season?: string;
-  category_name?: string;
-}
+// interface Product {
+//   id: number;
+//   name: string;
+//   description: string;
+//   price: number;
+//   created_at: Date;
+//   sizes: { size: string }[];
+//   top_sale?: boolean;
+//   limited_edition?: boolean;
+//   season?: string;
+//   category_name?: string;
+// }
 
 export default function FinalCard() {
   // GENERAL
@@ -91,17 +91,17 @@ export default function FinalCard() {
     const amountToPay = paymentType === "prepay" ? 300 : fullAmount;
 
     // Конвертуємо в копійки
-    const amountInKopecks = Math.round(amountToPay * 100);
+    // const amountInKopecks = Math.round(amountToPay * 100);
 
     // Формуємо замовлення для інвойсу
-    const basketOrder = items.map((item) => ({
-      name: item.name,
-      qty: item.quantity,
-      sum: Math.round(item.price * item.quantity * 100),
-      total: Math.round(item.price * item.quantity * 100),
-      unit: "шт.",
-      code: `${item.id}-${item.size}`,
-    }));
+    // const basketOrder = items.map((item) => ({
+    //   name: item.name,
+    //   qty: item.quantity,
+    //   sum: Math.round(item.price * item.quantity * 100),
+    //   total: Math.round(item.price * item.quantity * 100),
+    //   unit: "шт.",
+    //   code: `${item.id}-${item.size}`,
+    // }));
 
     try {
       // Create order and get payment URL

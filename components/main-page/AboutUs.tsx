@@ -2,7 +2,7 @@ export default function AboutUs() {
   return (
     <section
       id="about"
-      className="max-w-[1920px] mx-auto w-full px-4 py-12 lg:h-[625px] relative overflow-hidden flex flex-col items-center gap-8 lg:gap-15 justify-center"
+      className="scroll-mt-20 max-w-[1920px] mx-auto w-full px-4 py-12 lg:h-[625px] relative overflow-hidden flex flex-col items-center gap-8 lg:gap-15 justify-center"
     >
       {/* Title */}
       <div className="text-[#8C7461] text-center text-2xl lg:text-5xl font-medium lg:font-normal lg:font-['Inter'] uppercase">

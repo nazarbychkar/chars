@@ -11,7 +11,7 @@ export default function SocialMedia() {
     // h-[977px]
     <section
       id="contacts"
-      className="max-w-[1920px] mx-auto w-full relative overflow-hidden lg:my-36"
+      className="scroll-mt-30 max-w-[1920px] mx-auto w-full relative overflow-hidden lg:my-36"
     >
       <div className="flex flex-col-reverse lg:flex-row justify-center">
         <div className="flex justify-center gap-4 sm:gap-7 overflow-x-auto">
@@ -53,7 +53,7 @@ export default function SocialMedia() {
             <Image
               width={39}
               height={39}
-              className="w-8 h-8 md:w-10 md:h-10"
+              className="w-11 h-11 md:w-13 md:h-13"
               src={`/images/${
                 isDark ? "dark-theme/tiktok.svg" : "light-theme/tiktok.svg"
               }`}

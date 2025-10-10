@@ -64,7 +64,6 @@ export default function WhyChooseUs() {
                   src={item.pic}
                   alt={`image-${i}`}
                 />
-
                 <div className="w-full justify-center text-3xl lg:text-5xl font-normal font-['Inter'] lowercase">
                   {item.top_text} <br />
                   <span className="justify-center text-lg lg:text-xl font-normal font-['Inter'] capitalize">

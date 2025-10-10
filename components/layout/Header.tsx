@@ -3,8 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import SidebarMenu from "@/components/layout/SidebarMenu";
-import Search from "@/components/shared/Search";
-import ShoppingBasket from "@/components/shared/ShoppingBasket";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import SidebarBasket from "./SidebarBasket";
@@ -23,7 +21,7 @@ export default function Header() {
   } = useAppContext();
 
   const { items } = useBasket();
-  
+
   // Calculate total quantity of items in basket
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -60,7 +58,7 @@ export default function Header() {
             </Link>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="hover:text-[#8C7461]"
+              className="hover:text-[#8C7461]  cursor-pointer"
             >
               Каталог
             </button>
@@ -121,7 +119,7 @@ export default function Header() {
               />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems > 99 ? '99+' : totalItems}
+                  {totalItems > 99 ? "99+" : totalItems}
                 </span>
               )}
             </button>
@@ -180,7 +178,7 @@ export default function Header() {
               />
             </button>
 
-            <button 
+            <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
               className="relative"
             >
@@ -196,7 +194,7 @@ export default function Header() {
               />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {totalItems > 99 ? '99+' : totalItems}
+                  {totalItems > 99 ? "99+" : totalItems}
                 </span>
               )}
             </button>
