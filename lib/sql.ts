@@ -540,7 +540,6 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
       o.post_office,
       o.comment,
       o.payment_type,
-      o.total_amount,
       o.payment_status,
       o.created_at,
       COALESCE(

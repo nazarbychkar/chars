@@ -3,11 +3,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sqlUpdatePaymentStatus, sqlGetOrderByInvoiceId } from "@/lib/sql";
 
+export async function GET() {
+  return new NextResponse(null, { status: 200 });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
-    const { invoiceId, status } = data;
+    const { invoiceId, status, amount } = data;
     console.log("🔔 Webhook received:", { invoiceId, status });
 
     if (!invoiceId || !status) {
@@ -45,13 +49,21 @@ export async function POST(req: NextRequest) {
           ? "Передплата (300 грн)"
           : "Повна оплата"
       }
-🧾 <b>Сума:</b> ${order.total_amount} грн
+🧾 <b>Сума:</b> ${amount / 100} грн
 💳 <b>Статус:</b> ОПЛАЧЕНО ✅
 
 📦 <b>Товари:</b>
 ${order.items
   .map(
-    (item: { product_name: string; size: string; quantity: number; price: number; }, i: number) =>
+    (
+      item: {
+        product_name: string;
+        size: string;
+        quantity: number;
+        price: number;
+      },
+      i: number
+    ) =>
       `${i + 1}. ${item.product_name} | ${item.size} | x${item.quantity} | ${
         item.price
       } грн`

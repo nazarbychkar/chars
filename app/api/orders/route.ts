@@ -90,7 +90,22 @@ export async function POST(req: NextRequest) {
     // const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
     // Example: "https://abc123.ngrok.app"
 
-    const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
+    const PUBLIC_URL =
+      process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
+
+    // const monoResGET = await fetch(
+    //   PUBLIC_URL,
+    //   {
+    //     method: "GET",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "X-Token": process.env.NEXT_PUBLIC_MONO_TOKEN!,
+    //     },
+        
+    //   }
+    // );
+
+    // console.log("monoResGET", monoResGET);
 
     const monoRes = await fetch(
       "https://api.monobank.ua/api/merchant/invoice/create",
@@ -116,6 +131,8 @@ export async function POST(req: NextRequest) {
         }),
       }
     );
+    // console.log(`${PUBLIC_URL}/api/monowebhook`);
+    // console.log("monoRes", monoRes);
 
     const invoiceData = await monoRes.json();
     console.log("invoiceData api orders", invoiceData);
