@@ -5,7 +5,7 @@ import { sql } from "@/lib/sql"; // adjust to your actual path
 
 export async function POST() {
   try {
-    const mediaDir = path.join(process.cwd(), "public", "product-images");
+    const mediaDir = path.join(process.cwd(), "product-images");
     const files = await readdir(mediaDir);
 
     const usedMedia = await sql`SELECT url FROM product_media;`;

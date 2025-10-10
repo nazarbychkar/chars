@@ -365,7 +365,7 @@ export async function sqlDeleteProduct(id: number) {
 
   // Step 3: Delete files from disk
   for (const { url } of media) {
-    const filePath = path.join(process.cwd(), "public", url);
+    const filePath = path.join(process.cwd(), "product-images", url);
     try {
       await unlink(filePath);
     } catch (error) {
