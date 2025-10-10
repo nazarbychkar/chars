@@ -545,7 +545,7 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
       COALESCE(
         JSON_AGG(
           JSONB_BUILD_OBJECT(
-            'product_name', oi.product_name,
+            'product_name', oi.name,
             'size', oi.size,
             'quantity', oi.quantity,
             'price', oi.price
