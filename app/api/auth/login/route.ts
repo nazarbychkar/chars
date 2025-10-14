@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       { message: "Невірний логін або пароль" },
       { status: 401 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: "Помилка сервера" },
       { status: 500 }

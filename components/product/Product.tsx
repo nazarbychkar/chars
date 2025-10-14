@@ -27,7 +27,7 @@ interface Product {
 export default function Product() {
   const { addItem } = useBasket();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
+  const quantity = 1;
   const { isDark } = useAppContext();
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);

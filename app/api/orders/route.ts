@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     const { invoiceId, pageUrl } = invoiceData;
 
     // ✅ Зберігання замовлення у БД (статус "pending" - ще не оплачено)
-    const result = await sqlPostOrder({
+    await sqlPostOrder({
       customer_name,
       phone_number,
       email,

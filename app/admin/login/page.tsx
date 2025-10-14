@@ -31,7 +31,7 @@ export default function LoginPage() {
         const data = await response.json();
         setError(data.message || "Невірний логін або пароль");
       }
-    } catch (err) {
+    } catch {
       setError("Помилка з'єднання. Спробуйте ще раз.");
     } finally {
       setIsLoading(false);

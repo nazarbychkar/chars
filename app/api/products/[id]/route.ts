@@ -89,7 +89,7 @@ export async function PUT(
         : [],
       media: Array.isArray(body.media) ? body.media : [],
       colors: Array.isArray(body.colors)
-        ? body.colors.map((c: any) => ({ label: c.label, hex: c.hex || null }))
+        ? body.colors.map((c: { label: string; hex?: string | null }) => ({ label: c.label, hex: c.hex || null }))
         : [],
     });
 
