@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate": "ts-node scripts/migrate.ts"
   },
   "dependencies": {
     "@react-jvectormap/core": "^1.0.4",
@@ -36,6 +37,7 @@
     "eslint-config-next": "15.5.3",
     "file-loader": "^6.2.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5",
     "url-loader": "^4.1.1",
     "webpack": "^5.101.3"

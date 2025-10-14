@@ -9,6 +9,7 @@ import {
   GridIcon,
   HorizontaLDots,
   TableIcon,
+  ListIcon,
 } from "@/public/admin-icons/index";
 
 type NavItem = {
@@ -32,6 +33,11 @@ const navItems: NavItem[] = [
     //   { name: "Products Tables", path: "/admin/products", pro: false },
     // ],
     path: "/admin/products",
+  },
+  {
+    name: "Категорії",
+    icon: <ListIcon />,
+    path: "/admin/categories",
   },
   {
     name: "Замовлення",

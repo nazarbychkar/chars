@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
 
     const savedMedia: { type: "photo" | "video"; url: string }[] = [];
 
+    const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB per file
     for (const file of files) {
-      // Optional size guard (example: 500 MB per file)
       const size = (file).size as number | undefined;
-      if (typeof size === "number" && size > 500 * 1024 * 1024) {
-        return NextResponse.json({ error: "File too large" }, { status: 413 });
+      if (typeof size === "number" && size > MAX_FILE_SIZE) {
+        return NextResponse.json({ error: "Max file size is 15MB" }, { status: 413 });
       }
       const ext = file.name.split(".").pop();
       const uniqueName = `${crypto.randomUUID()}.${ext}`;

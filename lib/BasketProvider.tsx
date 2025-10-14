@@ -15,6 +15,7 @@ interface BasketItem {
   size: string;
   quantity: number;
   imageUrl: string;
+  color?: string;
 }
 
 interface BasketContextType {
@@ -56,7 +57,7 @@ export function BasketProvider({ children }: { children: ReactNode }) {
   function addItem(newItem: BasketItem) {
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex(
-        (i) => i.id === newItem.id && i.size === newItem.size
+        (i) => i.id === newItem.id && i.size === newItem.size && i.color === newItem.color
       );
       if (existingIndex !== -1) {
         const updated = [...prevItems];

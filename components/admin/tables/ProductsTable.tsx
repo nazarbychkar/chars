@@ -35,6 +35,7 @@ interface Product {
   season?: string;
   category_name?: string;
   color: string
+  media?: { type: string; url: string }[];
 }
 
 export default function ProductsTable() {
@@ -161,6 +162,12 @@ export default function ProductsTable() {
                   isHeader
                   className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
+                  Фото
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
                   Назва
                 </TableCell>
                 <TableCell
@@ -251,11 +258,28 @@ export default function ProductsTable() {
                     key={product.id}
                     className="hover:bg-gray-50 dark:hover:bg-white/[0.03]"
                   >
+                    <TableCell className="px-5 py-4">
+                      {product.media && product.media.length > 0 ? (
+                        product.media.find((m) => m.type === "photo") ? (
+                          <img
+                            src={`/api/images/${product.media.find((m) => m.type === "photo")?.url}`}
+                            alt={product.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {product.name}
                     </TableCell>
-                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {product.description}
+                    <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400 max-w-[360px]">
+                      {(product.description || "").length > 20
+                        ? `${product.description.slice(0, 20)}…`
+                        : product.description}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {product.price} ₴

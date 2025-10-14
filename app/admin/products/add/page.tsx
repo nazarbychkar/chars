@@ -11,9 +11,10 @@ import TextArea from "@/components/admin/form/input/TextArea";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
 import Image from "next/image";
 
-const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
+const seasonOptions = ["Весна", "Літо", "Осінь", "Зима", "Всі сезони"];
 
 const multiOptions = [
+  { value: "ONESIZE", text: "ONESIZE", selected: false },
   { value: "XL", text: "XL", selected: false },
   { value: "L", text: "L", selected: false },
   { value: "M", text: "M", selected: false },
@@ -40,13 +41,19 @@ export default function FormElements() {
   const [limitedEdition, setLimitedEdition] = useState(false);
 
   const [color, setColor] = useState("");
-  const [availableColors, setAvailableColors] = useState<{ color: string }[]>(
+  const [colors, setColors] = useState<{ label: string; hex?: string }[]>([]);
+  const [customColorLabel, setCustomColorLabel] = useState("");
+  const [customColorHex, setCustomColorHex] = useState("#000000");
+  const [availableColors, setAvailableColors] = useState<{ color: string; hex?: string }[]>(
     []
   );
 
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [season, setSeason] = useState("");
+  
+  const [fabricComposition, setFabricComposition] = useState("");
+  const [hasLining, setHasLining] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -122,12 +129,15 @@ export default function FormElements() {
           discount_percentage: discountPercentage ? Number(discountPercentage) : null,
           priority: Number(priority || 0),
           color,
+          colors,
           sizes,
           top_sale: topSale,
           limited_edition: limitedEdition,
-          season,
+          season: season === "Всі сезони" ? null : season,
           category_id: categoryId,
           media: uploadedMedia,
+          fabric_composition: fabricComposition,
+          has_lining: hasLining,
         }),
       });
 
@@ -144,12 +154,15 @@ export default function FormElements() {
       setDiscountPercentage("");
       setPriority("0");
       setColor("");
+      setColors([]);
       setSizes([]);
       setImages([]);
       setTopSale(false);
       setLimitedEdition(false);
       setSeason("");
       setCategoryId(null);
+      setFabricComposition("");
+      setHasLining(false);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Помилка при створенні товару"
@@ -258,21 +271,91 @@ export default function FormElements() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <Label>Колір</Label>
-                  <select
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
-                  >
-                    <option value="">Виберіть колір</option>
-                    {availableColors.map((c) => (
-                      <option key={c.color} value={c.color}>
-                        {c.color}
-                      </option>
+                <div className="space-y-2">
+                  <Label>Кольори</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {colors.map((c, idx) => (
+                      <button
+                        type="button"
+                        key={`${c.label}-${idx}`}
+                        className="relative w-8 h-8 rounded-full border"
+                        style={{ backgroundColor: c.hex || "#fff" }}
+                        title={c.label}
+                        onClick={() =>
+                          setColors(colors.filter((_, i) => i !== idx))
+                        }
+                      >
+                        <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">×</span>
+                      </button>
                     ))}
-                  </select>
+                  </div>
+                  {/* Removed dropdown; using swatch list below */}
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map((c) => (
+                      <button
+                        type="button"
+                        key={`pal-${c.color}`}
+                        className="flex items-center gap-2 border rounded-full px-2 py-1 text-xs hover:shadow transition"
+                        onClick={() => setColors((prev) => [...prev, { label: c.color, hex: c.hex }])}
+                        title={c.color}
+                      >
+                        <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex || "#fff" }} />
+                        <span>{c.color}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={customColorHex}
+                      onChange={(e) => setCustomColorHex(e.target.value)}
+                      className="w-10 h-10 p-0 border rounded"
+                    />
+                    <Input
+                      type="text"
+                      value={customColorLabel}
+                      onChange={(e) => setCustomColorLabel(e.target.value)}
+                      placeholder="Назва кольору"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!customColorLabel.trim()) return;
+                        setColors([
+                          ...colors,
+                          { label: customColorLabel.trim(), hex: customColorHex },
+                        ]);
+                        setCustomColorLabel("");
+                        setCustomColorHex("#000000");
+                      }}
+                      className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
+                    >
+                      Додати власний
+                    </button>
+                  </div>
                 </div>
+                
+                {/* Блок: Склад тканини і Підкладка */}
+                <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50">
+                  <div>
+                    <Label>Склад тканини</Label>
+                    <TextArea
+                      value={fabricComposition}
+                      onChange={setFabricComposition}
+                      rows={3}
+                      placeholder="Наприклад: 80% бавовна, 20% поліестер"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="mb-0">Підкладка?</Label>
+                    <ToggleSwitch
+                      enabled={hasLining}
+                      setEnabled={setHasLining}
+                      label="Has Lining"
+                    />
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between pt-2">
                   <Label className="mb-0">Топ продаж?</Label>
                   <ToggleSwitch

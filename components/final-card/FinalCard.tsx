@@ -33,9 +33,21 @@ export default function FinalCard() {
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState("pickup");
+  const [deliveryMethod, setDeliveryMethod] = useState("nova_poshta_branch");
   const [city, setCity] = useState("");
   const [postOffice, setPostOffice] = useState("");
+  // Auto-fill showroom address when selected
+  useEffect(() => {
+    if (deliveryMethod === "showroom_pickup") {
+      setCity("Київ");
+      setPostOffice("Самовивіз: вул. Костянтинівська, 21 (13:00–19:00)");
+    } else {
+      // Для способів Нової пошти не фіксуємо місто за замовчуванням
+      setCity("");
+      setPostOffice("");
+    }
+  }, [deliveryMethod]);
+
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState("");
   const [submittedOrder, setSubmittedOrder] = useState<{
@@ -633,18 +645,21 @@ export default function FinalCard() {
                 required
               >
                 <option value="">Оберіть спосіб доставки</option>
-                <option value="nova_poshta">Нова Пошта</option>
+                <option value="nova_poshta_branch">Нова пошта — у відділення</option>
+                <option value="nova_poshta_locker">Нова пошта — у поштомат</option>
+                <option value="nova_poshta_courier">Нова пошта — кур’єром</option>
                 {/* <option value="ukrposhta">Укрпошта</option> */}
+                <option value="showroom_pickup">Самовивіз з шоуруму (13:00–19:00)</option>
               </select>
 
-              {deliveryMethod === "nova_poshta" && (
+              {deliveryMethod.startsWith("nova_poshta") && (
                 <>
                   <div className="flex flex-col">
                     <label
                       htmlFor="city"
                       className="text-xl sm:text-2xl font-normal font-['Arial']"
                     >
-                      Місто *
+                      {deliveryMethod === "nova_poshta_courier" ? "Місто для доставки кур’єром *" : "Місто *"}
                     </label>
                     <input
                       type="text"
@@ -677,45 +692,71 @@ export default function FinalCard() {
                   </div>
 
                   {/* Post Office Input with Autocomplete */}
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="postOffice"
-                      className="text-xl sm:text-2xl font-normal font-['Arial']"
-                    >
-                      Відділення *
-                    </label>
-                    <input
-                      type="text"
-                      id="postOffice"
-                      value={postOffice}
-                      onChange={handlePostOfficeChange} // Update post office on input change
-                      placeholder="Введіть назву відділення"
-                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
-                      required
-                    />
-                    {loadingPostOffices ? (
-                      <p>Завантаження відділень...</p>
-                    ) : (
-                      postOfficeListVisible && (
-                        <div className="max-h-40 overflow-y-auto shadow-lg rounded border mt-2">
-                          <ul className="list-none p-0">
-                            {filteredPostOffices.map((postOfficeOption, idx) => (
-                                <li
-                                  key={idx}
-                                  className="p-3 cursor-pointer hover:bg-gray-200"
-                                  onClick={() =>
-                                    handlePostOfficeSelect(postOfficeOption)
-                                  } // Set post office on click
-                                >
-                                  {postOfficeOption}
-                                </li>
-                              ))}
-                          </ul>
-                        </div>
-                      )
-                    )}
-                  </div>
+                  {deliveryMethod === "nova_poshta_courier" ? (
+                    <div className="flex flex-col">
+                      <label
+                        htmlFor="postOffice"
+                        className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      >
+                        Адреса доставки (вулиця, будинок, квартира) *
+                      </label>
+                      <input
+                        type="text"
+                        id="postOffice"
+                        value={postOffice}
+                        onChange={(e) => setPostOffice(e.target.value)}
+                        placeholder="Напр.: вул. Січових Стрільців, 10, кв. 25"
+                        className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      <label
+                        htmlFor="postOffice"
+                        className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      >
+                        {deliveryMethod === "nova_poshta_locker" ? "Поштомат *" : "Відділення *"}
+                      </label>
+                      <input
+                        type="text"
+                        id="postOffice"
+                        value={postOffice}
+                        onChange={handlePostOfficeChange}
+                        placeholder={deliveryMethod === "nova_poshta_locker" ? "Введіть назву поштомата" : "Введіть назву відділення"}
+                        className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                        required
+                      />
+                      {loadingPostOffices ? (
+                        <p>Завантаження відділень...</p>
+                      ) : (
+                        postOfficeListVisible && (
+                          <div className="max-h-40 overflow-y-auto shadow-lg rounded border mt-2">
+                            <ul className="list-none p-0">
+                              {filteredPostOffices.map((postOfficeOption, idx) => (
+                                  <li
+                                    key={idx}
+                                    className="p-3 cursor-pointer hover:bg-gray-200"
+                                    onClick={() =>
+                                      handlePostOfficeSelect(postOfficeOption)
+                                    }
+                                  >
+                                    {postOfficeOption}
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
                 </>
+              )}
+
+              {deliveryMethod === "showroom_pickup" && (
+                <div className="text-base sm:text-lg text-gray-700">
+                  Самовивіз з шоуруму з 13:00 до 19:00, Київ, вул. Костянтинівська, 21
+                </div>
               )}
 
               <label

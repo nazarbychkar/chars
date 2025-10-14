@@ -13,6 +13,7 @@ import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
 
 const multiOptions = [
+  { value: "ONESIZE", text: "ONESIZE", selected: false },
   { value: "XL", text: "XL", selected: false },
   { value: "L", text: "L", selected: false },
   { value: "M", text: "M", selected: false },
@@ -20,7 +21,7 @@ const multiOptions = [
   { value: "XS", text: "XS", selected: false },
 ];
 
-const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
+const seasonOptions = ["Весна", "Літо", "Осінь", "Зима", "Всі сезони"];
 
 export default function EditProductPage() {
   const params = useParams();
@@ -41,6 +42,8 @@ export default function EditProductPage() {
     season: "",
     color: "",
     categoryId: null as number | null,
+    fabricComposition: "",
+    hasLining: false,
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -51,9 +54,12 @@ export default function EditProductPage() {
   const [categoryOptions, setCategoryOptions] = useState<
     { id: number; name: string }[]
   >([]);
-  const [availableColors, setAvailableColors] = useState<{ color: string }[]>(
+  const [availableColors, setAvailableColors] = useState<{ color: string; hex?: string }[]>(
     []
   );
+  const [customColorLabel, setCustomColorLabel] = useState("");
+  const [customColorHex, setCustomColorHex] = useState("#000000");
+  const [colors, setColors] = useState<{ label: string; hex?: string }[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -81,9 +87,12 @@ export default function EditProductPage() {
           season: productData.season,
           color: productData.color,
           categoryId: productData.category_id,
+          fabricComposition: productData.fabric_composition || "",
+          hasLining: productData.has_lining || false,
         });
 
         setCategoryOptions(categoryData);
+        setColors(productData.colors || []);
       } catch (err) {
         console.error("Failed to fetch product or categories", err);
         setError("Помилка при завантаженні товару або категорій");
@@ -176,9 +185,12 @@ export default function EditProductPage() {
           media: updatedMedia,
           top_sale: formData.topSale,
           limited_edition: formData.limitedEdition,
-          season: formData.season,
+          season: formData.season === "Всі сезони" ? null : formData.season,
           color: formData.color,
+          colors,
           category_id: formData.categoryId,
+          fabric_composition: formData.fabricComposition,
+          has_lining: formData.hasLining,
         }),
       });
 
@@ -288,20 +300,79 @@ export default function EditProductPage() {
                   ))}
                 </select>
 
-                <div>
-                  <Label>Колір</Label>
-                  <select
-                    value={formData.color}
-                    onChange={(e) => handleChange("color", e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
-                  >
-                    <option value="">Виберіть колір</option>
-                    {availableColors.map((c) => (
-                      <option key={c.color} value={c.color}>
-                        {c.color}
-                      </option>
+                <div className="space-y-2">
+                  <Label>Кольори</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {colors.map((c, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-2 border rounded-full px-3 py-1 text-xs">
+                        <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex || "#fff" }} />
+                        {c.label}
+                        <button type="button" className="ml-1 text-red-600" onClick={() => setColors(colors.filter((_, i) => i !== idx))}>×</button>
+                      </span>
                     ))}
-                  </select>
+                  </div>
+                  {/* Removed dropdown; using swatch list below */}
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map((c) => (
+                      <button
+                        type="button"
+                        key={`pal-${c.color}`}
+                        className="flex items-center gap-2 border rounded-full px-2 py-1 text-xs hover:shadow transition"
+                        onClick={() => setColors((prev) => [...prev, { label: c.color, hex: c.hex }])}
+                        title={c.color}
+                      >
+                        <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex || "#fff" }} />
+                        <span>{c.color}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={customColorHex}
+                      onChange={(e) => setCustomColorHex(e.target.value)}
+                      className="w-10 h-10 p-0 border rounded"
+                    />
+                    <Input
+                      type="text"
+                      value={customColorLabel}
+                      onChange={(e) => setCustomColorLabel(e.target.value)}
+                      placeholder="Назва кольору"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!customColorLabel.trim()) return;
+                        setColors([...colors, { label: customColorLabel.trim(), hex: customColorHex }]);
+                        setCustomColorLabel("");
+                        setCustomColorHex("#000000");
+                      }}
+                      className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
+                    >
+                      Додати власний
+                    </button>
+                  </div>
+                </div>
+
+                {/* Блок: Склад тканини і Підкладка */}
+                <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50 mt-4">
+                  <div>
+                    <Label>Склад тканини</Label>
+                    <TextArea
+                      value={formData.fabricComposition}
+                      onChange={(value) => handleChange("fabricComposition", value)}
+                      rows={3}
+                      placeholder="Наприклад: 80% бавовна, 20% поліестер"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="mb-0">Підкладка?</Label>
+                    <ToggleSwitch
+                      enabled={formData.hasLining}
+                      setEnabled={(value) => handleChange("hasLining", value)}
+                      label="Has Lining"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between mt-4">

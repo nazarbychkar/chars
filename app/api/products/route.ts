@@ -59,12 +59,15 @@ export async function POST(req: Request) {
         priority = 0,
         sizes = [],
         media = [],
+        colors = [],
         top_sale = false,
         limited_ition, // backward compat typo handling (ignored)
         limited_edition = false,
         season,
         color,
         category_id = null,
+        fabric_composition = "",
+        has_lining = false,
       } = body || {};
 
       if (!name || typeof price !== "number") {
@@ -88,6 +91,9 @@ export async function POST(req: Request) {
         season,
         color,
         category_id,
+        fabric_composition,
+        has_lining,
+        colors,
       });
 
       return NextResponse.json(product, { status: 201 });
@@ -111,6 +117,8 @@ export async function POST(req: Request) {
     const categoryId = formData.get("category_id")
       ? Number(formData.get("category_id"))
       : null;
+    const fabricComposition = formData.get("fabric_composition")?.toString() || "";
+    const hasLining = formData.get("has_lining") === "true";
 
     if (!name || !price) {
       return NextResponse.json(
@@ -156,6 +164,8 @@ export async function POST(req: Request) {
       season,
       color,
       category_id: categoryId,
+      fabric_composition: fabricComposition,
+      has_lining: hasLining,
       sizes: parsedSizes.map((size: string) => ({
         size,
         stock: 5,
