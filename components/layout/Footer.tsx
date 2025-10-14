@@ -334,6 +334,21 @@ export default function Footer() {
         </span>
         <span className="text-sm md:text-xl">Політика конфіденційності</span>
       </div>
+
+      {/* Centered developer credit */}
+      <div className="mt-6 mb-4 flex justify-center">
+        <Link
+          href="https://telebots.site/"
+          target="_blank"
+          className={`px-5 py-2 rounded-full border transition text-sm md:text-base tracking-wide ${
+            isDark
+              ? "border-white/40 text-white/90 hover:bg-white hover:text-black"
+              : "border-black/40 text-black hover:bg-black hover:text-white"
+          }`}
+        >
+          Telebots | Розробка сайтів
+        </Link>
+      </div>
     </footer>
   );
 }
