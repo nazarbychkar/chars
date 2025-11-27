@@ -465,7 +465,7 @@ export default function Header() {
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
       />
-
+      
       <SidebarBasket
         isDark={isDark}
         isOpen={isBasketOpen}
