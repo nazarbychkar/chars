@@ -209,15 +209,23 @@ export default function ProductClient({ product: initialProduct }: ProductClient
       return;
     }
     const media = product.media || [];
+    // Find stock for the selected size
+    const sizes = product.sizes as { size: string; stock?: number | string }[] | undefined;
+    const selectedSizeData = sizes?.find((s) => s.size === selectedSize);
+    const stock = selectedSizeData?.stock 
+      ? (typeof selectedSizeData.stock === 'string' ? parseInt(selectedSizeData.stock, 10) : selectedSizeData.stock)
+      : undefined;
+    
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
       size: selectedSize,
-      quantity,
+      quantity: Math.min(quantity, stock ?? quantity), // Don't add more than available stock
       imageUrl: getFirstProductImage(media),
       color: selectedColor || undefined,
       discount_percentage: product.discount_percentage,
+      stock: stock,
     });
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);

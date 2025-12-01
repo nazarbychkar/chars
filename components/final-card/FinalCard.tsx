@@ -993,13 +993,22 @@ export default function FinalCard() {
                       <div className="flex justify-start items-center gap-3 mt-auto">
                         <div className="w-20 h-9 border border-neutral-400/60 flex justify-around items-center rounded">
                           <button
-                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
+                            className={`text-base font-normal font-['Inter'] leading-normal ${
+                              item.stock !== undefined && item.stock !== null && item.quantity >= item.stock
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-zinc-500"
+                            }`}
                             onClick={() =>
                               updateQuantity(
                                 item.id,
                                 item.size,
                                 item.quantity + 1
                               )
+                            }
+                            disabled={
+                              item.stock !== undefined && 
+                              item.stock !== null && 
+                              item.quantity >= item.stock
                             }
                           >
                             +

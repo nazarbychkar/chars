@@ -100,9 +100,18 @@ export default function SidebarBasket({
                       </button>
                       <span>{item.quantity}</span>
                       <button
-                        className="text-zinc-500 text-lg"
+                        className={`text-lg ${
+                          item.stock !== undefined && item.stock !== null && item.quantity >= item.stock
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-zinc-500"
+                        }`}
                         onClick={() =>
                           updateQuantity(item.id, item.size, item.quantity + 1)
+                        }
+                        disabled={
+                          item.stock !== undefined && 
+                          item.stock !== null && 
+                          item.quantity >= item.stock
                         }
                       >
                         +

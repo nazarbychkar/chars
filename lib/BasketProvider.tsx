@@ -17,6 +17,7 @@ interface BasketItem {
   imageUrl: string;
   color?: string;
   discount_percentage?: number;
+  stock?: number; // Available stock for this product size
 }
 
 interface BasketContextType {
@@ -80,7 +81,16 @@ export function BasketProvider({ children }: { children: ReactNode }) {
       );
       if (existingIndex !== -1) {
         const updated = [...prevItems];
-        updated[existingIndex].quantity += newItem.quantity;
+        const existingItem = updated[existingIndex];
+        // If stock is available, enforce maximum quantity
+        if (existingItem.stock !== undefined && existingItem.stock !== null) {
+          updated[existingIndex].quantity = Math.min(
+            existingItem.quantity + newItem.quantity,
+            existingItem.stock
+          );
+        } else {
+          updated[existingIndex].quantity += newItem.quantity;
+        }
         trackAddToCart();
         return updated;
       }
@@ -99,7 +109,15 @@ export function BasketProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       return prev.map((item) => {
         if (item.id === id && item.size === size) {
-          return { ...item, quantity: Math.max(quantity, 1) };
+          // Enforce minimum quantity of 1
+          let newQuantity = Math.max(quantity, 1);
+          
+          // If stock is available, enforce maximum quantity
+          if (item.stock !== undefined && item.stock !== null) {
+            newQuantity = Math.min(newQuantity, item.stock);
+          }
+          
+          return { ...item, quantity: newQuantity };
         }
         return item;
       });
