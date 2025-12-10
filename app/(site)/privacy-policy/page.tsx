@@ -11,8 +11,8 @@ export const metadata: Metadata = {
     canonical: `${baseUrl}/privacy-policy`,
   },
   openGraph: {
-    title: "Політика конфіденційності | CHARS",
-    description: "Політика конфіденційності персональних даних CHARS",
+  title: "Політика конфіденційності | CHARS",
+  description: "Політика конфіденційності персональних даних CHARS",
     type: "website",
     url: `${baseUrl}/privacy-policy`,
     siteName: "CHARS",

@@ -419,7 +419,7 @@ export async function sqlPutProduct(
     priority?: number;
     top_sale?: boolean;
     limited_edition?: boolean;
-    season?: string;
+    season?: string[] | string;
     color?: string;
     category_id?: number | null;
     subcategory_id?: number | null;
@@ -432,11 +432,12 @@ export async function sqlPutProduct(
   }
 ) {
   // Step 1: Update main product fields
-  // Convert season array to string if needed
+  // Convert season to array format for PostgreSQL array type
+  // PostgreSQL expects array type, so we pass array directly (postgres.js handles conversion)
   const seasonValue = Array.isArray(update.season) 
-    ? update.season.join(',') 
-    : typeof update.season === 'string' 
-      ? update.season 
+    ? update.season.length > 0 ? update.season : null
+    : typeof update.season === 'string' && update.season.trim() !== ''
+      ? update.season.split(',').map(s => s.trim()).filter(s => s.length > 0)
       : null;
 
   await sql`

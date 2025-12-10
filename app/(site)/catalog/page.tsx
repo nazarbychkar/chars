@@ -95,12 +95,12 @@ export default async function Page({ searchParams }: PageProps) {
                 <BreadcrumbsSchema items={breadcrumbItems} />
             </div>
             <Suspense fallback={<CatalogSkeleton count={8} />}>
-                <CatalogServer 
-                    category={params.category || null}
-                    season={params.season || null}
-                    subcategory={params.subcategory || null}
-                />
-            </Suspense>
+            <CatalogServer 
+                category={params.category || null}
+                season={params.season || null}
+                subcategory={params.subcategory || null}
+            />
+        </Suspense>
         </>
     );
 }

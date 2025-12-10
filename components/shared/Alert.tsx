@@ -17,9 +17,9 @@ export default function Alert({ message, onClose, isVisible }: AlertProps) {
       <span className="text-sm md:text-base">
         {message}
       </span>
-      {onClose && (
-        <button
-          onClick={onClose}
+        {onClose && (
+          <button
+            onClick={onClose}
           className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
           aria-label="Закрити"
         >
@@ -36,8 +36,8 @@ export default function Alert({ message, onClose, isVisible }: AlertProps) {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
-      )}
+          </button>
+        )}
     </div>
   );
 }

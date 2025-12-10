@@ -244,14 +244,14 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     const media = product.media || [];
     const success = addItem(
       {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        size: selectedSize,
-        quantity,
-        imageUrl: getFirstProductImage(media),
-        color: selectedColor || undefined,
-        discount_percentage: product.discount_percentage,
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      size: selectedSize,
+      quantity,
+      imageUrl: getFirstProductImage(media),
+      color: selectedColor || undefined,
+      discount_percentage: product.discount_percentage,
         stock: availableStock,
       },
       (errorMessage) => {
@@ -263,8 +263,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     );
 
     if (success) {
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
     }
   };
 
@@ -331,108 +331,108 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           )}
           {media && media.length > 0 ? (
             <>
-              <Swiper
-                modules={[Navigation]}
-                onSwiper={setSwiper}
-                slidesPerView={1}
-                spaceBetween={10}
-                speed={500}
-                allowTouchMove={!isLoading}
-                centeredSlides={true}
-                onSlideChange={(s) => setActiveImageIndex(s.activeIndex)}
-                className="product-swiper w-full max-w-[800px]"
-                key={product.id}
-                touchRatio={1}
-                touchAngle={45}
-                resistance={true}
-                resistanceRatio={0.85}
-                followFinger={true}
-                threshold={5}
-                longSwipes={true}
-                longSwipesRatio={0.5}
-                longSwipesMs={300}
-                watchSlidesProgress={true}
-                cssMode={false}
-              >
-                {media.map((item, i) => (
-                  <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
-                    <div 
-                      className="flex justify-center items-center max-h-[85vh] overflow-hidden"
+          <Swiper
+            modules={[Navigation]}
+            onSwiper={setSwiper}
+            slidesPerView={1}
+            spaceBetween={10}
+            speed={500}
+            allowTouchMove={!isLoading}
+            centeredSlides={true}
+            onSlideChange={(s) => setActiveImageIndex(s.activeIndex)}
+            className="product-swiper w-full max-w-[800px]"
+            key={product.id}
+            touchRatio={1}
+            touchAngle={45}
+            resistance={true}
+            resistanceRatio={0.85}
+            followFinger={true}
+            threshold={5}
+            longSwipes={true}
+            longSwipesRatio={0.5}
+            longSwipesMs={300}
+            watchSlidesProgress={true}
+            cssMode={false}
+          >
+            {media.map((item, i) => (
+              <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
+                <div 
+                  className="flex justify-center items-center max-h-[85vh] overflow-hidden"
+                  style={{ 
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none'
+                  }}
+                >
+                  {item.type === "video" ? (
+                    <video
+                      className="object-contain w-full max-h-[85vh]"
+                      src={`/api/images/${item.url}`}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       style={{ 
                         WebkitUserSelect: 'none',
                         userSelect: 'none',
-                        WebkitTouchCallout: 'none'
+                        pointerEvents: 'auto'
                       }}
-                    >
-                      {item.type === "video" ? (
-                        <video
-                          className="object-contain w-full max-h-[85vh]"
-                          src={`/api/images/${item.url}`}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          style={{ 
-                            WebkitUserSelect: 'none',
-                            userSelect: 'none',
-                            pointerEvents: 'auto'
-                          }}
-                        />
-                      ) : (
-                        <Image
-                          src={`/api/images/${item.url}`}
-                          alt={`Product media ${i}`}
-                          width={800}
-                          height={1160}
-                          priority={i === activeImageIndex}
-                          quality={i === activeImageIndex ? 90 : 80}
-                          className="object-contain w-auto h-auto"
-                          style={{ 
-                            maxHeight: "85vh",
-                            WebkitUserSelect: 'none',
-                            userSelect: 'none',
-                            pointerEvents: 'auto'
-                          }}
-                          draggable={false}
-                        />
-                      )}
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+                    />
+                  ) : (
+                    <Image
+                      src={`/api/images/${item.url}`}
+                      alt={`Product media ${i}`}
+                      width={800}
+                      height={1160}
+                      priority={i === activeImageIndex}
+                      quality={i === activeImageIndex ? 90 : 80}
+                      className="object-contain w-auto h-auto"
+                      style={{ 
+                        maxHeight: "85vh",
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        pointerEvents: 'auto'
+                      }}
+                      draggable={false}
+                    />
+                  )}
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
-              {media.length > 1 && (
-                <>
-                  <button
-                    onClick={handlePrev}
-                    aria-label="Previous image"
-                    className="absolute left-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
-                  >
-                    <svg 
-                      className="w-4 h-4 text-gray-700 dark:text-gray-300" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
+          {media.length > 1 && (
+            <>
+              <button
+                onClick={handlePrev}
+                aria-label="Previous image"
+                className="absolute left-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
+              >
+                <svg 
+                  className="w-4 h-4 text-gray-700 dark:text-gray-300" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
 
-                  <button
-                    onClick={handleNext}
-                    aria-label="Next image"
-                    className="absolute right-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
-                  >
-                    <svg 
-                      className="w-4 h-4 text-gray-700 dark:text-gray-300" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </>
+              <button
+                onClick={handleNext}
+                aria-label="Next image"
+                className="absolute right-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
+              >
+                <svg 
+                  className="w-4 h-4 text-gray-700 dark:text-gray-300" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
               )}
             </>
           ) : (

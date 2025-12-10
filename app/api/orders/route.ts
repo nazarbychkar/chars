@@ -155,10 +155,10 @@ export async function POST(req: NextRequest) {
 
     const basketOrder = normalizedItems.map((item) => ({
       name: item.color ? `${item.product_name} (${item.color})` : item.product_name,
-      qty: item.quantity,
-      sum: Math.round(item.price * item.quantity * 100),
-      total: Math.round(item.price * item.quantity * 100),
-      unit: "шт.",
+        qty: item.quantity,
+        sum: Math.round(item.price * item.quantity * 100),
+        total: Math.round(item.price * item.quantity * 100),
+        unit: "шт.",
       code: item.color
         ? `${item.product_id}-${item.size}-${item.color}`
         : `${item.product_id}-${item.size}`,

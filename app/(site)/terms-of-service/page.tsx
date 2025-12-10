@@ -11,8 +11,8 @@ export const metadata: Metadata = {
     canonical: `${baseUrl}/terms-of-service`,
   },
   openGraph: {
-    title: "Договір публічної оферти | CHARS",
-    description: "Договір публічної оферти CHARS",
+  title: "Договір публічної оферти | CHARS",
+  description: "Договір публічної оферти CHARS",
     type: "website",
     url: `${baseUrl}/terms-of-service`,
     siteName: "CHARS",

@@ -35,6 +35,7 @@ export default function FormElements() {
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [priority, setPriority] = useState("0");
   const [sizes, setSizes] = useState<string[]>([]);
+  const [sizeStocks, setSizeStocks] = useState<Record<string, number>>({});
   // const [images, setImages] = useState<File[]>([]);
 
   const [topSale, setTopSale] = useState(false);
@@ -169,7 +170,13 @@ export default function FormElements() {
         uploadedMedia = uploadData.media || [];
       }
 
-      // 2) Create product via JSON body (no files)
+      // 2) Convert sizes and stocks to the format expected by API
+      const sizesWithStock = sizes.map((size) => ({
+        size,
+        stock: sizeStocks[size] ?? 0,
+      }));
+
+      // 3) Create product via JSON body (no files)
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,7 +191,7 @@ export default function FormElements() {
           priority: Number(priority || 0),
           color,
           colors,
-          sizes,
+          sizes: sizesWithStock,
           top_sale: topSale,
           limited_edition: limitedEdition,
           season: season.length === 0 ? null : season,
@@ -212,6 +219,7 @@ export default function FormElements() {
       setColor("");
       setColors([]);
       setSizes([]);
+      setSizeStocks({});
       setMediaFiles([]);
       setTopSale(false);
       setLimitedEdition(false);
@@ -297,10 +305,50 @@ export default function FormElements() {
                     label="Розміри"
                     options={multiOptions}
                     defaultSelected={sizes}
-                    onChange={setSizes}
+                    onChange={(values: string[]) => {
+                      setSizes(values);
+                      // Ensure stocks exist for any newly added size
+                      setSizeStocks((prev) => {
+                        const next = { ...prev };
+                        values.forEach((sz: string) => {
+                          if (next[sz] === undefined) next[sz] = 0;
+                        });
+                        // Remove stocks for sizes no longer selected
+                        Object.keys(next).forEach((sz) => {
+                          if (!values.includes(sz)) delete next[sz];
+                        });
+                        return next;
+                      });
+                    }}
                     zIndex={51}
                   />
                 </div>
+                {/* Per-size stock editor */}
+                {sizes.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Кількість на складі для кожного розміру</Label>
+                    <div className="space-y-2">
+                      {sizes.map((size) => (
+                        <div key={size} className="flex items-center gap-2">
+                          <Label className="w-20 mb-0">{size}:</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={sizeStocks[size] ?? 0}
+                            onChange={(e) =>
+                              setSizeStocks((prev) => ({
+                                ...prev,
+                                [size]: Math.max(0, parseInt(e.target.value) || 0),
+                              }))
+                            }
+                            placeholder="0"
+                            className="flex-1"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <Label>Категорія</Label>
                   <select
