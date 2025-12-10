@@ -8,7 +8,7 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   images: {
     remotePatterns: [
       {
@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "100mb", // for images, videos
     },
     // Increase body size limit for API routes (Next.js 15+)
-    // @ts-expect-error - proxyClientMaxBodySize is an experimental feature
+    // @ts-ignore - proxyClientMaxBodySize is an experimental feature not yet in types
     proxyClientMaxBodySize: "100mb",
     // Enable optimized package imports with tree shaking
     optimizePackageImports: [
@@ -145,6 +145,6 @@ const nextConfig: NextConfig = {
       }
     ];
   },
-};
+} satisfies NextConfig;
 
 export default withBundleAnalyzer(nextConfig);
