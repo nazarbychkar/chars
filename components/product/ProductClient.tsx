@@ -8,7 +8,7 @@ import Alert from "@/components/shared/Alert";
 import { getFirstProductImage } from "@/lib/getFirstProductImage";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import "swiper/css";
 import "swiper/css/navigation";
 
@@ -75,7 +75,6 @@ interface RelatedProduct {
 }
 
 export default function ProductClient({ product: initialProduct }: ProductClientProps) {
-  const router = useRouter();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const quantity = 1;
   const { isDark } = useAppContext();
@@ -85,7 +84,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   
   // Use basket hook - component is client-side only with 'use client'
-  const { addItem } = useBasket();
+  const { addItem, items } = useBasket();
 
   // Inject custom styles for smoother transitions
   useEffect(() => {
@@ -95,7 +94,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     return () => {
       document.head.removeChild(style);
     };
-  }, [swiperStyles]);
+  }, []); // swiperStyles is a constant defined outside component
 
   const [showToast, setShowToast] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
@@ -208,19 +207,65 @@ export default function ProductClient({ product: initialProduct }: ProductClient
       setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
+
+    // Find stock for selected size
+    const selectedSizeData = (product.sizes as { size: string; stock?: number | string }[] | undefined)?.find(
+      (s) => s.size === selectedSize
+    );
+    const availableStock = selectedSizeData ? Number(selectedSizeData.stock ?? 0) : 0;
+
+    // Check if item already exists in basket
+    const existingItem = items.find(
+      (i) => i.id === product.id && i.size === selectedSize && i.color === selectedColor
+    );
+    const currentQuantityInBasket = existingItem ? existingItem.quantity : 0;
+    const totalRequestedQuantity = currentQuantityInBasket + quantity;
+
+    // Check stock availability
+    if (availableStock === 0) {
+      setAlertMessage("На жаль, цього товару обраного розміру немає в наявності 😔");
+      setAlertType("warning");
+      setTimeout(() => setAlertMessage(null), 3000);
+      return;
+    }
+
+    if (totalRequestedQuantity > availableStock) {
+      const available = availableStock - currentQuantityInBasket;
+      if (available <= 0) {
+        setAlertMessage(`На жаль, ви вже додали максимум доступної кількості цього товару. В наявності: ${availableStock} шт.`);
+      } else {
+        setAlertMessage(`На жаль, доступно лише ${available} шт. цього товару. В наявності: ${availableStock} шт.`);
+      }
+      setAlertType("warning");
+      setTimeout(() => setAlertMessage(null), 3000);
+      return;
+    }
+
     const media = product.media || [];
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      size: selectedSize,
-      quantity,
-      imageUrl: getFirstProductImage(media),
-      color: selectedColor || undefined,
-      discount_percentage: product.discount_percentage,
-    });
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    const success = addItem(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        size: selectedSize,
+        quantity,
+        imageUrl: getFirstProductImage(media),
+        color: selectedColor || undefined,
+        discount_percentage: product.discount_percentage,
+        stock: availableStock,
+      },
+      (errorMessage) => {
+        // This callback is called if adding fails due to stock
+        setAlertMessage(errorMessage);
+        setAlertType("warning");
+        setTimeout(() => setAlertMessage(null), 4000);
+      }
+    );
+
+    if (success) {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
   };
 
   const media = product.media || [];
@@ -249,7 +294,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
   // Avoid SSR hydration flicker
   useEffect(() => setIsMounted(true), []);
-  if (!isMounted || !media?.length) return null;
+  if (!isMounted) return null;
 
   // Manual next/prev handling (to avoid loop flickers)
   const handleNext = () => {
@@ -284,108 +329,133 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               <div className="w-8 h-8 border-2 border-gray-300 border-t-black dark:border-t-white rounded-full animate-spin"></div>
             </div>
           )}
-          <Swiper
-            modules={[Navigation]}
-            onSwiper={setSwiper}
-            slidesPerView={1}
-            spaceBetween={10}
-            speed={500}
-            allowTouchMove={!isLoading}
-            centeredSlides={true}
-            onSlideChange={(s) => setActiveImageIndex(s.activeIndex)}
-            className="product-swiper w-full max-w-[800px]"
-            key={product.id}
-            touchRatio={1}
-            touchAngle={45}
-            resistance={true}
-            resistanceRatio={0.85}
-            followFinger={true}
-            threshold={5}
-            longSwipes={true}
-            longSwipesRatio={0.5}
-            longSwipesMs={300}
-            watchSlidesProgress={true}
-            cssMode={false}
-          >
-            {media.map((item, i) => (
-              <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
-                <div 
-                  className="flex justify-center items-center max-h-[85vh] overflow-hidden"
-                  style={{ 
-                    WebkitUserSelect: 'none',
-                    userSelect: 'none',
-                    WebkitTouchCallout: 'none'
-                  }}
-                >
-                  {item.type === "video" ? (
-                    <video
-                      className="object-contain w-full max-h-[85vh]"
-                      src={`/api/images/${item.url}`}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      style={{ 
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none',
-                        pointerEvents: 'auto'
-                      }}
-                    />
-                  ) : (
-                    <Image
-                      src={`/api/images/${item.url}`}
-                      alt={`Product media ${i}`}
-                      width={800}
-                      height={1160}
-                      priority={i === activeImageIndex}
-                      quality={i === activeImageIndex ? 90 : 80}
-                      className="object-contain w-auto h-auto"
-                      style={{ 
-                        maxHeight: "85vh",
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none',
-                        pointerEvents: 'auto'
-                      }}
-                      draggable={false}
-                    />
-                  )}
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          {media.length > 1 && (
+          {media && media.length > 0 ? (
             <>
-              <button
-                onClick={handlePrev}
-                aria-label="Previous image"
-                className="absolute left-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
+              <Swiper
+                modules={[Navigation]}
+                onSwiper={setSwiper}
+                slidesPerView={1}
+                spaceBetween={10}
+                speed={500}
+                allowTouchMove={!isLoading}
+                centeredSlides={true}
+                onSlideChange={(s) => setActiveImageIndex(s.activeIndex)}
+                className="product-swiper w-full max-w-[800px]"
+                key={product.id}
+                touchRatio={1}
+                touchAngle={45}
+                resistance={true}
+                resistanceRatio={0.85}
+                followFinger={true}
+                threshold={5}
+                longSwipes={true}
+                longSwipesRatio={0.5}
+                longSwipesMs={300}
+                watchSlidesProgress={true}
+                cssMode={false}
               >
-                <svg 
-                  className="w-4 h-4 text-gray-700 dark:text-gray-300" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+                {media.map((item, i) => (
+                  <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
+                    <div 
+                      className="flex justify-center items-center max-h-[85vh] overflow-hidden"
+                      style={{ 
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        WebkitTouchCallout: 'none'
+                      }}
+                    >
+                      {item.type === "video" ? (
+                        <video
+                          className="object-contain w-full max-h-[85vh]"
+                          src={`/api/images/${item.url}`}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          style={{ 
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
+                            pointerEvents: 'auto'
+                          }}
+                        />
+                      ) : (
+                        <Image
+                          src={`/api/images/${item.url}`}
+                          alt={`Product media ${i}`}
+                          width={800}
+                          height={1160}
+                          priority={i === activeImageIndex}
+                          quality={i === activeImageIndex ? 90 : 80}
+                          className="object-contain w-auto h-auto"
+                          style={{ 
+                            maxHeight: "85vh",
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
+                            pointerEvents: 'auto'
+                          }}
+                          draggable={false}
+                        />
+                      )}
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
-              <button
-                onClick={handleNext}
-                aria-label="Next image"
-                className="absolute right-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
-              >
-                <svg 
-                  className="w-4 h-4 text-gray-700 dark:text-gray-300" 
-                  fill="none" 
-                  stroke="currentColor" 
+              {media.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrev}
+                    aria-label="Previous image"
+                    className="absolute left-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
+                  >
+                    <svg 
+                      className="w-4 h-4 text-gray-700 dark:text-gray-300" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  <button
+                    onClick={handleNext}
+                    aria-label="Next image"
+                    className="absolute right-2 top-[42.5vh] -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8 border border-gray-300 dark:border-gray-600 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-sm hover:bg-white dark:hover:bg-black transition-all"
+                  >
+                    <svg 
+                      className="w-4 h-4 text-gray-700 dark:text-gray-300" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="w-full max-w-[800px] aspect-[2/3] flex items-center justify-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="text-center p-8">
+                <svg
+                  className="w-24 h-24 mx-auto text-gray-400 dark:text-gray-600 mb-4"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
-              </button>
-            </>
+                <p className="text-gray-500 dark:text-gray-400 text-sm font-['Inter']">
+                  Фото товару
+                </p>
+              </div>
+            </div>
           )}
         </div>
 
@@ -706,10 +776,19 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             </div>
           )}
 
-          {/* Toast */}
+          {/* Toast Notification with Link to Cart */}
           {showToast && (
-            <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-black text-white px-5 py-3 rounded shadow-lg z-50">
-              Товар додано до кошика!
+            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+              <span className="text-sm md:text-base">
+                Товар додано в кошик{" "}
+                <Link
+                  href="/final"
+                  className="underline hover:no-underline"
+                  onClick={() => setShowToast(false)}
+                >
+                  Перейти
+                </Link>
+              </span>
             </div>
           )}
 
