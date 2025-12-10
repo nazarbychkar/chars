@@ -282,6 +282,26 @@ export default function EditProductPage() {
       if (images.length > 0) {
         console.log('[EditProduct] Uploading new images:', images.map(f => f.name));
         
+        const totalSize = images.reduce((sum, img) => sum + img.size, 0);
+        const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
+        const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per file
+
+        // Check individual file sizes
+        for (const img of images) {
+          if (img.size > MAX_FILE_SIZE) {
+            throw new Error(
+              `Файл "${img.name}" занадто великий. Максимальний розмір одного файлу: 15MB.`
+            );
+          }
+        }
+
+        // Check total size
+        if (totalSize > MAX_TOTAL_SIZE) {
+          throw new Error(
+            `Загальний розмір всіх файлів (${(totalSize / 1024 / 1024).toFixed(2)}MB) перевищує ліміт 100MB. Будь ласка, завантажте менше файлів або зменшіть їх розмір.`
+          );
+        }
+        
         const uploadForm = new FormData();
         images.forEach((img) => uploadForm.append("images", img));
 
@@ -290,7 +310,10 @@ export default function EditProductPage() {
           body: uploadForm,
         });
 
-        if (!uploadRes.ok) throw new Error("File upload failed");
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({ error: "Помилка завантаження файлів" }));
+          throw new Error(errorData.error || "Помилка завантаження файлів");
+        }
 
         const uploadData = await uploadRes.json();
         uploadedMedia = uploadData.media;

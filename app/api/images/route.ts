@@ -6,6 +6,13 @@ import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // seconds
+export const dynamic = "force-dynamic";
+
+// Note: Body size limit is controlled by Next.js configuration
+// The default limit is 10MB. To increase it, you need to:
+// 1. Set environment variable: NEXT_MAX_BODY_SIZE=100mb
+// 2. Or configure it in next.config.ts (though this may not work in all Next.js 15 versions)
+// 3. IMPORTANT: Restart the server after changing configuration
 
 // Convert uploaded image to WebP
 async function convertToWebP(
@@ -60,7 +67,40 @@ function getFileType(mimeType: string, filename: string): "photo" | "video" {
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
+    // Check Content-Length header to warn about large requests
+    const contentLength = req.headers.get("content-length");
+    if (contentLength) {
+      const sizeInMB = parseInt(contentLength) / (1024 * 1024);
+      if (sizeInMB > 10) {
+        console.warn(`[POST /api/images] Large request detected: ${sizeInMB.toFixed(2)}MB`);
+      }
+    }
+
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch (error) {
+      console.error("[POST /api/images] FormData parsing error:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Check if it's a size limit error
+      if (errorMessage.includes("boundary") || errorMessage.includes("10MB")) {
+        return NextResponse.json(
+          { 
+            error: "Розмір файлів перевищує ліміт. Будь ласка, завантажте файли окремо або зменшіть їх розмір. Максимальний розмір одного файлу: 15MB. Для завантаження великих файлів потрібно перезапустити сервер з налаштуванням збільшеного ліміту." 
+          },
+          { status: 413 }
+        );
+      }
+      
+      return NextResponse.json(
+        { 
+          error: "Помилка обробки файлів. Можливо, файли занадто великі. Максимальний розмір одного файлу: 15MB." 
+        },
+        { status: 413 }
+      );
+    }
+
     const files = formData.getAll("images") as File[];
 
     if (!files || files.length === 0) {

@@ -158,6 +158,26 @@ export default function FormElements() {
       // 1) Upload images first (if any)
       let uploadedMedia: { type: "photo" | "video"; url: string }[] = [];
       if (mediaFiles.length > 0) {
+        const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per file
+        const totalSize = mediaFiles.reduce((sum, m) => sum + m.file.size, 0);
+        const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
+
+        // Check individual file sizes
+        for (const media of mediaFiles) {
+          if (media.file.size > MAX_FILE_SIZE) {
+            throw new Error(
+              `Файл "${media.file.name}" занадто великий. Максимальний розмір одного файлу: 15MB.`
+            );
+          }
+        }
+
+        // Check total size
+        if (totalSize > MAX_TOTAL_SIZE) {
+          throw new Error(
+            `Загальний розмір всіх файлів (${(totalSize / 1024 / 1024).toFixed(2)}MB) перевищує ліміт 100MB. Будь ласка, завантажте менше файлів або зменшіть їх розмір.`
+          );
+        }
+
         const uploadForm = new FormData();
         mediaFiles.forEach((m) => uploadForm.append("images", m.file));
 
@@ -165,6 +185,11 @@ export default function FormElements() {
           method: "POST",
           body: uploadForm,
         });
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({ error: "Помилка завантаження файлів" }));
+          throw new Error(errorData.error || "Помилка завантаження файлів");
+        }
 
         const uploadData = await uploadRes.json();
         uploadedMedia = uploadData.media || [];

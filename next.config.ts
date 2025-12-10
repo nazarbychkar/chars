@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "100mb", // for images, videos
     },
+    // Increase body size limit for API routes (Next.js 15+)
+    // @ts-expect-error - proxyClientMaxBodySize is an experimental feature
+    proxyClientMaxBodySize: "100mb",
     // Enable optimized package imports with tree shaking
     optimizePackageImports: [
       "@react-jvectormap/core", 

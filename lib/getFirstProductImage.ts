@@ -29,6 +29,10 @@ export function getProductImageSrc(
 ): string {
   // Handle new optimized format (single first_media object)
   if (media && !Array.isArray(media) && 'url' in media) {
+    // Only return image URLs, not video URLs
+    if (media.type === "video") {
+      return fallback;
+    }
     return `/api/images/${media.url}`;
   }
   
@@ -36,6 +40,14 @@ export function getProductImageSrc(
   const imageUrl = getFirstProductImage(media as { url: string; type: string }[] | undefined);
   
   if (!imageUrl) {
+    return fallback;
+  }
+  
+  // Check if the URL is for a video file (by extension)
+  const videoExtensions = ['.webm', '.mp4', '.ogg', '.mov', '.avi', '.mkv', '.flv', '.wmv'];
+  const isVideo = videoExtensions.some(ext => imageUrl.toLowerCase().endsWith(ext));
+  
+  if (isVideo) {
     return fallback;
   }
   
