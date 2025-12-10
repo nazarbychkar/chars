@@ -30,6 +30,7 @@ export function getProductImageSrc(
   // Handle new optimized format (single first_media object)
   if (media && !Array.isArray(media) && 'url' in media) {
     // Only return image URLs, not video URLs
+    // Note: SQL queries now prioritize photos, but we still check for safety
     if (media.type === "video") {
       return fallback;
     }
@@ -43,7 +44,8 @@ export function getProductImageSrc(
     return fallback;
   }
   
-  // Check if the URL is for a video file (by extension)
+  // Check if the URL is for a video file (by extension) - safety check
+  // Note: This should rarely happen now since SQL prioritizes photos
   const videoExtensions = ['.webm', '.mp4', '.ogg', '.mov', '.avi', '.mkv', '.flv', '.wmv'];
   const isVideo = videoExtensions.some(ext => imageUrl.toLowerCase().endsWith(ext));
   
