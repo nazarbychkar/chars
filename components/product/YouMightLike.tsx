@@ -24,7 +24,7 @@ export default function YouMightLike() {
         <div
           className={`mx-0 md:mx-10 text-4xl md:text-7xl font-normal font-['Inter'] leading-tight md:leading-[84.91px] text-center md:text-left`}
         >
-          Вам може сподобатися
+          Доповніть LOOK
         </div>
 
         {/* Products list - Mobile Optimized */}
