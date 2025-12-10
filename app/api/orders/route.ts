@@ -90,19 +90,19 @@ export async function POST(req: NextRequest) {
         hasItems: !!items?.length,
       });
       return NextResponse.json(
-        { error: "Missing required order fields" },
+        { error: "Будь ласка, заповніть усі необхідні поля, щоб ми змогли швидко обробити ваше замовлення ✨" },
         { status: 400 }
       );
     }
     console.log("[POST /api/orders] Validation passed");
 
-    const normalizedItems: NormalizedOrderItem[] = (items || []).map(
-      (item: IncomingOrderItem, index: number) => {
+        const normalizedItems: NormalizedOrderItem[] = (items || []).map(
+          (item: IncomingOrderItem) => {
         const productIdRaw = item.product_id ?? item.productId;
         const productId = Number(productIdRaw);
         if (!Number.isFinite(productId)) {
           throw new Error(
-            `[POST /api/orders] Invalid product_id for item index ${index}`
+            `Нам не вдалося розпізнати один з товарів у вашому замовленні. Будь ласка, спробуйте оформити замовлення ще раз.`
           );
         }
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           typeof item.price === "string" ? Number(item.price) : item.price;
         if (!Number.isFinite(price)) {
           throw new Error(
-            `[POST /api/orders] Invalid price for item index ${index}`
+            `Виникла помилка при обробці ціни товару. Будь ласка, оновіть сторінку та спробуйте ще раз.`
           );
         }
 
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
             : item.quantity;
         if (!Number.isFinite(quantity)) {
           throw new Error(
-            `[POST /api/orders] Invalid quantity for item index ${index}`
+            `Нам не вдалося визначити кількість товару. Будь ласка, перевірте ваше замовлення та спробуйте ще раз.`
           );
         }
 
@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
     if (!monoRes.ok) {
       console.error("[POST /api/orders] Monobank error:", invoiceData);
       return NextResponse.json(
-        { error: "Не вдалося створити рахунок", details: invoiceData },
+        { error: "На жаль, наразі ми не можемо створити рахунок для оплати. Будь ласка, спробуйте через кілька хвилин або зв'яжіться з нашою службою підтримки.", details: invoiceData },
         { status: 500 }
       );
     }
@@ -278,8 +278,21 @@ export async function POST(req: NextRequest) {
     });
     console.log("=".repeat(50));
     
+    const errorMessage = error instanceof Error 
+      ? error.message.includes("[POST /api/orders]")
+        ? error.message.replace("[POST /api/orders] ", "")
+        : error.message
+      : "На жаль, сталася неочікувана помилка";
+    
+    // Перевіряємо тип помилки та надаємо дружнє повідомлення
+    let friendlyMessage = "Нам шкода, але щось пішло не так під час обробки вашого замовлення. Будь ласка, спробуйте ще раз або зв'яжіться з нами — ми обов'язково допоможемо! 💪";
+    
+    if (errorMessage.includes("Недостатньо товару")) {
+      friendlyMessage = "На жаль, одного з товарів у вашому замовленні більше немає в наявності. Будь ласка, перевірте кошик та оновіть замовлення. Якщо питання залишаються, напишіть нам — підберемо альтернативу! ✨";
+    }
+    
     return NextResponse.json(
-      { error: "Failed to create order", details: error instanceof Error ? error.message : "Unknown error" },
+      { error: friendlyMessage, details: errorMessage },
       { status: 500 }
     );
   }

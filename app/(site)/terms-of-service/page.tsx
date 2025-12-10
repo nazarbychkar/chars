@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+
 export const metadata: Metadata = {
   title: "Договір публічної оферти | CHARS",
-  description: "Договір публічної оферти CHARS",
+  description: "Договір публічної оферти CHARS. Умови використання сайту та покупки товарів. Ознайомтесь з правилами замовлення та доставки.",
+  keywords: "CHARS, договір оферти, умови використання, правила замовлення, доставка",
+  alternates: {
+    canonical: `${baseUrl}/terms-of-service`,
+  },
+  openGraph: {
+    title: "Договір публічної оферти | CHARS",
+    description: "Договір публічної оферти CHARS",
+    type: "website",
+    url: `${baseUrl}/terms-of-service`,
+    siteName: "CHARS",
+    locale: "uk_UA",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function TermsOfServicePage() {

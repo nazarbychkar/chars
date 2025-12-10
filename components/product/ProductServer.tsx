@@ -1,7 +1,7 @@
-import ProductClient from "./ProductClient";
 import ProductClientWrapper from "./ProductClientWrapper";
 import { notFound } from "next/navigation";
 import { sqlGetProduct } from "@/lib/sql";
+import { generateProductStructuredData, generateBreadcrumbStructuredData } from "@/lib/seo";
 
 interface Product {
   id: number;
@@ -16,6 +16,7 @@ interface Product {
   fabric_composition?: string;
   has_lining?: boolean;
   lining_description?: string;
+  category_name?: string;
 }
 
 async function getProduct(id: string): Promise<Product | null> {
@@ -39,6 +40,33 @@ export default async function ProductServer({ id }: ProductServerProps) {
     notFound();
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+  const productStructuredData = generateProductStructuredData(product, baseUrl);
+  const breadcrumbStructuredData = generateBreadcrumbStructuredData(
+    [
+      { name: "Головна", url: "/" },
+      { name: "Каталог", url: "/catalog" },
+      { name: product.name, url: `/product/${id}` },
+    ],
+    baseUrl
+  );
+
   // Wrap ProductClient to ensure it only renders client-side after hydration
-  return <ProductClientWrapper product={product} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productStructuredData),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbStructuredData),
+        }}
+      />
+      <ProductClientWrapper product={product} />
+    </>
+  );
 }

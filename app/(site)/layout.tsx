@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./critical.css";
 import "./globals.css";
 import "./mobile-optimizations.css";
+import "./animations.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AppProvider } from "@/lib/GeneralProvider";
@@ -11,6 +12,8 @@ import { registerServiceWorker } from "@/lib/registerSW";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { WebVitals } from "@/components/shared/WebVitals";
 import MainContent from "@/components/shared/MainContent";
+import SmoothScrollInit from "@/components/shared/SmoothScrollInit";
+import { generateOrganizationStructuredData, generateWebsiteStructuredData } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -21,27 +24,72 @@ const inter = Inter({
   adjustFontFallback: true,
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+
 export const metadata: Metadata = {
-  title: "CHARS — Український Бренд Чоловічого Одягу | Стиль Без Компромісів",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "CHARS — Український Бренд Чоловічого Одягу | Стиль Без Компромісів",
+    template: "%s | CHARS",
+  },
   description:
-    "CHARS — український бренд чоловічого одягу, заснований у 2023 році. Ми створюємо стильний одяг для різних чоловіків без компромісів. Класика, кежуал та спорт.",
+    "CHARS — український бренд чоловічого одягу, заснований у 2023 році. Ми створюємо стильний одяг для різних чоловіків без компромісів. Класика, кежуал та спорт. Замовляйте онлайн з доставкою по Україні.",
   keywords:
-    "CHARS, український бренд одягу, чоловічий одяг, стильний одяг, смарт-кежуал, кежуал-класик, українська мода, одяг для чоловіків, київ",
+    "CHARS, український бренд одягу, чоловічий одяг, стильний одяг, смарт-кежуал, кежуал-класик, українська мода, одяг для чоловіків, київ, купити одяг онлайн, доставка по Україні",
+  authors: [{ name: "CHARS" }],
+  creator: "CHARS",
+  publisher: "CHARS",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: "/images/light-theme/chars-logo-header-light.png",
     shortcut: "/images/light-theme/chars-logo-header-light.png",
     apple: "/images/light-theme/chars-logo-header-light.png",
   },
   openGraph: {
-    title: "CHARS — Український Бренд Чоловічого Одягу",
-    description:
-      "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт.",
     type: "website",
     locale: "uk_UA",
+    url: baseUrl,
+    siteName: "CHARS",
+    title: "CHARS — Український Бренд Чоловічого Одягу",
+    description:
+      "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт. Замовляйте онлайн з доставкою по Україні.",
+    images: [
+      {
+        url: `${baseUrl}/images/light-theme/chars-logo-header-light.png`,
+        width: 1200,
+        height: 630,
+        alt: "CHARS — Український Бренд Чоловічого Одягу",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CHARS — Український Бренд Чоловічого Одягу",
+    description: "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт.",
+    images: [`${baseUrl}/images/light-theme/chars-logo-header-light.png`],
+  },
+  alternates: {
+    canonical: baseUrl,
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    // Add your verification codes here when available
+    // google: "your-google-verification-code",
+    // yandex: "your-yandex-verification-code",
   },
 };
 
@@ -128,9 +176,22 @@ export default function RootLayout({
         {/* End Meta Pixel Code */}
       </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(generateOrganizationStructuredData(baseUrl)),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(generateWebsiteStructuredData(baseUrl)),
+          }}
+        />
         <ErrorBoundary>
           <AppProvider>
             <BasketProvider>
+              <SmoothScrollInit />
               <Header />
               <MainContent>{children}</MainContent>
               <Footer />

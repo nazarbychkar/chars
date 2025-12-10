@@ -53,9 +53,29 @@ export async function PUT(
 
     const body = await req.json();
 
-    if (!body.name || !body.price) {
+    console.log("[PUT /products/:id] Received body:", JSON.stringify(body, null, 2));
+    console.log("[PUT /products/:id] Body name:", body.name);
+    console.log("[PUT /products/:id] Body price:", body.price, typeof body.price);
+
+    // Validate required fields
+    if (!body.name || body.name.trim() === "") {
+      console.error("[PUT /products/:id] Missing or empty name");
       return NextResponse.json(
-        { error: "Missing required fields: name, price" },
+        { error: "Missing required field: name" },
+        { status: 400 }
+      );
+    }
+
+    const priceNum = typeof body.price === 'number' 
+      ? body.price 
+      : typeof body.price === 'string' 
+        ? parseFloat(body.price) 
+        : null;
+
+    if (priceNum === null || isNaN(priceNum) || priceNum < 0) {
+      console.error("[PUT /products/:id] Invalid price:", body.price);
+      return NextResponse.json(
+        { error: "Missing or invalid price. Price must be a valid number >= 0" },
         { status: 400 }
       );
     }
@@ -81,9 +101,9 @@ export async function PUT(
     const liningDescription = body.lining_description || ""; // Add this line to handle it
 
     await sqlPutProduct(id, {
-      name: body.name,
-      description: body.description,
-      price: body.price,
+      name: body.name.trim(),
+      description: body.description || null,
+      price: priceNum,
       old_price: oldPrice,
       discount_percentage: discountPercentage,
       priority,

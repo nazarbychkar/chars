@@ -10,6 +10,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
+import FormField, { validators } from "@/components/shared/FormField";
 
 // interface Product {
 //   id: number;
@@ -98,7 +99,7 @@ export default function FinalCard() {
       !city ||
       !postOffice
     ) {
-      setError("Будь ласка, заповніть усі обов’язкові поля.");
+      setError("Будь ласка, заповніть усі необхідні поля, щоб ми змогли швидко обробити ваше замовлення ✨");
       setLoading(false);
       return;
     }
@@ -106,13 +107,13 @@ export default function FinalCard() {
     const trimmedName = customerName.trim();
     const nameParts = trimmedName.split(/\s+/);
     if (nameParts.length < 2) {
-      setError("Введіть ім’я та прізвище повністю.");
+      setError("Будь ласка, введіть ваше ім'я та прізвище повністю — це допоможе нам швидше обробити замовлення 😊");
       setLoading(false);
       return;
     }
 
     if (items.length === 0) {
-      setError("Ваш кошик порожній.");
+      setError("Ваш кошик порожній. Додайте товари, які вам подобаються, і повертайтеся! 🛒");
       setLoading(false);
       return;
     }
@@ -184,7 +185,7 @@ export default function FinalCard() {
       if (!response.ok) {
         const data = await response.json();
         console.error("[FinalCard] Error response:", data);
-        setError(data.error || "Помилка при оформленні замовлення.");
+        setError(data.error || "Нам шкода, але щось пішло не так. Будь ласка, спробуйте ще раз або зв'яжіться з нами — ми обов'язково допоможемо! 💪");
       } else {
         const data = await response.json();
         console.log("[FinalCard] Success response:", data);
@@ -196,7 +197,7 @@ export default function FinalCard() {
 
         if (!invoiceUrl) {
           console.error("[FinalCard] No invoice URL received!");
-          setError("Не вдалося отримати посилання на оплату.");
+          setError("На жаль, наразі ми не можемо створити посилання для оплати. Будь ласка, спробуйте через кілька хвилин або зв'яжіться з нашою службою підтримки.");
           return;
         }
 
@@ -250,7 +251,7 @@ export default function FinalCard() {
       }
     } catch (error) {
       console.error("[FinalCard] Network error:", error);
-      setError("Помилка мережі. Спробуйте пізніше.");
+      setError("Схоже, виникли проблеми з інтернет-з'єднанням. Будь ласка, перевірте підключення та спробуйте ще раз.");
     } finally {
       setLoading(false);
     }
@@ -273,27 +274,7 @@ export default function FinalCard() {
   const [filteredPostOffices, setFilteredPostOffices] = useState<string[]>([]); // Filtered post offices list for autocomplete
   const [cityListVisible, setCityListVisible] = useState(false);
   const [postOfficeListVisible, setPostOfficeListVisible] = useState(false);
-  const [region, setRegion] = useState(""); // For Ukrposhta - область
-  const [district, setDistrict] = useState(""); // For Ukrposhta - район
-  const [regionListVisible] = useState(false); // Controls region list visibility
-  const [districtListVisible] = useState(false); // Controls district list visibility
-
-  // Example useEffect for region and district fetching for Ukrposhta
-  useEffect(() => {
-    if (region) {
-      setLoadingCities(true);
-      // API call to fetch regions for Ukrposhta
-      setLoadingCities(false);
-    }
-  }, [region]);
-
-  useEffect(() => {
-    if (district) {
-      setLoadingPostOffices(true);
-      // API call to fetch districts for Ukrposhta
-      setLoadingPostOffices(false);
-    }
-  }, [district]);
+  // Removed unused state variables and related useEffect hooks for region/district
 
   useEffect(() => {
     // Fetch available cities when delivery method changes to Nova Poshta
@@ -323,12 +304,12 @@ export default function FinalCard() {
             );
           } else {
             setCities([]);
-            setError("Не вдалося знайти міста.");
+            setError("На жаль, наразі ми не можемо завантажити список міст. Будь ласка, спробуйте через кілька хвилин.");
           }
         })
         .catch((err) => {
           console.error("Fetch error:", err);
-          setError("Помилка при завантаженні міст.");
+          setError("Виникла проблема при завантаженні списку міст. Будь ласка, перевірте підключення та спробуйте ще раз.");
         })
         .finally(() => {
           setLoadingCities(false);
@@ -362,12 +343,13 @@ export default function FinalCard() {
         })
         .catch(() => {
           console.error("Error fetching cities");
-          setError("Failed to load cities.");
+          setError("На жаль, наразі ми не можемо завантажити список міст. Будь ласка, спробуйте через кілька хвилин.");
         })
         .finally(() => {
           setLoadingCities(false);
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deliveryMethod]);
 
   useEffect(() => {
@@ -433,12 +415,13 @@ export default function FinalCard() {
         })
         .catch(() => {
           console.error("Error fetching post offices");
-          setError("Failed to load post offices.");
+          setError("На жаль, наразі ми не можемо завантажити список відділень. Будь ласка, спробуйте через кілька хвилин.");
         })
         .finally(() => {
           setLoadingPostOffices(false);
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city]);
 
   useEffect(() => {
@@ -684,56 +667,47 @@ export default function FinalCard() {
               className="flex flex-col gap-5 w-full sm:w-1/3"
               noValidate
             >
-              <label
-                htmlFor="name"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
-              >
-                Ім’я та прізвище *
-              </label>
-              <input
-                type="text"
+              <FormField
+                label="Ім'я та прізвище"
                 id="name"
-                placeholder="Ваше імʼя та прізвище"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Ваше імʼя та прізвище"
                 required
                 autoComplete="name"
+                validation={(value) => {
+                  const required = validators.required(value);
+                  if (required) return required;
+                  return validators.fullName(value);
+                }}
               />
 
-              <label
-                htmlFor="email"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
-              >
-                Email
-              </label>
-              <input
-                type="email"
+              <FormField
+                label="Email"
                 id="email"
-                placeholder="Ваш Email"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Ваш Email"
                 autoComplete="email"
+                validation={validators.email}
               />
 
-              <label
-                htmlFor="phone"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
-              >
-                Телефон *
-              </label>
-              <input
-                type="tel"
+              <FormField
+                label="Телефон"
                 id="phone"
-                placeholder="Ваш телефон"
-                pattern="^\+?\d{10,15}$"
-                title="Введіть номер телефону у форматі +380xxxxxxxxx"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Ваш телефон (наприклад: +380501234567)"
                 required
                 autoComplete="tel"
+                validation={(value) => {
+                  const required = validators.required(value);
+                  if (required) return required;
+                  return validators.phone(value);
+                }}
               />
 
               {/* Add delivery method, city, and post office fields */}
@@ -927,8 +901,58 @@ export default function FinalCard() {
                 {loading ? "Відправка..." : "Відправити"}
               </button>
 
-              {error && <p className="text-red-500 mt-2">{error}</p>}
-              {success && <p className="text-green-600 mt-2">{success}</p>}
+              {error && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+                  <span className="text-sm md:text-base">
+                    {error}
+                  </span>
+                  <button
+                    onClick={() => setError(null)}
+                    className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+                    aria-label="Закрити"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              {success && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+                  <span className="text-sm md:text-base">
+                    {success}
+                  </span>
+                  <button
+                    onClick={() => setSuccess(null)}
+                    className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+                    aria-label="Закрити"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </form>
 
             <div className="w-full sm:w-1/4 px-4 sm:px-0 flex flex-col gap-4">
@@ -993,22 +1017,42 @@ export default function FinalCard() {
                       <div className="flex justify-start items-center gap-3 mt-auto">
                         <div className="w-20 h-9 border border-neutral-400/60 flex justify-around items-center rounded">
                           <button
-                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
-                            onClick={() =>
+                            className={`text-zinc-500 text-base font-normal font-['Inter'] leading-normal ${
+                              item.stock !== undefined && item.quantity >= item.stock
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:text-black dark:hover:text-white"
+                            }`}
+                            onClick={() => {
                               updateQuantity(
                                 item.id,
                                 item.size,
-                                item.quantity + 1
-                              )
+                                item.quantity + 1,
+                                (errorMessage) => {
+                                  // Show error alert when stock limit is reached
+                                  setError(errorMessage);
+                                  setTimeout(() => setError(null), 4000);
+                                }
+                              );
+                            }}
+                            disabled={item.stock !== undefined && item.quantity >= item.stock}
+                            title={
+                              item.stock !== undefined && item.quantity >= item.stock
+                                ? `Максимальна кількість в наявності: ${item.stock} шт.`
+                                : "Збільшити кількість"
                             }
                           >
                             +
                           </button>
                           <div className="text-base font-normal font-['Inter'] leading-normal">
                             {item.quantity}
+                            {item.stock !== undefined && (
+                              <span className="text-xs text-gray-500 ml-1">
+                                / {item.stock}
+                              </span>
+                            )}
                           </div>
                           <button
-                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal"
+                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal hover:text-black dark:hover:text-white"
                             onClick={() =>
                               updateQuantity(
                                 item.id,

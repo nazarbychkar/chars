@@ -77,9 +77,75 @@ export default function Product() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  if (loading) return <div className="p-10">Loading product...</div>;
-  if (error || !product)
-    return <div className="p-10">Error: {error || "Product not found"}</div>;
+  if (loading) {
+    return (
+      <section className="max-w-[1920px] w-full mx-auto">
+        <div className="flex flex-col lg:flex-row justify-around p-4 md:p-10 gap-10">
+          <div className="w-full lg:w-1/2">
+            <div className="w-full h-[85vh] bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+          </div>
+          <div className="w-full lg:w-1/2 space-y-6">
+            <div className="space-y-2">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse" />
+            </div>
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse" />
+            </div>
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  if (error || !product) {
+    return (
+      <section className="max-w-[1920px] w-full mx-auto p-10">
+        <div className="text-center py-20">
+          <div className="mb-4">
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-semibold mb-2">Товар не знайдено</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {error || "На жаль, ми не можемо знайти цей товар"}
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition-colors"
+              aria-label="Спробувати ще раз"
+            >
+              Спробувати ще раз
+            </button>
+            <a
+              href="/catalog"
+              className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-6 py-3 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              aria-label="Перейти до каталогу"
+            >
+              До каталогу
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const media = product.media || [];
   const sizes = (product.sizes as { size: string; stock?: number | string }[] | undefined)

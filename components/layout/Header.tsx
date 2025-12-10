@@ -70,7 +70,6 @@ export default function Header() {
   const [pinnedCatalog, setPinnedCatalog] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [justUnpinned] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -204,7 +203,10 @@ export default function Header() {
                         category.name
                       )}`)
                     }
-                    className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter']"
+                    className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter'] focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded px-2"
+                    aria-label={`Перейти до категорії ${category.name}`}
+                    aria-expanded={catalogOpen && hoveredCategoryId === category.id}
+                    aria-haspopup="true"
                   >
                     {category.name}
                   </button>
@@ -332,11 +334,17 @@ export default function Header() {
 
             {/* Right Icons */}
             <div className="flex items-center gap-5">
-              <button className="cursor-pointer" onClick={toggleTheme}>
+              <button
+                className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                onClick={toggleTheme}
+                aria-label={isDark ? "Увімкнути світлу тему" : "Увімкнути темну тему"}
+                aria-pressed={isDark}
+              >
                 <Image
                   height="32"
                   width="32"
-                  alt="theme switch"
+                  alt=""
+                  aria-hidden="true"
                   src={
                     isDark
                       ? "/images/dark-theme/theme-switch.svg"
@@ -344,12 +352,18 @@ export default function Header() {
                   }
                 />
               </button>
-              <button onClick={() => setIsSearchOpen(true)}>
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Відкрити пошук"
+                aria-expanded={isSearchOpen}
+              >
                 <Image
                   className="cursor-pointer"
                   height="32"
                   width="32"
-                  alt="search icon"
+                  alt=""
+                  aria-hidden="true"
                   src={
                     isDark
                       ? "/images/dark-theme/search.svg"
@@ -358,13 +372,16 @@ export default function Header() {
                 />
               </button>
               <button
-                className="cursor-pointer relative"
+                className="cursor-pointer relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
+                aria-label={`Відкрити кошик. Товарів в кошику: ${totalItems}`}
+                aria-expanded={isBasketOpen}
               >
                 <Image
                   height="32"
                   width="32"
-                  alt="shopping basket"
+                  alt=""
+                  aria-hidden="true"
                   src={
                     isDark
                       ? "/images/dark-theme/basket.svg"
@@ -372,7 +389,10 @@ export default function Header() {
                   }
                 />
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  <span
+                    className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                    aria-label={`${totalItems} товарів в кошику`}
+                  >
                     {totalItems > 99 ? "99+" : totalItems}
                   </span>
                 )}
@@ -392,15 +412,23 @@ export default function Header() {
           <div className="flex gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="relative w-12 h-12 text-3xl"
+              className="relative w-12 h-12 text-3xl focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Відкрити меню"
+              aria-expanded={isSidebarOpen}
             >
               ☰
             </button>
-            <button className="cursor-pointer" onClick={toggleTheme}>
+            <button
+              className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              onClick={toggleTheme}
+              aria-label={isDark ? "Увімкнути світлу тему" : "Увімкнути темну тему"}
+              aria-pressed={isDark}
+            >
               <Image
                 height="32"
                 width="32"
-                alt="theme switch"
+                alt=""
+                aria-hidden="true"
                 src={
                   isDark
                     ? "/images/dark-theme/theme-switch.svg"
@@ -424,11 +452,17 @@ export default function Header() {
           </Link>
 
           <div className="flex gap-4">
-            <button onClick={() => setIsSearchOpen(true)}>
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Відкрити пошук"
+              aria-expanded={isSearchOpen}
+            >
               <Image
                 height="32"
                 width="32"
-                alt="search icon"
+                alt=""
+                aria-hidden="true"
                 src={
                   isDark
                     ? "/images/dark-theme/search.svg"
@@ -438,12 +472,15 @@ export default function Header() {
             </button>
             <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
-              className="relative"
+              className="relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label={`Відкрити кошик. Товарів в кошику: ${totalItems}`}
+              aria-expanded={isBasketOpen}
             >
               <Image
                 height="32"
                 width="32"
-                alt="shopping basket"
+                alt=""
+                aria-hidden="true"
                 src={
                   isDark
                     ? "/images/dark-theme/basket.svg"
@@ -451,7 +488,10 @@ export default function Header() {
                 }
               />
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span
+                  className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                  aria-label={`${totalItems} товарів в кошику`}
+                >
                   {totalItems > 99 ? "99+" : totalItems}
                 </span>
               )}

@@ -3,49 +3,41 @@
 import React from "react";
 
 interface AlertProps {
-  type: "success" | "error" | "warning" | "info";
+  type?: "success" | "error" | "warning" | "info"; // Type kept for API compatibility but not used
   message: string;
   onClose?: () => void;
   isVisible: boolean;
 }
 
-export default function Alert({ type, message, onClose, isVisible }: AlertProps) {
+export default function Alert({ message, onClose, isVisible }: AlertProps) {
   if (!isVisible) return null;
 
-  const baseClasses = "fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out";
-  
-  const typeClasses = {
-    success: "bg-green-100 border border-green-400 text-green-700",
-    error: "bg-red-100 border border-red-400 text-red-700",
-    warning: "bg-yellow-100 border border-yellow-400 text-yellow-700",
-    info: "bg-blue-100 border border-blue-400 text-blue-700"
-  };
-
-  const iconClasses = {
-    success: "✓",
-    error: "✕",
-    warning: "⚠",
-    info: "ℹ"
-  };
-
   return (
-    <div className={`${baseClasses} ${typeClasses[type]}`}>
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0">
-          <span className="text-lg font-bold">{iconClasses[type]}</span>
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-medium">{message}</p>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 ml-2 text-lg hover:opacity-70 transition-opacity"
+    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+      <span className="text-sm md:text-base">
+        {message}
+      </span>
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+          aria-label="Закрити"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            ×
-          </button>
-        )}
-      </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

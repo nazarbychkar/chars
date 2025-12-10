@@ -7,7 +7,8 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import SidebarMenu from "../layout/SidebarMenu";
 import Link from "next/link";
 import Image from "next/image";
-import { getProductImageSrc, getFirstMedia } from "@/lib/getFirstProductImage";
+import { getProductImageSrc } from "@/lib/getFirstProductImage";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 interface Product {
   id: number;
@@ -28,6 +29,13 @@ export default function CatalogClient({
   initialProducts,
   colors,
 }: CatalogClientProps) {
+  // Pull to refresh functionality
+  usePullToRefresh({
+    onRefresh: async () => {
+      window.location.reload();
+    },
+    enabled: true,
+  });
   const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
   const searchParams = useSearchParams();
 
@@ -118,7 +126,8 @@ export default function CatalogClient({
             <Link
               href={`/product/${product.id}`}
               key={product.id}
-              className="flex flex-col gap-2 sm:gap-4 group"
+              className="flex flex-col gap-2 sm:gap-4 group product-card"
+              aria-label={`Перейти до товару ${product.name}`}
             >
               {/* Image or Video */}
               <div className="relative w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300 overflow-hidden">

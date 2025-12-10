@@ -432,21 +432,28 @@ export async function sqlPutProduct(
   }
 ) {
   // Step 1: Update main product fields
+  // Convert season array to string if needed
+  const seasonValue = Array.isArray(update.season) 
+    ? update.season.join(',') 
+    : typeof update.season === 'string' 
+      ? update.season 
+      : null;
+
   await sql`
     UPDATE products
     SET 
       name = ${update.name},
       description = ${update.description || null},
-      price = ${update.price},
-      old_price = ${update.old_price || null},
-      discount_percentage = ${update.discount_percentage || null},
-      priority = ${update.priority || 0},
+      price = ${Number(update.price)},
+      old_price = ${update.old_price ? Number(update.old_price) : null},
+      discount_percentage = ${update.discount_percentage ? Number(update.discount_percentage) : null},
+      priority = ${Number(update.priority || 0)},
       top_sale = ${update.top_sale || false},
       limited_edition = ${update.limited_edition || false},
-      season = ${update.season || null},
+      season = ${seasonValue},
       color = ${update.color || null},
-      category_id = ${update.category_id || null},
-      subcategory_id = ${update.subcategory_id || null}, -- ✅ NEW
+      category_id = ${update.category_id ? Number(update.category_id) : null},
+      subcategory_id = ${update.subcategory_id ? Number(update.subcategory_id) : null},
       fabric_composition = ${update.fabric_composition || null},
       has_lining = ${update.has_lining || false},
       lining_description = ${update.lining_description || null}
@@ -545,6 +552,7 @@ export async function sqlGetAllOrders() {
   return await sql`
     SELECT *
     FROM orders
+    WHERE payment_status = 'paid'
     ORDER BY created_at DESC;
   `;
 }
@@ -636,7 +644,7 @@ export async function sqlPostOrder(order: OrderInput) {
       if (!updated || updated.length === 0) {
         // Not enough stock or size doesn't exist
         throw new Error(
-          `Insufficient stock for product ${item.product_id} size ${item.size}`
+          `Недостатньо товару на складі. На жаль, обраного вами товару розміру ${item.size} зараз немає в наявності. Будь ласка, виберіть інший розмір або перевірте доступність товару пізніше.`
         );
       }
   }
@@ -753,7 +761,8 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
             'product_name', p.name,
             'size', oi.size,
             'quantity', oi.quantity,
-            'price', oi.price
+            'price', oi.price,
+            'color', oi.color
           )
         ) FILTER (WHERE oi.id IS NOT NULL),
         '[]'
