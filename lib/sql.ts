@@ -63,9 +63,7 @@ export async function sqlGetAllProducts() {
         SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
         FROM product_media m
         WHERE m.product_id = p.id
-        ORDER BY 
-          CASE WHEN m.type = 'photo' THEN 0 ELSE 1 END,
-          m.id
+        ORDER BY m.id
         LIMIT 1
       ) AS first_media
     FROM products p
@@ -172,9 +170,7 @@ export async function sqlGetProductsByCategory(categoryName: string) {
         SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
         FROM product_media m
         WHERE m.product_id = p.id
-        ORDER BY 
-          CASE WHEN m.type = 'photo' THEN 0 ELSE 1 END,
-          m.id
+        ORDER BY m.id
         LIMIT 1
       ) AS first_media
     FROM products p
@@ -203,9 +199,7 @@ export async function sqlGetProductsBySubcategoryName(name: string) {
         SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
         FROM product_media m
         WHERE m.product_id = p.id
-        ORDER BY 
-          CASE WHEN m.type = 'photo' THEN 0 ELSE 1 END,
-          m.id
+        ORDER BY m.id
         LIMIT 1
       ) AS first_media
     FROM products p
@@ -233,9 +227,7 @@ export async function sqlGetProductsBySeason(season: string) {
         SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
         FROM product_media m
         WHERE m.product_id = p.id
-        ORDER BY 
-          CASE WHEN m.type = 'photo' THEN 0 ELSE 1 END,
-          m.id
+        ORDER BY m.id
         LIMIT 1
       ) AS first_media
     FROM products p
@@ -260,9 +252,7 @@ export async function sqlGetTopSaleProducts() {
         SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
         FROM product_media m
         WHERE m.product_id = p.id
-        ORDER BY 
-          CASE WHEN m.type = 'photo' THEN 0 ELSE 1 END,
-          m.id
+        ORDER BY m.id
         LIMIT 1
       ) AS first_media
     FROM products p
@@ -286,9 +276,7 @@ export async function sqlGetLimitedEditionProducts() {
         SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
         FROM product_media m
         WHERE m.product_id = p.id
-        ORDER BY 
-          CASE WHEN m.type = 'photo' THEN 0 ELSE 1 END,
-          m.id
+        ORDER BY m.id
         LIMIT 1
       ) AS first_media
     FROM products p
