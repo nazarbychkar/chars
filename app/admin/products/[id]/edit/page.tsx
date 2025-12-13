@@ -729,6 +729,7 @@ export default function EditProductPage() {
                             className="w-32 h-32 object-cover rounded"
                           />
                         ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={previewUrl}
                             alt={`new-media-${i}`}

@@ -9,7 +9,6 @@ import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
-import Image from "next/image";
 
 const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
 
@@ -622,6 +621,7 @@ export default function FormElements() {
                         }}
                       />
                     ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={previewUrl}
                         alt={media.file.name}

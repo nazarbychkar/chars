@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, PoolClient } from "pg";
 import { unlink } from "fs/promises";
 import path from "path";
 
@@ -19,7 +19,7 @@ const pool = new Pool({
 // Helper function to execute queries in a transaction
 // CRITICAL: Must use the same client for BEGIN/COMMIT/ROLLBACK
 export async function withTransaction<T>(
-  callback: (client: any) => Promise<T>
+  callback: (client: PoolClient) => Promise<T>
 ): Promise<T> {
   const client = await pool.connect();
   try {

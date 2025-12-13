@@ -26,7 +26,7 @@ function VideoWithAutoplay({ src, className }: { src: string; className?: string
       const playVideo = async () => {
         try {
           await video.play();
-        } catch (error) {
+        } catch {
           // Retry after delay for mobile
           setTimeout(async () => {
             try {
