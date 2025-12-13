@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import CatalogServer from "@/components/catalog/CatalogServer";
 import type { Metadata } from "next";
-import Breadcrumbs, { BreadcrumbsSchema } from "@/components/shared/Breadcrumbs";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import BreadcrumbsSchema from "@/components/shared/BreadcrumbsSchema";
 import { CatalogSkeleton } from "@/components/shared/Skeleton";
 
 interface PageProps {
@@ -82,6 +83,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function Page({ searchParams }: PageProps) {
     const params = await searchParams;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
     
     const breadcrumbItems = [
       { label: "Головна", href: "/" },
@@ -92,7 +94,7 @@ export default async function Page({ searchParams }: PageProps) {
         <>
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
                 <Breadcrumbs items={breadcrumbItems} />
-                <BreadcrumbsSchema items={breadcrumbItems} />
+                <BreadcrumbsSchema items={breadcrumbItems} baseUrl={baseUrl} />
             </div>
             <Suspense fallback={<CatalogSkeleton count={8} />}>
             <CatalogServer 

@@ -4,7 +4,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { sqlGetProduct } from "@/lib/sql";
 import { getFirstProductImage } from "@/lib/getFirstProductImage";
-import Breadcrumbs, { BreadcrumbsSchema } from "@/components/shared/Breadcrumbs";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
+import BreadcrumbsSchema from "@/components/shared/BreadcrumbsSchema";
 import { ProductPageSkeleton } from "@/components/shared/Skeleton";
 
 interface PageProps {
@@ -125,6 +126,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
   
   // Get product for breadcrumbs
   let productName = "Товар";
@@ -147,7 +149,7 @@ export default async function Page({ params }: PageProps) {
     <main>
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
         <Breadcrumbs items={breadcrumbItems} productName={productName} />
-        <BreadcrumbsSchema items={breadcrumbItems} />
+        <BreadcrumbsSchema items={breadcrumbItems} baseUrl={baseUrl} />
       </div>
       <Suspense fallback={<ProductPageSkeleton />}>
         <ProductServer id={id} />
