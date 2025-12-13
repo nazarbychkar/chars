@@ -384,8 +384,12 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                       alt={`Product media ${i}`}
                       width={800}
                       height={1160}
-                      priority={i === activeImageIndex}
-                      quality={i === activeImageIndex ? 90 : 80}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
+                      priority={i === 0}
+                      loading={i <= 1 ? undefined : "lazy"}
+                      quality={i === 0 ? 85 : 75}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                       className="object-contain w-auto h-auto"
                       style={{ 
                         maxHeight: "85vh",
