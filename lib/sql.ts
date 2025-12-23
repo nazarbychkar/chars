@@ -1,6 +1,7 @@
 import { Pool, PoolClient } from "pg";
 import { unlink } from "fs/promises";
 import path from "path";
+import { unstable_cache } from "next/cache";
 
 // Create a PostgreSQL connection pool with optimized settings
 // Optimized for 2GB VPS: max 5 connections (20 was too high and caused memory issues)
@@ -63,7 +64,8 @@ export const sql = Object.assign(
 
 // Get all products - optimized for catalog list (only first photo)
 // OPTIMIZED: Using LATERAL JOIN instead of correlated subquery (2-3x faster)
-export async function sqlGetAllProducts() {
+// OPTIMIZED: Added Next.js cache wrapper for server-side caching (revalidate every 5 minutes)
+async function _sqlGetAllProducts() {
   return await sql`
     SELECT
       p.id,
@@ -94,6 +96,15 @@ export async function sqlGetAllProducts() {
     ORDER BY p.created_at DESC;
   `;
 }
+
+export const sqlGetAllProducts = unstable_cache(
+  _sqlGetAllProducts,
+  ['all-products'],
+  {
+    revalidate: 300, // 5 minutes - matches ISR revalidate time
+    tags: ['products'], // Cache tags for on-demand revalidation
+  }
+);
 
 // Get one product by ID with sizes & media
 export async function sqlGetProduct(id: number) {
@@ -148,10 +159,40 @@ export async function sqlGetProduct(id: number) {
 }
 
 // =========================
-// Get related color variants by product name
+// Get related color variants by first two words of product name
 // Returns: id, name, first_color (main color from product_colors)
 // =========================
 export async function sqlGetRelatedColorsByName(name: string) {
+  // Extract first two words from the product name
+  const nameWords = name.trim().split(/\s+/).filter(word => word.length > 0);
+  const firstTwoWords = nameWords.slice(0, 2).join(' ');
+  
+  // If we have less than 2 words, fall back to exact match
+  if (nameWords.length < 2) {
+    return await sql`
+      SELECT
+        p.id,
+        p.name,
+        COALESCE(
+          (
+            SELECT JSONB_BUILD_OBJECT('label', pc.label, 'hex', pc.hex)
+            FROM product_colors pc
+            WHERE pc.product_id = p.id
+            ORDER BY pc.id
+            LIMIT 1
+          ),
+          CASE 
+            WHEN p.color IS NOT NULL THEN JSONB_BUILD_OBJECT('label', p.color, 'hex', NULL)
+            ELSE NULL
+          END
+        ) AS first_color
+      FROM products p
+      WHERE array_to_string((string_to_array(p.name, ' '))[1:2], ' ') = ${firstTwoWords}
+      ORDER BY p.id;
+    `;
+  }
+  
+  // Compare first two words using PostgreSQL array functions
   return await sql`
     SELECT
       p.id,
@@ -170,7 +211,7 @@ export async function sqlGetRelatedColorsByName(name: string) {
         END
       ) AS first_color
     FROM products p
-    WHERE p.name = ${name}
+    WHERE array_to_string((string_to_array(p.name, ' '))[1:2], ' ') = ${firstTwoWords}
     ORDER BY p.id;
   `;
 }

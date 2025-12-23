@@ -89,7 +89,7 @@ export default function WhyChooseUs() {
         <div className="text-start lg:text-center justify-center text-3xl lg:text-5xl font-normal font-['Inter'] uppercase">
           Чому обирають нас
         </div>
-        <div className=" justify-center opacity-70 lg:text-xl font-normal font-['Inter'] capitalize leading-normal">
+        <div className=" justify-center opacity-70 lg:text-xl font-normal font-['Inter'] leading-normal">
           Chars — коли естетика не потребує зайвих слів.
         </div>
       </div>
@@ -115,9 +115,9 @@ export default function WhyChooseUs() {
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                 />
-                <div className="w-full justify-center text-xl sm:text-3xl lg:text-5xl font-normal font-['Inter'] lowercase">
+                <div className="w-full justify-center text-xl sm:text-3xl lg:text-5xl font-normal font-['Inter']">
                   {item.top_text} <br />
-                  <span className="justify-center text-sm sm:text-lg lg:text-xl font-normal font-['Inter'] capitalize">
+                  <span className="justify-center text-sm sm:text-lg lg:text-xl font-normal font-['Inter']">
                     {item.bottom_text}
                   </span>
                 </div>

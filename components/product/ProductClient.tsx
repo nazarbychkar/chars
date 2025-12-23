@@ -464,7 +464,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         </div>
 
         {/* Info Section */}
-        <div className="flex flex-col gap-6 md:gap-10 px-4 md:px-0 w-full lg:w-1/2">
+        <div className="flex flex-col gap-4 md:gap-5 px-4 md:px-0 w-full lg:w-1/2">
           {/* Availability */}
           <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide">
             В наявності
@@ -541,7 +541,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
           {/* Color Picker */}
           {(product.colors && product.colors.length > 0) || relatedProducts.length > 0 ? (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               <div className="text-sm md:text-base font-['Inter'] uppercase tracking-tight">
                 Колір
               </div>

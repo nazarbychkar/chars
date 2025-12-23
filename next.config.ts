@@ -39,6 +39,9 @@ const nextConfig = {
     // Increase body size limit for API routes (Next.js 15+)
     // @ts-ignore - proxyClientMaxBodySize is an experimental feature not yet in types
     proxyClientMaxBodySize: "100mb",
+    // Increase body size limit for middleware (Next.js 16+)
+    // @ts-ignore - middlewareClientMaxBodySize is an experimental feature not yet in types
+    middlewareClientMaxBodySize: "100mb",
     // Enable optimized package imports with tree shaking
     optimizePackageImports: [
       "@react-jvectormap/core", 

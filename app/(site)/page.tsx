@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     locale: "uk_UA",
     images: [
       {
-        url: `${baseUrl}/images/light-theme/chars-logo-header-light.png`,
+        url: `${baseUrl}/images/IMG_5887.JPG`,
         width: 1200,
         height: 630,
         alt: "CHARS — Український Бренд Чоловічого Одягу",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CHARS — Український Бренд Чоловічого Одягу",
     description: "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт.",
-    images: [`${baseUrl}/images/light-theme/chars-logo-header-light.png`],
+    images: [`${baseUrl}/images/IMG_5887.JPG`],
   },
 };
 

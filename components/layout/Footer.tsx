@@ -368,7 +368,7 @@ export default function Footer() {
       {/* Centered developer credit */}
       <div className="mt-8 mb-6 flex flex-col lg:flex-row items-center gap-3 lg:gap-6 justify-center">
         <Link
-          href="https://telebots.site/"
+          href="https://new.telebots.site/?utm_source=chars_ua_brand"
           target="_blank"
           className={`px-6 py-3 rounded-full border-2 transition-all duration-300 text-sm md:text-base tracking-wide hover:scale-105 ${
             isDark
