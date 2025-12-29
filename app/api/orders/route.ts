@@ -177,8 +177,12 @@ export async function POST(req: NextRequest) {
     // const PUBLIC_URL = process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
     // Example: "https://abc123.ngrok.app"
 
+    // Use NEXT_PUBLIC_PUBLIC_URL (recommended) or PUBLIC_URL for compatibility
+    // Recommended: Set NEXT_PUBLIC_PUBLIC_URL in your .env file
     const PUBLIC_URL =
-      process.env.NEXT_PUBLIC_PUBLIC_URL || "http://localhost:3000";
+      process.env.NEXT_PUBLIC_PUBLIC_URL || 
+      process.env.PUBLIC_URL || 
+      "https://chars.ua";
     
     console.log("[POST /api/orders] PUBLIC_URL:", PUBLIC_URL);
     console.log("[POST /api/orders] MONO_TOKEN exists:", !!process.env.NEXT_PUBLIC_MONO_TOKEN);
@@ -192,7 +196,7 @@ export async function POST(req: NextRequest) {
         comment: comment || "Оплата замовлення",
         basketOrder,
       },
-      redirectUrl: `${PUBLIC_URL}/final`,
+      redirectUrl: `${PUBLIC_URL}/payment/status`, // Payment status page will check localStorage for invoiceId
       webHookUrl: `${PUBLIC_URL}/api/mono-webhook`,
       validity: 3600,
       paymentType: "debit",

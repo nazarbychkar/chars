@@ -250,16 +250,16 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <div className="flex justify-start gap-4">
               <div
-                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                className={`w-14 h-14 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
                   isDark ? "border-white" : "border-black"
                 }`}
               >
                 <Image
                   src="/images/location-icon.svg"
                   alt="Location"
-                  width={16}
-                  height={16}
-                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
+                  width={32}
+                  height={32}
+                  className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
                 />
               </div>
               <Link
@@ -275,16 +275,16 @@ export default function Footer() {
 
             <div className="flex justify-start gap-4 md:gap-6">
               <div
-                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                className={`w-14 h-14 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
                   isDark ? "border-white" : "border-black"
                 }`}
               >
                 <Image
                   src="/images/email-icon.svg"
                   alt="Email"
-                  width={16}
-                  height={16}
-                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
+                  width={32}
+                  height={32}
+                  className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
                 />
               </div>
               <Link
@@ -297,16 +297,16 @@ export default function Footer() {
 
             <div className="flex justify-start gap-4 md:gap-6">
               <div
-                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                className={`w-14 h-14 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
                   isDark ? "border-white" : "border-black"
                 }`}
               >
                 <Image
                   src="/images/instagram-icon.svg"
                   alt="Instagram"
-                  width={16}
-                  height={16}
-                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
+                  width={32}
+                  height={32}
+                  className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
                 />
               </div>
               <Link
@@ -320,16 +320,16 @@ export default function Footer() {
 
             <div className="flex justify-start gap-4 md:gap-6">
               <div
-                className={`w-15 h-15 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
+                className={`w-14 h-14 md:w-26 md:h-26 rounded-full border flex items-center justify-center ${
                   isDark ? "border-white" : "border-black"
                 }`}
               >
                 <Image
                   src="/images/facebook-icon.svg"
                   alt="Facebook"
-                  width={16}
-                  height={16}
-                  className={`w-3 h-3 md:w-4 md:h-4 ${isDark ? "invert" : ""}`}
+                  width={32}
+                  height={32}
+                  className={`w-8 h-8 md:w-10 md:h-10 ${isDark ? "invert" : ""}`}
                 />
               </div>
               <Link

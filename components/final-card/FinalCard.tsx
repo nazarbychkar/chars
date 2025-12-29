@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import Image from "next/image";
@@ -29,6 +30,8 @@ export default function FinalCard() {
   // GENERAL
   const { isDark } = useAppContext();
   const { items, updateQuantity, removeItem, clearBasket } = useBasket();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // CUSTOMER
   const [customerName, setCustomerName] = useState("");
@@ -239,8 +242,14 @@ export default function FinalCard() {
           })
         );
 
+        // Clear any old invoiceId and payment success flag before storing the new one
+        localStorage.removeItem("currentInvoiceId");
+        localStorage.removeItem("paymentSuccess");
+        // Store invoiceId separately for payment status check
+        localStorage.setItem("currentInvoiceId", invoiceId);
+
         setSuccess("Замовлення успішно створено! Переходимо до оплати...");
-        clearBasket();
+        // Don't clear basket here - only clear after successful payment
 
         console.log("[FinalCard] Redirecting to invoice URL in 2 seconds...");
         // Перехід на сторінку оплати через 2 сек
@@ -263,7 +272,38 @@ export default function FinalCard() {
       setSubmittedOrder(JSON.parse(storedOrder));
       // localStorage.removeItem("submittedOrder");
     }
-  }, []);
+    
+    // Clear submittedOrder from localStorage if basket is empty and payment wasn't successful
+    // This prevents showing order details when user manually clears the basket
+    const paymentSuccessFromQuery = searchParams.get("payment") === "success";
+    const paymentSuccessFromStorage = typeof window !== "undefined" && localStorage.getItem("paymentSuccess") === "true";
+    const paymentSuccess = paymentSuccessFromQuery || paymentSuccessFromStorage;
+    
+    if (items.length === 0 && storedOrder && !paymentSuccess) {
+      localStorage.removeItem("submittedOrder");
+      setSubmittedOrder(null);
+    }
+
+    // Check if payment was successful via query parameter
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      // Show success message
+      setSuccess("✅ Оплата успішна! Ваше замовлення прийнято до обробки. Ми надішлемо вам SMS з номером відправлення після комплектування замовлення.");
+      // Clear basket only after successful payment
+      clearBasket();
+      // Mark payment as successful in localStorage so order details page can be shown
+      localStorage.setItem("paymentSuccess", "true");
+      // Clear invoiceId from localStorage
+      localStorage.removeItem("currentInvoiceId");
+      // Remove query parameters from URL without reload
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("payment");
+        url.searchParams.delete("invoiceId");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      }
+    }
+  }, [searchParams, router, clearBasket, items.length]);
 
   // POST OFFICE
   const [cities, setCities] = useState<string[]>([]); // Available cities
@@ -478,8 +518,12 @@ export default function FinalCard() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // ⬇️ When order is completed
-  if (items.length == 0 && submittedOrder) {
+  // ⬇️ When order is completed - show order details only after successful payment
+  const paymentSuccessFromQuery = searchParams.get("payment") === "success";
+  const paymentSuccessFromStorage = typeof window !== "undefined" && localStorage.getItem("paymentSuccess") === "true";
+  const paymentSuccess = paymentSuccessFromQuery || paymentSuccessFromStorage;
+  
+  if (items.length == 0 && submittedOrder && paymentSuccess) {
     const { items: orderItems, customer } = submittedOrder;
 
     return (
@@ -576,9 +620,9 @@ export default function FinalCard() {
             <div className="text-3xl  font-normal text-center">
               Дані клієнта
             </div>
-            <div className="text-xl font-normal leading-loose w-full md:w-1/3 text-left">
+            <div className="text-xl font-normal leading-loose w-full max-w-4xl text-left">
               <p className="flex justify-start gap-3">
-                <span className="">Ім’я: </span>
+                <span className="">Ім&apos;я: </span>
                 <span className="text-neutral-400">{customer.name}</span>
               </p>
               {customer.email && (

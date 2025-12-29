@@ -34,6 +34,14 @@ export async function POST(req: NextRequest) {
       // Send to Telegram after successful payment
       const BOT_TOKEN = process.env.BOT_TOKEN;
       const CHAT_ID = process.env.CHAT_ID;
+      
+      // Get base URL for admin panel link
+      const PUBLIC_URL =
+        process.env.NEXT_PUBLIC_PUBLIC_URL || 
+        process.env.PUBLIC_URL || 
+        "https://chars.ua";
+      
+      const adminOrderUrl = `${PUBLIC_URL}/admin/orders/${order.id}/edit`;
 
       const orderMessage = `
 🛒 <b>Нове замовлення (ОПЛАЧЕНО ✅)</b>
@@ -74,6 +82,8 @@ ${order.items
 
 🆔 <b>ID замовлення:</b> ${order.id}
 💳 <b>ID інвойсу:</b> ${invoiceId}
+
+🔗 <a href="${adminOrderUrl}">Переглянути замовлення в адмін панелі</a>
       `;
 
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {

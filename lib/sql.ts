@@ -666,7 +666,7 @@ type OrderInput = {
 };
 
 export async function sqlPostOrder(order: OrderInput) {
-  // Transaction: create order, insert items, decrement stock atomically
+  // Transaction: create order, insert items, check stock availability (but don't decrement - only after payment)
   // CRITICAL FIX: Use the same client for BEGIN/COMMIT/ROLLBACK
   const client = await pool.connect();
   try {
@@ -708,17 +708,16 @@ export async function sqlPostOrder(order: OrderInput) {
         );
       `;
 
-      // 2) Decrement stock for the specific size (guard non-negative)
-      const updated = await query`
-        UPDATE product_sizes
-        SET stock = stock - ${item.quantity}
+      // 2) Check stock availability (but don't decrement yet - only after payment)
+      const stockCheck = await query`
+        SELECT id, stock
+        FROM product_sizes
         WHERE product_id = ${item.product_id}
           AND size = ${item.size}
           AND stock >= ${item.quantity}
-        RETURNING id;
       `;
 
-      if (!updated || updated.length === 0) {
+      if (!stockCheck || stockCheck.length === 0) {
         // Not enough stock or size doesn't exist
         throw new Error(
           `Недостатньо товару на складі. На жаль, обраного вами товару розміру ${item.size} зараз немає в наявності. Будь ласка, виберіть інший розмір або перевірте доступність товару пізніше.`
@@ -812,11 +811,67 @@ export async function sqlUpdatePaymentStatus(
   invoiceId: string,
   status: string
 ) {
-  await sql`
-    UPDATE orders
-    SET payment_status = ${status}
-    WHERE invoice_id = ${invoiceId};
-  `;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Helper function to execute query on the same client
+    const query = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      let queryText = strings[0];
+      for (let i = 0; i < values.length; i++) {
+        queryText += `$${i + 1}` + strings[i + 1];
+      }
+      const result = await client.query(queryText, values);
+      return result.rows;
+    };
+
+    // Update payment status
+    await query`
+      UPDATE orders
+      SET payment_status = ${status}
+      WHERE invoice_id = ${invoiceId}
+      RETURNING id;
+    `;
+
+    // If payment status is "paid", decrement stock for all order items
+    if (status === "paid") {
+      // Get order items
+      const orderItems = await query`
+        SELECT product_id, size, quantity
+        FROM order_items
+        WHERE order_id = (
+          SELECT id FROM orders WHERE invoice_id = ${invoiceId}
+        )
+      `;
+
+      // Decrement stock for each item
+      for (const item of orderItems) {
+        const updated = await query`
+          UPDATE product_sizes
+          SET stock = stock - ${item.quantity}
+          WHERE product_id = ${item.product_id}
+            AND size = ${item.size}
+            AND stock >= ${item.quantity}
+          RETURNING id;
+        `;
+
+        if (!updated || updated.length === 0) {
+          // Not enough stock - this shouldn't happen if stock was checked at order creation
+          // But log it as a warning
+          console.warn(
+            `[sqlUpdatePaymentStatus] Not enough stock for product ${item.product_id}, size ${item.size}, quantity ${item.quantity}`
+          );
+        }
+      }
+    }
+
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 // Get order by invoice ID for webhook processing
