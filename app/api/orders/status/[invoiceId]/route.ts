@@ -24,11 +24,12 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Return payment status regardless of whether it's paid or not
+    // Return payment status + locale so frontend can redirect to correct language
     return NextResponse.json({
       invoiceId,
       payment_status: order.payment_status,
       order_id: order.id,
+      locale: order.locale ?? null,
     });
   } catch (error) {
     console.error("[GET /api/orders/status] Error:", error);

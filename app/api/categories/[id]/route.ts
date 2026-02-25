@@ -46,7 +46,7 @@ export async function PUT(
 
   try {
     const body = await req.json();
-    const { name, priority } = body;
+    const { name, priority, name_en, name_de, recommended_look_config } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -65,8 +65,41 @@ export async function PUT(
       );
     }
 
-    // Default priority to 0 if undefined
-    const updated = await sqlPutCategory(id, name, priority ?? 0);
+    // Load current category to preserve fields not provided in body
+    const existingArr = await sqlGetCategory(id);
+    const existing = existingArr[0];
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    const finalPriority =
+      priority !== undefined && typeof priority === "number" && priority >= 0
+        ? priority
+        : existing.priority ?? 0;
+
+    const finalNameEn =
+      name_en !== undefined ? name_en : (existing.name_en as string | null);
+    const finalNameDe =
+      name_de !== undefined ? name_de : (existing.name_de as string | null);
+
+    const finalRecommendedConfig =
+      recommended_look_config !== undefined
+        ? typeof recommended_look_config === "string"
+          ? recommended_look_config
+          : null
+        : (existing.recommended_look_config as string | null);
+
+    const updated = await sqlPutCategory(
+      id,
+      name,
+      finalPriority,
+      finalNameEn || null,
+      finalNameDe || null,
+      finalRecommendedConfig || null
+    );
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[PUT /api/categories/:id]", error);

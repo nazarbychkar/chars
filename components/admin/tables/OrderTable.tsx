@@ -26,6 +26,9 @@ interface Order {
   payment_type: string;
   status: string;
   created_at: Date;
+  currency?: "UAH" | "EUR";
+  locale?: string | null;
+  total_amount?: number;
 }
 
 const options = [
@@ -41,6 +44,14 @@ export default function OrdersTable() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
+
+  // Compute total sum for all loaded orders (in their stored currency)
+  const totalSum = useMemo(() => {
+    return orders.reduce(
+      (sum, order) => sum + (order.total_amount ?? 0),
+      0
+    );
+  }, [orders]);
 
   const totalPages = useMemo(() => 
     Math.ceil(orders.length / ordersPerPage), 
@@ -157,9 +168,17 @@ export default function OrdersTable() {
         <div className="min-w-[1200px]">
           {/* Header with title and add button */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.05]">
-            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-              Замовлення
-            </h2>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                Замовлення
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Загальна сума оплачних замовлень:{" "}
+                <span className="font-semibold">
+                  {totalSum.toFixed(2)} UAH/EUR
+                </span>
+              </p>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={clearCache}
@@ -215,6 +234,12 @@ export default function OrdersTable() {
                   className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
                   Відділення
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
+                  Мова / Валюта
                 </TableCell>
                 <TableCell
                   isHeader
@@ -285,6 +310,14 @@ export default function OrdersTable() {
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.post_office}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <div className="flex flex-col gap-0.5">
+                        <span>{order.locale ? order.locale.toUpperCase() : "—"}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {order.currency === "EUR" ? "€ EUR" : "₴ UAH"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {order.payment_type === "full"

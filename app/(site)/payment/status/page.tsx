@@ -3,11 +3,13 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isDark } = useAppContext();
+  const { messages, withLocalePath } = useI18n();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [status, setStatus] = useState<"loading" | "checking" | "error">("loading");
   
@@ -27,7 +29,7 @@ function PaymentStatusContent() {
     if (!invoiceId) {
       setStatus("error");
       setTimeout(() => {
-        router.push("/final");
+        router.push(withLocalePath("/final"));
       }, 3000);
       return;
     }
@@ -44,7 +46,7 @@ function PaymentStatusContent() {
           console.error("[PaymentStatus] Error checking status:", data);
           // If order not found or error, redirect to final page
           setTimeout(() => {
-            router.push("/final");
+            router.push(withLocalePath("/final"));
           }, 2000);
           return;
         }
@@ -54,8 +56,23 @@ function PaymentStatusContent() {
         if (data.payment_status === "paid") {
           // Clear invoiceId from localStorage on success
           localStorage.removeItem("currentInvoiceId");
-          // Redirect to final page with payment success parameter
-          router.push(`/final?payment=success&invoiceId=${invoiceId}`);
+
+          // Determine locale-specific prefix for redirect
+          const orderLocale =
+            typeof data.locale === "string" ? data.locale : null;
+          const localePrefix =
+            orderLocale === "uk"
+              ? "/uk"
+              : orderLocale === "de"
+              ? "/de"
+              : orderLocale === "en"
+              ? "/en"
+              : "";
+
+          // Redirect to localized final page with payment success parameter
+          router.push(
+            `${localePrefix}/final?payment=success&invoiceId=${invoiceId}`
+          );
           return;
         }
 
@@ -67,14 +84,25 @@ function PaymentStatusContent() {
         }
 
         // If payment not yet completed or other status, redirect back to final page
+        const orderLocale =
+          typeof data.locale === "string" ? data.locale : null;
+        const localePrefix =
+          orderLocale === "uk"
+            ? "/uk"
+            : orderLocale === "de"
+            ? "/de"
+            : orderLocale === "en"
+            ? "/en"
+            : "";
+
         setTimeout(() => {
-          router.push("/final");
+          router.push(`${localePrefix}/final`);
         }, 2000);
       } catch (error) {
         console.error("[PaymentStatus] Error:", error);
         setStatus("error");
         setTimeout(() => {
-          router.push("/final");
+          router.push(withLocalePath("/final"));
         }, 2000);
       }
     };
@@ -91,7 +119,7 @@ function PaymentStatusContent() {
       pollCount++;
       if (pollCount >= maxPolls) {
         clearInterval(pollInterval);
-        router.push("/final");
+        router.push(withLocalePath("/final"));
         return;
       }
       checkPaymentStatus();
@@ -101,7 +129,7 @@ function PaymentStatusContent() {
       clearTimeout(initialDelay);
       clearInterval(pollInterval);
     };
-  }, [invoiceId, invoiceIdFromQuery, router]);
+  }, [invoiceId, invoiceIdFromQuery, router, withLocalePath]);
 
   return (
     <div
@@ -114,10 +142,10 @@ function PaymentStatusContent() {
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current"></div>
         </div>
         <h1 className="text-2xl md:text-3xl font-['Inter'] mb-4">
-          Перевірка статусу оплати...
+          {messages.checkout.paymentStatusTitle}
         </h1>
         <p className="text-base md:text-lg opacity-70 font-['Inter']">
-          Будь ласка, зачекайте
+          {messages.checkout.paymentStatusDescription}
         </p>
       </div>
     </div>

@@ -4,7 +4,10 @@ import { sqlGetTopSaleProducts } from "@/lib/sql";
 interface Product {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
   price: number;
+  price_eur?: number | null;
   first_media?: { url: string; type: string } | null;
 }
 

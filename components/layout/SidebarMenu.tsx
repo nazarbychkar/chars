@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import type { Locale } from "@/lib/i18n/config";
+import { useBasket } from "@/lib/BasketProvider";
+import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
 
 interface SidebarMenuProps {
   isOpen: boolean;
@@ -12,12 +16,16 @@ interface SidebarMenuProps {
 interface Category {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
   subcategories?: Subcategory[];
 }
 
 interface Subcategory {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
 }
 
 export default function SidebarMenu({
@@ -25,6 +33,10 @@ export default function SidebarMenu({
   setIsOpen,
   isDark,
 }: SidebarMenuProps) {
+  const { locale, messages, switchLocale, withLocalePath } = useI18n();
+  const { currency, setCurrency } = useBasket();
+  const effectiveCurrency =
+    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +44,18 @@ export default function SidebarMenu({
   // "menu" = main menu with categories, "season" = season sidebar
   const [view, setView] = useState<"menu" | "season">("menu");
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null);
+
+  const getCategoryLabel = (cat: Category) => {
+    if (locale === "en") return cat.name_en || cat.name;
+    if (locale === "de") return cat.name_de || cat.name;
+    return cat.name;
+  };
+
+  const getSubcategoryLabel = (sub: Subcategory) => {
+    if (locale === "en") return sub.name_en || sub.name;
+    if (locale === "de") return sub.name_de || sub.name;
+    return sub.name;
+  };
 
   useEffect(() => {
     async function fetchCategories() {
@@ -67,21 +91,27 @@ export default function SidebarMenu({
     fetchCategories();
   }, []);
 
+  // Internal season values (UA) stay як були для фільтрації,
+  // а підпис (label) локалізуємо через i18n.
   const season_data = [
     {
-      name: "Осінь",
+      value: "Осінь",
+      label: messages.header.seasonAutumn,
       image: "/images/autumn2.jpg",
     },
     {
-      name: "Зима",
+      value: "Зима",
+      label: messages.header.seasonWinter,
       image: "/images/winter2.jpg",
     },
     {
-      name: "Весна",
+      value: "Весна",
+      label: messages.header.seasonSpring,
       image: "/images/spring2.jpg",
     },
     {
-      name: "Літо",
+      value: "Літо",
+      label: messages.header.seasonSummer,
       image: "/images/summer2.jpg",
     },
   ];
@@ -115,7 +145,7 @@ export default function SidebarMenu({
         {view === "menu" && (
           <nav className="flex flex-col px-4 py-6 space-y-2 text-xl sm:text-2xl md:text-3xl">
             <div className="flex justify-between items-center mb-4">
-              <h2>Меню</h2>
+              <h2>{messages.header.menuLabel}</h2>
               <button
                 className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
                 onClick={() => setIsOpen(false)}
@@ -124,7 +154,7 @@ export default function SidebarMenu({
               </button>
             </div>
 
-            {loading && <p>Loading categories...</p>}
+            {loading && <p>{messages.common.loading}</p>}
             {error && <p className="text-red-500">Error: {error}</p>}
 
             {!loading &&
@@ -133,11 +163,15 @@ export default function SidebarMenu({
                 <div key={cat.id} className="flex flex-col">
                   <div className="flex justify-between items-center">
                     <Link
-                      href={`/catalog?category=${encodeURIComponent(cat.name)}`}
+                      href={withLocalePath(
+                        `/catalog?category=${encodeURIComponent(
+                          buildCategorySlug(cat.name)
+                        )}`
+                      )}
                       className="hover:text-[#8C7461]"
                       onClick={() => setIsOpen(false)}
                     >
-                      {cat.name}
+                      {getCategoryLabel(cat)}
                     </Link>
 
                     {cat.subcategories && cat.subcategories.length > 0 && (
@@ -160,24 +194,83 @@ export default function SidebarMenu({
                       {cat.subcategories.map((sub) => (
                         <Link
                           key={sub.id}
-                          href={`/catalog?subcategory=${encodeURIComponent(
-                            sub.name
-                          )}`}
+                          href={withLocalePath(
+                            `/catalog?subcategory=${encodeURIComponent(
+                              buildSubcategorySlug(sub.name)
+                            )}`
+                          )}
                           className="hover:text-[#8C7461]"
                           onClick={() => setIsOpen(false)}
                         >
-                          {sub.name}
+                          {getSubcategoryLabel(sub)}
                         </Link>
                       ))}
                     </div>
                   )}
                 </div>
               ))}
+            {/* Currency & language selector in burger menu */}
+            <div className="mt-6 pt-4 border-t border-stone-300 dark:border-stone-700 space-y-4 text-base sm:text-lg">
+              <div className="flex items-center justify-between">
+                <span className="opacity-80">
+                  {messages.header.currencyLabel}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrency("UAH")}
+                    className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
+                      effectiveCurrency === "UAH"
+                        ? "bg-[#8C7461] text-white border-[#8C7461]"
+                        : "bg-white border-stone-300 text-stone-900"
+                    }`}
+                    aria-pressed={effectiveCurrency === "UAH"}
+                  >
+                    ₴ UAH
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrency("EUR")}
+                    className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
+                      effectiveCurrency === "EUR"
+                        ? "bg-[#8C7461] text-white border-[#8C7461]"
+                        : "bg-white border-stone-300 text-stone-900"
+                    }`}
+                    aria-pressed={effectiveCurrency === "EUR"}
+                  >
+                    € EUR
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="opacity-80">
+                  {messages.header.languageLabel}
+                </span>
+                <div className="flex items-center gap-2">
+                  {["uk", "de", "en"].map((lng) => (
+                    <button
+                      key={lng}
+                      type="button"
+                      onClick={() => switchLocale(lng as Locale)}
+                      className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
+                        locale === lng
+                          ? "bg-[#8C7461] text-white border-[#8C7461]"
+                          : "bg-white border-stone-300 text-stone-900"
+                      }`}
+                      aria-current={locale === lng ? "page" : undefined}
+                    >
+                      {lng.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             <button
               className="text-start cursor-pointer hover:text-[#8C7461]"
               onClick={() => setView("season")}
             >
-              Сезон -{">"}
+              {messages.header.seasonCategory} -{">"}
             </button>
           </nav>
         )}
@@ -185,7 +278,7 @@ export default function SidebarMenu({
         {view === "season" && (
           <div>
             <div className="flex justify-between items-center p-4 text-xl sm:text-2xl md:text-3xl">
-              <h2 className="font-bold">Сезони</h2>
+              <h2 className="font-bold">{messages.header.seasonCategory}</h2>
               <button
                 className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
                 onClick={() => setView("menu")}
@@ -198,7 +291,9 @@ export default function SidebarMenu({
               {season_data.map((item, i) => (
                 <Link
                   key={i}
-                  href={`/catalog?season=${item.name}`}
+                  href={withLocalePath(
+                    `/catalog?season=${encodeURIComponent(item.value)}`
+                  )}
                   onClick={() => setIsOpen(false)}
                   className="h-[120px] rounded overflow-hidden relative text-white text-xl sm:text-2xl font-bold text-center flex items-center justify-center"
                   style={{
@@ -209,7 +304,7 @@ export default function SidebarMenu({
                 >
                   {/* Dark overlay on image */}
                   <div className="absolute inset-0 bg-black/30" />
-                  <span className="relative z-10">{item.name}</span>{" "}
+                  <span className="relative z-10">{item.label}</span>{" "}
                 </Link>
               ))}
             </div>

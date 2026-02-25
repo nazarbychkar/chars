@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 interface SidebarFilterProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export default function SidebarFilter({
   setSelectedColors,
   colors,
 }: SidebarFilterProps) {
+  const { messages } = useI18n();
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? null : index);
   };
@@ -81,7 +83,7 @@ export default function SidebarFilter({
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <div className="text-xl sm:text-2xl uppercase font-semibold">
-              Фільтрувати / Сортувати
+              {messages.catalog.sidebarTitle}
             </div>
             <button
               className="text-2xl sm:text-3xl hover:text-[#8C7461]"
@@ -98,7 +100,7 @@ export default function SidebarFilter({
               onClick={() => toggleAccordion(1)}
             >
               <span className="text-xl sm:text-2xl uppercase">
-                Сортувати за
+                {messages.catalog.sortAccordionTitle}
               </span>
               <span className="font-semibold text-xl sm:text-2xl">
                 {openAccordion === 1 ? "−" : "+"}
@@ -113,7 +115,7 @@ export default function SidebarFilter({
                   }`}
                   onClick={() => setSortOrder("asc")}
                 >
-                  За зростанням ціни
+                  {messages.catalog.sortAscLabel}
                 </button>
                 <button
                   className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
@@ -121,7 +123,7 @@ export default function SidebarFilter({
                   }`}
                   onClick={() => setSortOrder("desc")}
                 >
-                  За спаданням ціни
+                  {messages.catalog.sortDescLabel}
                 </button>
               </div>
             )}
@@ -133,7 +135,9 @@ export default function SidebarFilter({
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(2)}
             >
-              <span className="text-xl sm:text-2xl uppercase">Розмір</span>
+              <span className="text-xl sm:text-2xl uppercase">
+                {messages.catalog.sizeAccordionTitle}
+              </span>
               <span className="font-semibold text-xl sm:text-2xl">
                 {openAccordion === 2 ? "−" : "+"}
               </span>
@@ -165,7 +169,9 @@ export default function SidebarFilter({
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(3)}
             >
-              <span className="text-xl sm:text-2xl uppercase">Колір</span>
+              <span className="text-xl sm:text-2xl uppercase">
+                {messages.catalog.colorAccordionTitle}
+              </span>
               <span className="font-semibold text-xl sm:text-2xl">
                 {openAccordion === 3 ? "−" : "+"}
               </span>
@@ -184,7 +190,9 @@ export default function SidebarFilter({
                       onChange={() => toggleColor(color)}
                       className="form-checkbox h-4 w-4 text-[#8C7461]"
                     />
-                    <span className="text-base sm:text-lg">{color}</span>
+                    <span className="text-base sm:text-lg">
+                      {messages.catalog.colorNames[color] || color}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -197,7 +205,9 @@ export default function SidebarFilter({
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(4)}
             >
-              <span className="text-xl sm:text-2xl uppercase">Вартість</span>
+              <span className="text-xl sm:text-2xl uppercase">
+                {messages.catalog.priceAccordionTitle}
+              </span>
               <span className="font-semibold text-xl sm:text-2xl">
                 {openAccordion === 4 ? "−" : "+"}
               </span>
@@ -207,7 +217,7 @@ export default function SidebarFilter({
               <div className="pl-4 mt-4 space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Мінімальна ціна
+                    {messages.catalog.minPriceLabel}
                   </label>
                   <input
                     type="number"
@@ -218,13 +228,13 @@ export default function SidebarFilter({
                       )
                     }
                     className="w-full border rounded px-2 py-1 text-sm"
-                    placeholder="від"
+                    placeholder={messages.catalog.minPricePlaceholder}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Максимальна ціна
+                    {messages.catalog.maxPriceLabel}
                   </label>
                   <input
                     type="number"
@@ -235,7 +245,7 @@ export default function SidebarFilter({
                       )
                     }
                     className="w-full border rounded px-2 py-1 text-sm"
-                    placeholder="до"
+                    placeholder={messages.catalog.maxPricePlaceholder}
                   />
                 </div>
               </div>

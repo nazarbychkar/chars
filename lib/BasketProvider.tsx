@@ -11,7 +11,11 @@ import React, {
 interface BasketItem {
   id: number;
   name: string;
+  /** Price in UAH (from product.price) */
   price: number;
+  /** Price in EUR (from product.price_eur), so cart/checkout can show selected currency */
+  price_eur?: number | null;
+  currency?: "UAH" | "EUR";
   size: string;
   quantity: number;
   imageUrl: string;
@@ -20,8 +24,13 @@ interface BasketItem {
   stock?: number; // Available stock for this size
 }
 
+export type BasketCurrency = "UAH" | "EUR";
+
 interface BasketContextType {
   items: BasketItem[];
+  /** User-selected currency; null = use locale default (UK→UAH, EN/DE→EUR) */
+  currency: BasketCurrency | null;
+  setCurrency: (c: BasketCurrency) => void;
   addItem: (item: BasketItem, onError?: (message: string) => void) => boolean;
   removeItem: (id: number, size: string) => void;
   updateQuantity: (id: number, size: string, quantity: number, onError?: (message: string) => void) => boolean;
@@ -31,21 +40,52 @@ interface BasketContextType {
 const BasketContext = createContext<BasketContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = "basketItems";
+const CURRENCY_STORAGE_KEY = "basketCurrency";
 
 export function BasketProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<BasketItem[]>([]);
+  const [currency, setCurrencyState] = useState<BasketCurrency | null>(null);
 
-  // Load from localStorage only on client side after hydration
+  // Load basket and currency from localStorage after hydration
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
         setItems(JSON.parse(saved));
       }
+      const savedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY);
+      if (savedCurrency === "UAH" || savedCurrency === "EUR") {
+        setCurrencyState(savedCurrency);
+      } else if (typeof window !== "undefined") {
+        // First visit: choose default currency based on locale in URL
+        const path = window.location.pathname || "/";
+        // Treat /en, /en/... or /de, /de/... as EUR; everything else as UAH
+        const lowerPath = path.toLowerCase();
+        const defaultCurrency: BasketCurrency =
+          lowerPath === "/en" ||
+          lowerPath.startsWith("/en/") ||
+          lowerPath === "/de" ||
+          lowerPath.startsWith("/de/")
+            ? "EUR"
+            : "UAH";
+        setCurrencyState(defaultCurrency);
+        try {
+          localStorage.setItem(CURRENCY_STORAGE_KEY, defaultCurrency);
+        } catch {
+          // ignore write errors
+        }
+      }
     } catch {
       // Handle localStorage read errors
     }
   }, []);
+
+  const setCurrency = (c: BasketCurrency) => {
+    setCurrencyState(c);
+    try {
+      localStorage.setItem(CURRENCY_STORAGE_KEY, c);
+    } catch {}
+  };
 
   // Save basket items to localStorage whenever items change
   useEffect(() => {
@@ -58,18 +98,7 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   function addItem(newItem: BasketItem, onError?: (message: string) => void): boolean {
     const trackAddToCart = () => {
-      if (typeof window !== "undefined" && window.fbq) {
-        const value = (newItem.discount_percentage
-          ? newItem.price * (1 - newItem.discount_percentage / 100)
-          : newItem.price) * newItem.quantity;
-        window.fbq("track", "AddToCart", {
-          content_name: newItem.name,
-          content_ids: [String(newItem.id)],
-          content_type: "product",
-          value,
-          currency: "UAH",
-        });
-      }
+      // Meta Pixel кастомні події вимкнені
     };
 
     let shouldAdd = true;
@@ -163,7 +192,7 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   return (
     <BasketContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearBasket }}
+      value={{ items, currency, setCurrency, addItem, removeItem, updateQuantity, clearBasket }}
     >
       {children}
     </BasketContext.Provider>

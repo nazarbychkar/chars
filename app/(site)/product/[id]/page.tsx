@@ -3,10 +3,15 @@ import YouMightLike from "@/components/product/YouMightLike";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { sqlGetProduct } from "@/lib/sql";
+import { notFound } from "next/navigation";
 import { getFirstProductImage } from "@/lib/getFirstProductImage";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import BreadcrumbsSchema from "@/components/shared/BreadcrumbsSchema";
 import { ProductPageSkeleton } from "@/components/shared/Skeleton";
+import {
+  buildProductSlug,
+  extractProductIdFromParam,
+} from "@/lib/slug";
 
 interface PageProps {
   params: Promise<{
@@ -23,8 +28,8 @@ export async function generateStaticParams() {
     const products = await sqlGetAllProducts();
     
     // Generate static pages for all products (or limit to top N)
-    return products.slice(0, 50).map((product: { id: number }) => ({
-      id: String(product.id),
+    return products.slice(0, 50).map((product: { id: number; name: string }) => ({
+      id: buildProductSlug(product.name, product.id),
     }));
   } catch (error) {
     console.error("Error generating static params:", error);
@@ -35,16 +40,39 @@ export async function generateStaticParams() {
 // Generate dynamic metadata for product pages
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
-  
+  const numericId = extractProductIdFromParam(id);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://charsua.com";
+
+  if (numericId === null) {
+    return {
+      title: "Товар не знайдено | CHARS",
+      description: "Товар не знайдено",
+      alternates: {
+        canonical: `${baseUrl}/product/${id}`,
+        languages: {
+          uk: `${baseUrl}/uk/product/${id}`,
+          de: `${baseUrl}/de/product/${id}`,
+          en: `${baseUrl}/en/product/${id}`,
+        },
+      },
+    };
+  }
   try {
-    const products = await sqlGetProduct(Number(id));
+    const products = await sqlGetProduct(Number(numericId));
     const product = products[0];
     
     if (!product) {
       return {
         title: "Товар не знайдено | CHARS",
         description: "Товар не знайдено",
+        alternates: {
+          canonical: `${baseUrl}/product/${id}`,
+          languages: {
+            uk: `${baseUrl}/uk/product/${id}`,
+            de: `${baseUrl}/de/product/${id}`,
+            en: `${baseUrl}/en/product/${id}`,
+          },
+        },
       };
     }
 
@@ -84,6 +112,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       keywords,
       alternates: {
         canonical: `${baseUrl}/product/${id}`,
+        languages: {
+          uk: `${baseUrl}/uk/product/${id}`,
+          de: `${baseUrl}/de/product/${id}`,
+          en: `${baseUrl}/en/product/${id}`,
+        },
       },
       openGraph: {
         title: `${productName} | CHARS`,
@@ -92,6 +125,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         url: `${baseUrl}/product/${id}`,
         siteName: "CHARS",
         locale: "uk_UA",
+        alternateLocale: ["de_DE", "en_US"],
         images: [
           {
             url: fullImageUrl,
@@ -110,8 +144,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       other: {
         "product:price:amount": Number(finalPrice).toFixed(2),
         "product:price:currency": "UAH",
-        ...(oldPrice && typeof oldPrice === 'number' && { "product:original_price:amount": Number(oldPrice).toFixed(2) }),
-        ...(oldPrice && typeof oldPrice === 'number' && { "product:original_price:currency": "UAH" }),
+        ...(oldPrice &&
+          typeof oldPrice === "number" && {
+            "product:original_price:amount": Number(oldPrice).toFixed(2),
+          }),
+        ...(oldPrice &&
+          typeof oldPrice === "number" && {
+            "product:original_price:currency": "UAH",
+          }),
         ...(discount > 0 && { "product:discount": `${discount}%` }),
       },
     };
@@ -120,18 +160,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: "Товар | CHARS",
       description: "Сторінка товару CHARS — український бренд чоловічого одягу",
+      alternates: {
+        canonical: `${baseUrl}/product/${id}`,
+        languages: {
+          uk: `${baseUrl}/uk/product/${id}`,
+          de: `${baseUrl}/de/product/${id}`,
+          en: `${baseUrl}/en/product/${id}`,
+        },
+      },
     };
   }
 }
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+  const numericId = extractProductIdFromParam(id);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://charsua.com';
+
+  if (numericId === null) {
+    notFound();
+  }
   
   // Get product for breadcrumbs
   let productName = "Товар";
   try {
-    const products = await sqlGetProduct(Number(id));
+    const products = await sqlGetProduct(numericId);
     if (products[0]) {
       productName = products[0].name || "Товар";
     }
@@ -154,7 +207,7 @@ export default async function Page({ params }: PageProps) {
       <Suspense fallback={<ProductPageSkeleton />}>
         <ProductServer id={id} />
       </Suspense>
-      <YouMightLike />
+      <YouMightLike productId={numericId} />
     </main>
   );
 }

@@ -8,7 +8,13 @@ import { cachedFetch, CACHE_KEYS } from "./cache";
 interface Product {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
+  description?: string | null;
+  description_en?: string | null;
+  description_de?: string | null;
   price: number;
+  price_eur?: number | null;
   discount_percentage?: number;
   media?: { url: string; type: string }[];
   first_media?: { url: string; type: string } | null;
@@ -19,7 +25,6 @@ interface Product {
   limited_edition?: boolean;
   season?: string;
   category_name?: string;
-  description?: string;
   has_lining?: boolean;
   lining_description?: string;
   fabric_composition?: string;
@@ -67,7 +72,11 @@ export function useProducts(options: UseProductsOptions = {}) {
           cacheKey = CACHE_KEYS.PRODUCTS_SEASON(season);
         }
 
-        const data = await cachedFetch<Product[]>(url, cacheKey);
+        // For global list (used in search) не кешуємо довго, щоб одразу бачити нові товари
+        const isBaseList = cacheKey === CACHE_KEYS.PRODUCTS;
+        const duration = isBaseList ? 0 : undefined;
+
+        const data = await cachedFetch<Product[]>(url, cacheKey, duration);
         setProducts(data);
       } catch (err: unknown) {
         if (err instanceof Error) {

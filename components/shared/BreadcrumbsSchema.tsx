@@ -16,7 +16,7 @@ export default function BreadcrumbsSchema({
   baseUrl 
 }: BreadcrumbsSchemaProps) {
   // Use provided baseUrl or fallback to env variable (same on server and client)
-  const origin = baseUrl || process.env.NEXT_PUBLIC_BASE_URL || "https://chars.ua";
+  const origin = baseUrl || process.env.NEXT_PUBLIC_BASE_URL || "https://charsua.com";
   
   const schema = {
     "@context": "https://schema.org",

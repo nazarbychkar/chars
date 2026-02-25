@@ -88,7 +88,9 @@ export function generateProductStructuredData(
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description || `${product.name} від CHARS — український бренд чоловічого одягу`,
+    description:
+      product.description ||
+      `${product.name} від CHARS — український бренд чоловічого одягу`,
     image: [imageUrl],
     brand: {
       "@type": "Brand",
@@ -117,6 +119,12 @@ export function generateOrganizationStructuredData(
     url: baseUrl,
     logo: `${baseUrl}/images/light-theme/chars-logo-header-light.png`,
     description: "CHARS — український бренд чоловічого одягу, заснований у 2023 році. Ми створюємо стильний одяг для різних чоловіків без компромісів.",
+    // Supported languages for the brand website
+    // Ukrainian, German, English
+    // This helps search engines understand multilingual content.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - inLanguage is not in our custom interface but valid in schema.org
+    inLanguage: ["uk", "de", "en"],
     address: {
       "@type": "PostalAddress",
       addressCountry: "UA",
@@ -157,6 +165,9 @@ export function generateWebsiteStructuredData(baseUrl: string) {
     "@type": "WebSite",
     name: "CHARS",
     url: baseUrl,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - inLanguage is valid for schema.org but not in our TS interface
+    inLanguage: ["uk", "de", "en"],
     potentialAction: {
       "@type": "SearchAction",
       target: {

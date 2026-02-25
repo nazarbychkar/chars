@@ -3,9 +3,11 @@
 import SidebarMenu from "@/components/layout/SidebarMenu";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export default function Hero() {
   const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
+  const { messages } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showPlayButton, setShowPlayButton] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -161,7 +163,7 @@ export default function Hero() {
             className="cursor-pointer mx-auto w-40 sm:w-52 md:w-60 lg:w-72 h-12 sm:h-14 md:h-16 lg:h-16 p-2 bg-transparent border border-white text-white inline-flex justify-center items-center gap-2 hover:opacity-80 transition-opacity duration-300 font-['Inter'] mb-32 md:mb-0"
           >
             <div className="text-center justify-center text-white text-base sm:text-lg md:text-xl lg:text-2xl font-normal capitalize leading-none tracking-tight">
-              Каталог
+              {messages.home.heroCatalogButton}
             </div>
           </button>
         </div>

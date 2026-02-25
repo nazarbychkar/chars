@@ -14,6 +14,7 @@ import { WebVitals } from "@/components/shared/WebVitals";
 import MainContent from "@/components/shared/MainContent";
 import SmoothScrollInit from "@/components/shared/SmoothScrollInit";
 import { generateOrganizationStructuredData, generateWebsiteStructuredData } from "@/lib/seo";
+import { I18nProvider } from "@/lib/i18n/I18nProvider";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -24,12 +25,13 @@ const inter = Inter({
   adjustFontFallback: true,
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://charsua.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "CHARS — Український Бренд Чоловічого Одягу | Стиль Без Компромісів",
+    default:
+      "CHARS — Український Бренд Чоловічого Одягу | Стиль Без Компромісів",
     template: "%s | CHARS",
   },
   description:
@@ -45,13 +47,14 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/images/light-theme/chars-logo-header-light.png",
-    shortcut: "/images/light-theme/chars-logo-header-light.png",
-    apple: "/images/light-theme/chars-logo-header-light.png",
+    icon: "/images/CHARS-06.png",
+    shortcut: "/images/CHARS-06.png",
+    apple: "/images/CHARS-06.png",
   },
   openGraph: {
     type: "website",
     locale: "uk_UA",
+    alternateLocale: ["de_DE", "en_US"],
     url: baseUrl,
     siteName: "CHARS",
     title: "CHARS — Український Бренд Чоловічого Одягу",
@@ -69,11 +72,17 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CHARS — Український Бренд Чоловічого Одягу",
-    description: "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт.",
+    description:
+      "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт.",
     images: [`${baseUrl}/images/IMG_5887.JPG`],
   },
   alternates: {
     canonical: baseUrl,
+    languages: {
+      uk: `${baseUrl}/uk`,
+      de: `${baseUrl}/de`,
+      en: `${baseUrl}/en`,
+    },
   },
   robots: {
     index: true,
@@ -106,9 +115,9 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
         
         {/* Favicon and App Icons */}
-        <link rel="icon" type="image/png" href="/images/light-theme/chars-logo-header-light.png" />
-        <link rel="shortcut icon" type="image/png" href="/images/light-theme/chars-logo-header-light.png" />
-        <link rel="apple-touch-icon" href="/images/light-theme/chars-logo-header-light.png" />
+        <link rel="icon" type="image/png" href="/images/CHARS-06.png" />
+        <link rel="shortcut icon" type="image/png" href="/images/CHARS-06.png" />
+        <link rel="apple-touch-icon" href="/images/CHARS-06.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#000000" />
         <meta name="msapplication-TileColor" content="#000000" />
@@ -142,7 +151,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
         {/* Apple touch icon */}
-        <link rel="apple-touch-icon" href="/images/light-theme/chars-logo-header-light.png" />
+        <link rel="apple-touch-icon" href="/images/CHARS-06.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         
@@ -158,7 +167,7 @@ export default function RootLayout({
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1148656287371559');
+              fbq('init', '1705117413789207');
               fbq('track', 'PageView');
             `,
           }}
@@ -169,7 +178,7 @@ export default function RootLayout({
             height="1"
             width="1"
             style={{ display: 'none' }}
-            src="https://www.facebook.com/tr?id=1148656287371559&ev=PageView&noscript=1"
+            src="https://www.facebook.com/tr?id=1705117413789207&ev=PageView&noscript=1"
             alt=""
           />
         </noscript>
@@ -191,10 +200,12 @@ export default function RootLayout({
         <ErrorBoundary>
           <AppProvider>
             <BasketProvider>
-              <SmoothScrollInit />
-              <Header />
-              <MainContent>{children}</MainContent>
-              <Footer />
+              <I18nProvider>
+                <SmoothScrollInit />
+                <Header />
+                <MainContent>{children}</MainContent>
+                <Footer />
+              </I18nProvider>
             </BasketProvider>
           </AppProvider>
         </ErrorBoundary>

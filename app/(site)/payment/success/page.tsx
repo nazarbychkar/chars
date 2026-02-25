@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import Link from "next/link";
 
 interface OrderItem {
@@ -31,6 +32,7 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isDark } = useAppContext();
+  const { messages } = useI18n();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const invoiceId = searchParams.get("invoiceId");
@@ -172,7 +174,9 @@ function PaymentSuccessContent() {
                 {order.items.map((item: OrderItem, index: number) => (
                   <li key={index} className="font-['Inter']">
                     {item.product_name}
-                    {item.color && ` (${item.color})`} — Розмір: {item.size} ×
+                    {item.color &&
+                      ` (${messages.catalog.colorNames[item.color] || item.color})`}{" "}
+                    — Розмір: {item.size} ×
                     {item.quantity} — {item.price}₴
                   </li>
                 ))}

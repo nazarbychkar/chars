@@ -1,16 +1,22 @@
 import CatalogClient from "./CatalogClient";
-import { 
-  sqlGetAllProducts, 
-  sqlGetProductsByCategory, 
-  sqlGetProductsBySeason, 
+import {
+  sqlGetAllProducts,
+  sqlGetProductsByCategory,
+  sqlGetProductsBySeason,
   sqlGetProductsBySubcategoryName,
-  sqlGetAllColors 
+  sqlGetAllColors,
+  sqlGetAllCategories,
+  sqlGetAllSubcategories,
 } from "@/lib/sql";
+import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
 
 interface Product {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
   price: number;
+  price_eur?: number | null;
   first_media?: { url: string; type: string } | null;
   sizes?: { size: string; stock: string }[];
   color?: string;
@@ -27,9 +33,31 @@ async function getProducts(params: CatalogServerProps): Promise<Product[]> {
   
   try {
     if (subcategory) {
-      return await sqlGetProductsBySubcategoryName(subcategory);
+      const allSubs = await sqlGetAllSubcategories();
+      const key = subcategory.toLowerCase();
+      const matched = allSubs.find((s: { name?: string }) => {
+        const baseName = (s.name || "") as string;
+        const slug = buildSubcategorySlug(baseName);
+        return (
+          baseName.toLowerCase() === key ||
+          slug.toLowerCase() === key
+        );
+      });
+      const nameForDb = matched ? (matched.name as string) : subcategory;
+      return await sqlGetProductsBySubcategoryName(nameForDb);
     } else if (category) {
-      return await sqlGetProductsByCategory(category);
+      const allCats = await sqlGetAllCategories();
+      const key = category.toLowerCase();
+      const matched = allCats.find((c: { name?: string }) => {
+        const baseName = (c.name || "") as string;
+        const slug = buildCategorySlug(baseName);
+        return (
+          baseName.toLowerCase() === key ||
+          slug.toLowerCase() === key
+        );
+      });
+      const nameForDb = matched ? (matched.name as string) : category;
+      return await sqlGetProductsByCategory(nameForDb);
     } else if (season) {
       return await sqlGetProductsBySeason(season);
     }

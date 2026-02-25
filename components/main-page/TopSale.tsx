@@ -9,26 +9,35 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useProducts } from "@/lib/useProducts";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { buildProductSlug } from "@/lib/slug";
 
 export default function TopSale() {
   const { products, loading } = useProducts({ topSale: true });
+  const { messages, withLocalePath } = useI18n();
 
   if (loading) {
-    return <div className="text-center py-10">Завантаження...</div>;
+    return (
+      <div className="text-center py-10">{messages.common.loading}</div>
+    );
   }
 
   if (products.length === 0) {
-    return <div className="text-center py-10">Наразі немає топових товарів.</div>;
+    return (
+      <div className="text-center py-10">
+        {messages.home.topSaleSubtitle}
+      </div>
+    );
   }
 
   return (
     <section className="max-w-[1920px] mx-auto w-full mb-35 relative overflow-hidden flex flex-col gap-10">
       <div className="border-b-2 pb-10 flex flex-col lg:flex-row justify-between mt-20 mx-10 lg:items-center">
         <div className="lg:text-center justify-center text-2xl lg:text-5xl font-normal font-['Inter'] uppercase">
-          Топ продажів | CHARS
+          {messages.home.topSaleTitle}
         </div>
         <div className="text-left opacity-70 text-base lg:text-xl font-normal font-['Inter'] capitalize leading-normal">
-          Улюблені образи наших клієнтів.
+          {messages.home.topSaleSubtitle}
         </div>
       </div>
 
@@ -36,7 +45,7 @@ export default function TopSale() {
       <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 px-6">
         {products.slice(0, 4).map((product) => (
           <Link
-            href={`/product/${product.id}`}
+            href={withLocalePath(`/product/${buildProductSlug(product.name, product.id)}`)}
             key={product.id}
             className="flex flex-col gap-3 group w-full"
           >
@@ -82,7 +91,7 @@ export default function TopSale() {
           {products.map((product) => (
             <SwiperSlide key={product.id}>
               <Link
-                href={`/product/${product.id}`}
+                href={withLocalePath(`/product/${buildProductSlug(product.name, product.id)}`)}
                 className="relative flex flex-col gap-3 group"
               >
                 <div className="relative w-full h-[350px]">

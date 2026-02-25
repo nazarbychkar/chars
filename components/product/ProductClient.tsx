@@ -11,6 +11,8 @@ import { Navigation } from "swiper/modules";
 import Link from "next/link";
 import "swiper/css";
 import "swiper/css/navigation";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { buildProductSlug } from "@/lib/slug";
 
 // Add custom styles for smooth transitions
 const swiperStyles = `
@@ -55,16 +57,25 @@ interface ProductClientProps {
   product: {
     id: number;
     name: string;
+    name_en?: string | null;
+    name_de?: string | null;
     price: number;
+    price_eur?: number | null;
     old_price?: number;
     discount_percentage?: number;
     description?: string;
+    description_en?: string | null;
+    description_de?: string | null;
     media?: { url: string; type: string }[];
     sizes?: { size: string; stock: string }[];
     colors?: { label: string; hex?: string | null }[];
     fabric_composition?: string;
+    fabric_composition_en?: string | null;
+    fabric_composition_de?: string | null;
     has_lining?: boolean;
     lining_description?: string;
+    lining_description_en?: string | null;
+    lining_description_de?: string | null;
   };
 }
 
@@ -83,8 +94,11 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   const [isLoading, setIsLoading] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   
-  // Use basket hook - component is client-side only with 'use client'
-  const { addItem, items } = useBasket();
+  const { locale, withLocalePath, messages } = useI18n();
+  const { addItem, items, currency } = useBasket();
+  const effectiveCurrency =
+    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
+  const isEuro = effectiveCurrency === "EUR";
 
   // Inject custom styles for smoother transitions
   useEffect(() => {
@@ -103,6 +117,34 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   >("info");
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  const displayName =
+    locale === "en"
+      ? product.name_en || product.name
+      : locale === "de"
+      ? product.name_de || product.name
+      : product.name;
+
+  const descriptionText =
+    locale === "en"
+      ? product.description_en || product.description
+      : locale === "de"
+      ? product.description_de || product.description
+      : product.description;
+
+  const fabricText =
+    locale === "en"
+      ? product.fabric_composition_en || product.fabric_composition
+      : locale === "de"
+      ? product.fabric_composition_de || product.fabric_composition
+      : product.fabric_composition;
+
+  const liningText =
+    locale === "en"
+      ? product.lining_description_en || product.lining_description
+      : locale === "de"
+      ? product.lining_description_de || product.lining_description
+      : product.lining_description;
 
   // Auto-select first color if available
   useEffect(() => {
@@ -155,8 +197,10 @@ export default function ProductClient({ product: initialProduct }: ProductClient
       if (response.ok) {
         const newProduct = await response.json();
         
-        // Update URL without reload
-        window.history.pushState(null, '', `/product/${productId}`);
+        // Update URL without reload, preserving locale
+        const slug = buildProductSlug(newProduct.name, newProduct.id);
+        const newPath = withLocalePath(`/product/${slug}`);
+        window.history.pushState(null, "", newPath);
         
         // Update product state with smooth transition
         setTimeout(() => {
@@ -184,25 +228,25 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      setAlertMessage("Оберіть розмір");
+      setAlertMessage(messages.product.selectSizeError);
       setAlertType("warning");
       setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
     if (product?.colors && product.colors.length > 0 && !selectedColor) {
-      setAlertMessage("Оберіть колір");
+      setAlertMessage(messages.product.selectColorError);
       setAlertType("warning");
       setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
     if (!product) {
-      setAlertMessage("Товар не завантажений");
+      setAlertMessage(messages.product.productNotLoadedError);
       setAlertType("error");
       setTimeout(() => setAlertMessage(null), 3000);
       return;
     }
     if (!addItem) {
-      setAlertMessage("Кошик недоступний. Спробуйте оновити сторінку.");
+      setAlertMessage(messages.product.basketUnavailableError);
       setAlertType("error");
       setTimeout(() => setAlertMessage(null), 3000);
       return;
@@ -223,7 +267,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
     // Check stock availability
     if (availableStock === 0) {
-      setAlertMessage("На жаль, цього товару обраного розміру немає в наявності 😔");
+      setAlertMessage(messages.product.noStockError);
       setAlertType("warning");
       setTimeout(() => setAlertMessage(null), 3000);
       return;
@@ -232,9 +276,16 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     if (totalRequestedQuantity > availableStock) {
       const available = availableStock - currentQuantityInBasket;
       if (available <= 0) {
-        setAlertMessage(`На жаль, ви вже додали максимум доступної кількості цього товару. В наявності: ${availableStock} шт.`);
+        setAlertMessage(
+          messages.product.maxQuantityReachedError(availableStock)
+        );
       } else {
-        setAlertMessage(`На жаль, доступно лише ${available} шт. цього товару. В наявності: ${availableStock} шт.`);
+        setAlertMessage(
+          messages.product.limitedQuantityAvailableError(
+            available,
+            availableStock
+          )
+        );
       }
       setAlertType("warning");
       setTimeout(() => setAlertMessage(null), 3000);
@@ -244,14 +295,16 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     const media = product.media || [];
     const success = addItem(
       {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      size: selectedSize,
-      quantity,
-      imageUrl: getFirstProductImage(media),
-      color: selectedColor || undefined,
-      discount_percentage: product.discount_percentage,
+        id: product.id,
+        name: displayName,
+        price: product.price,
+        price_eur: product.price_eur ?? null,
+        currency: effectiveCurrency,
+        size: selectedSize,
+        quantity,
+        imageUrl: getFirstProductImage(media),
+        color: selectedColor || undefined,
+        discount_percentage: product.discount_percentage,
         stock: availableStock,
       },
       (errorMessage) => {
@@ -456,7 +509,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                   />
                 </svg>
                 <p className="text-gray-500 dark:text-gray-400 text-sm font-['Inter']">
-                  Фото товару
+                  {messages.product.imagePlaceholder}
                 </p>
               </div>
             </div>
@@ -467,59 +520,71 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         <div className="flex flex-col gap-4 md:gap-5 px-4 md:px-0 w-full lg:w-1/2">
           {/* Availability */}
           <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-            В наявності
+            {messages.product.inStockLabel}
           </div>
 
           {/* Product Name */}
           <div className={`text-3xl md:text-5xl lg:text-6xl font-normal font-['Inter'] capitalize leading-tight transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-            {product.name}
+            {displayName}
           </div>
 
           {/* Price */}
           <div className="w-full flex flex-col sm:flex-row justify-start border-b p-2 sm:p-4 gap-2">
             <div className="flex justify-start gap-8 text-2xl md:text-3xl font-['Helvetica']">
-              {product.discount_percentage ? (
-                <div className="flex items-center gap-2">
-                  {/* Discounted price */}
-                  <span className="font-medium text-red-600">
-                    {(
-                      product.price *
-                      (1 - product.discount_percentage / 100)
-                    ).toFixed(2)}
-                    ₴
-                  </span>
+              {(() => {
+                const basePrice =
+                  isEuro && product.price_eur != null
+                    ? product.price_eur
+                    : product.price;
+                const currencySymbol = isEuro ? "€" : "₴";
 
-                  {/* Original (crossed-out) price */}
-                  <span className="line-through">{product.price}₴</span>
+                if (product.discount_percentage) {
+                  const discounted =
+                    basePrice * (1 - product.discount_percentage / 100);
+                  return (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-red-600">
+                        {discounted.toFixed(2)}
+                        {currencySymbol}
+                      </span>
+                      <span className="line-through">
+                        {basePrice}
+                        {currencySymbol}
+                      </span>
+                      <span className="text-green-600 text-sm">
+                        -{product.discount_percentage}%
+                      </span>
+                    </div>
+                  );
+                }
 
-                  {/* Optional: show discount percentage */}
-                  <span className="text-green-600 text-sm">
-                    -{product.discount_percentage}%
+                return (
+                  <span className="font-medium">
+                    {basePrice}
+                    {currencySymbol}
                   </span>
-                </div>
-              ) : (
-                <span className="font-medium">{product.price}₴</span>
-              )}
+                );
+              })()}
             </div>
           </div>
 
           {/* Size Picker Title */}
           <div className="flex items-center justify-between">
             <div className="text-base md:text-lg font-['Inter'] uppercase tracking-tight">
-              Оберіть розмір
+              {messages.product.chooseSizeLabel}
             </div>
             <button
               onClick={() => setShowSizeGuide(true)}
               className="text-sm md:text-base text-gray-600 dark:text-gray-400 underline hover:text-black dark:hover:text-white cursor-pointer transition-all duration-200"
             >
-              Розмірна сітка
+              {messages.product.sizeGuideLabel}
             </button>
           </div>
 
           {/* Size Options */}
           {sizes.length === 0 ? (
             <div className="inline-flex items-center gap-2 px-3 py-2 rounded border text-sm uppercase tracking-wide bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 w-fit">
-              out of stock
+              {messages.product.outOfStockLabel}
             </div>
           ) : (
           <div className="flex flex-wrap gap-2 md:gap-3">
@@ -543,7 +608,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           {(product.colors && product.colors.length > 0) || relatedProducts.length > 0 ? (
             <div className="flex flex-col gap-2">
               <div className="text-sm md:text-base font-['Inter'] uppercase tracking-tight">
-                Колір
+                {messages.product.colorLabel}
               </div>
               
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
@@ -551,6 +616,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                 {product.colors && product.colors.length > 0 && 
                   product.colors.map((c, idx) => {
                     const isActive = selectedColor === c.label;
+                    const colorDisplayName =
+                      messages.catalog.colorNames[c.label] || c.label;
                     return (
                       <button
                         key={`current-${c.label}-${idx}`}
@@ -561,8 +628,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                             ? "border-black dark:border-white scale-100"
                             : "border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500"
                         }`}
-                        aria-label={c.label}
-                        title={c.label}
+                        aria-label={messages.product.viewColorAria(colorDisplayName)}
+                        title={colorDisplayName}
                         style={{ 
                           backgroundColor: c.hex || "#ffffff",
                         }}
@@ -580,6 +647,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                   if (!relatedProduct.first_color) return null;
                   
                   const color = relatedProduct.first_color;
+                  const relatedColorDisplayName =
+                    messages.catalog.colorNames[color.label] || color.label;
                   
                   return (
                     <button
@@ -590,8 +659,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                       className={`relative w-10 h-10 md:w-11 md:h-11 rounded-full border border-gray-300 dark:border-gray-600 transition-all duration-200 hover:border-gray-500 dark:hover:border-gray-400 cursor-pointer ${
                         isLoading ? 'opacity-50 cursor-wait' : ''
                       }`}
-                      aria-label={`Переглянути ${color.label}`}
-                      title={color.label}
+                      aria-label={messages.product.viewColorAria(relatedColorDisplayName)}
+                      title={relatedColorDisplayName}
                       style={{ 
                         backgroundColor: color.hex || "#ffffff",
                         opacity: 0.7
@@ -603,7 +672,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               
               {selectedColor && (
                 <div className="text-sm font-['Inter'] text-gray-700 dark:text-gray-300 font-light tracking-wide">
-                  {selectedColor}
+                  {messages.catalog.colorNames[selectedColor] || selectedColor}
                 </div>
               )}
             </div>
@@ -622,7 +691,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                 : "cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             }`}
           >
-            в кошик
+            {messages.product.addToCartLabel}
           </div>
 
           {/* Telegram Manager Link */}
@@ -636,7 +705,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                 : "border-gray-400 text-gray-600 hover:border-black hover:text-black"
             } py-2 px-3 text-sm md:text-base font-light font-['Inter'] cursor-pointer transition-all duration-200`}
           >
-            Написати менеджеру
+            {messages.product.contactManagerLabel}
           </a>
 
           {/* Size Guide Modal */}
@@ -659,10 +728,10 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                 <div className="p-8 md:p-12">
                   <div className="text-center mb-10">
                     <h2 className="text-3xl md:text-4xl font-bold text-black tracking-tight font-['Inter']">
-                      РОЗМІРНА СІТКА
+                      {messages.product.sizeGuideTitle}
                     </h2>
                     <div className="mt-2 text-sm text-gray-500 font-['Helvetica']">
-                      Всі вимірювання вказані в сантиметрах
+                      {messages.product.sizeGuideSubtitle}
                     </div>
                   </div>
 
@@ -671,25 +740,19 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                       <thead>
                         <tr className="border-b-2 border-black">
                           <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter']">
-                            Розмір
+                            {messages.product.sizeGuideSizeHeader}
+                          </th>
+                          <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter'] whitespace-pre-line">
+                            {messages.product.sizeGuideChestHeader}
+                          </th>
+                          <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter'] whitespace-pre-line">
+                            {messages.product.sizeGuideWaistHeader}
+                          </th>
+                          <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter'] whitespace-pre-line">
+                            {messages.product.sizeGuideHipsHeader}
                           </th>
                           <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter']">
-                            Обхват
-                            <br />
-                            грудей
-                          </th>
-                          <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter']">
-                            Обхват
-                            <br />
-                            талії
-                          </th>
-                          <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter']">
-                            Обхват
-                            <br />
-                            бедер
-                          </th>
-                          <th className="py-4 px-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider font-['Inter']">
-                            Зріст
+                            {messages.product.sizeGuideHeightHeader}
                           </th>
                         </tr>
                       </thead>
@@ -784,13 +847,13 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           {showToast && (
             <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
               <span className="text-sm md:text-base">
-                Товар додано в кошик{" "}
+                {messages.product.toastAddedToCart}{" "}
                 <Link
-                  href="/final"
+                  href={withLocalePath("/final")}
                   className="underline hover:no-underline"
                   onClick={() => setShowToast(false)}
                 >
-                  Перейти
+                  {messages.product.toastGoToCheckout}
                 </Link>
               </span>
             </div>
@@ -807,24 +870,24 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           {/* Description Section */}
           <div className="w-full md:w-[522px]">
             <div className="mb-3 md:mb-4 text-xl md:text-2xl font-['Inter'] uppercase tracking-tight">
-              опис
+              {messages.product.descriptionTitle}
             </div>
             <div className="text-sm md:text-lg font-['Inter'] leading-relaxed tracking-wide">
-              {product.description}
+              {descriptionText}
             </div>
           </div>
 
-          {product.fabric_composition && (
+          {fabricText && (
             <div className="opacity-90">
-              <h3>Cклад тканини: </h3>
-              <span>{product.fabric_composition}</span>
+              <h3>{messages.product.fabricTitle} </h3>
+              <span>{fabricText}</span>
             </div>
           )}
 
-          {product.has_lining && (
+          {product.has_lining && liningText && (
             <div className="opacity-90">
-              <h3>Підкладка: </h3>
-              <span>{product.lining_description}</span>
+              <h3>{messages.product.liningTitle} </h3>
+              <span>{liningText}</span>
             </div>
           )}
         </div>

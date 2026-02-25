@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://chars.ua";
 
 export const metadata: Metadata = {
   title: "Політика конфіденційності | CHARS",
@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   keywords: "CHARS, політика конфіденційності, захист даних, персональні дані, GDPR",
   alternates: {
     canonical: `${baseUrl}/privacy-policy`,
+    languages: {
+      uk: `${baseUrl}/uk/privacy-policy`,
+      de: `${baseUrl}/de/privacy-policy`,
+      en: `${baseUrl}/en/privacy-policy`,
+    },
   },
   openGraph: {
   title: "Політика конфіденційності | CHARS",
@@ -17,6 +22,7 @@ export const metadata: Metadata = {
     url: `${baseUrl}/privacy-policy`,
     siteName: "CHARS",
     locale: "uk_UA",
+    alternateLocale: ["de_DE", "en_US"],
   },
   robots: {
     index: true,

@@ -43,8 +43,13 @@ export default function EditProductPage() {
 
   const [formData, setFormData] = useState({
     name: "",
+    nameEn: "",
+    nameDe: "",
     description: "",
+    descriptionEn: "",
+    descriptionDe: "",
     price: "",
+    priceEur: "",
     oldPrice: "",
     discountPercentage: "",
     priority: "0",
@@ -57,8 +62,12 @@ export default function EditProductPage() {
     categoryId: null as number | null,
     subcategoryId: null as number | null,
     fabricComposition: "",
+    fabricCompositionEn: "",
+    fabricCompositionDe: "",
     hasLining: false,
     liningDescription: "",
+    liningDescriptionEn: "",
+    liningDescriptionDe: "",
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -81,6 +90,137 @@ export default function EditProductPage() {
   const [customColorHex, setCustomColorHex] = useState("#000000");
   const [colors, setColors] = useState<{ label: string; hex?: string }[]>([]);
   const [sizeStocks, setSizeStocks] = useState<Record<string, number>>({});
+  const [showNameLocales, setShowNameLocales] = useState(false);
+  const [showDescriptionLocales, setShowDescriptionLocales] = useState(false);
+  const [showLiningLocales, setShowLiningLocales] = useState(false);
+  const [showFabricLocales, setShowFabricLocales] = useState(false);
+  const [isTranslatingName, setIsTranslatingName] = useState(false);
+  const [isTranslatingDescription, setIsTranslatingDescription] = useState(false);
+  const [isTranslatingFabric, setIsTranslatingFabric] = useState(false);
+  const [isTranslatingLining, setIsTranslatingLining] = useState(false);
+
+  // -------- Simple free translators (Google + MyMemory) --------
+  const translateWithGoogleFree = async (
+    text: string,
+    targetLang: "uk" | "en" | "de",
+    sourceLang: "uk" | "en" | "de" = "uk"
+  ): Promise<string> => {
+    if (!text || !text.trim()) return "";
+
+    const langMap: Record<string, string> = {
+      uk: "uk",
+      en: "en",
+      de: "de",
+    };
+
+    const source = langMap[sourceLang] ?? "uk";
+    const target = langMap[targetLang] ?? "en";
+
+    if (source === target) return text;
+
+    try {
+      const params = new URLSearchParams({
+        client: "gtx",
+        sl: source,
+        tl: target,
+        dt: "t",
+        q: text,
+      });
+
+      const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?${params.toString()}`
+      );
+      if (!res.ok) return text;
+      const data = await res.json();
+      if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
+        const translated = (data[0] as unknown[])
+          .map((item) => (Array.isArray(item) ? item[0] : ""))
+          .join("");
+        return (translated || "").trim();
+      }
+    } catch (e) {
+      console.warn("Translation error (google):", e);
+    }
+
+    return text;
+  };
+
+  const translateWithMyMemory = async (
+    text: string,
+    targetLang: "uk" | "en" | "de",
+    sourceLang: "uk" | "en" | "de" = "uk"
+  ): Promise<string> => {
+    if (!text || !text.trim()) return "";
+
+    const langMap: Record<string, string> = {
+      uk: "uk-UA",
+      en: "en-US",
+      de: "de-DE",
+    };
+
+    const source = langMap[sourceLang] ?? "uk-UA";
+    const target = langMap[targetLang] ?? "en-US";
+
+    if (source === target) return text;
+
+    try {
+      const params = new URLSearchParams({
+        q: text,
+        langpair: `${source}|${target}`,
+      });
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?${params.toString()}`
+      );
+      if (!res.ok) return text;
+      const data = await res.json();
+      if (data?.responseStatus === 200) {
+        const translated = data?.responseData?.translatedText;
+        if (
+          translated &&
+          typeof translated === "string" &&
+          translated.toLowerCase() !== text.toLowerCase()
+        ) {
+          return translated.trim();
+        }
+      }
+    } catch (e) {
+      console.warn("Translation error (mymemory):", e);
+    }
+
+    return text;
+  };
+
+  const translateTextAllLangs = async (
+    text: string,
+    sourceLang: "uk" | "en" | "de" = "uk"
+  ): Promise<{ uk: string; en: string; de: string }> => {
+    if (!text || !text.trim()) {
+      return { uk: "", en: "", de: "" };
+    }
+
+    const baseText = text.trim();
+
+    const textUk =
+      sourceLang === "uk"
+        ? baseText
+        : await translateWithGoogleFree(baseText, "uk", sourceLang);
+
+    let textEn = await translateWithGoogleFree(baseText, "en", sourceLang);
+    let textDe = await translateWithGoogleFree(baseText, "de", sourceLang);
+
+    if (!textEn || textEn === baseText) {
+      textEn = await translateWithMyMemory(baseText, "en", sourceLang);
+    }
+    if (!textDe || textDe === baseText) {
+      textDe = await translateWithMyMemory(baseText, "de", sourceLang);
+    }
+
+    return {
+      uk: textUk || baseText,
+      en: textEn || baseText,
+      de: textDe || baseText,
+    };
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -102,8 +242,13 @@ export default function EditProductPage() {
 
         setFormData({
           name: productData.name,
+          nameEn: productData.name_en || "",
+          nameDe: productData.name_de || "",
           description: productData.description,
+          descriptionEn: productData.description_en || "",
+          descriptionDe: productData.description_de || "",
           price: String(productData.price),
+          priceEur: productData.price_eur ? String(productData.price_eur) : "",
           oldPrice: String(productData.old_price || ""),
           discountPercentage: String(productData.discount_percentage || ""),
           priority: String(productData.priority || 0),
@@ -116,8 +261,12 @@ export default function EditProductPage() {
           categoryId: productData.category_id,
           subcategoryId: productData.subcategory_id || null,
           fabricComposition: productData.fabric_composition || "",
+          fabricCompositionEn: productData.fabric_composition_en || "",
+          fabricCompositionDe: productData.fabric_composition_de || "",
           hasLining: productData.has_lining || false,
           liningDescription: productData.lining_description || "",
+          liningDescriptionEn: productData.lining_description_en || "",
+          liningDescriptionDe: productData.lining_description_de || "",
         });
 
         // Initialize sizeStocks from productData.sizes
@@ -330,8 +479,13 @@ export default function EditProductPage() {
         },
         body: JSON.stringify({
           name: formData.name,
+          name_en: formData.nameEn || null,
+          name_de: formData.nameDe || null,
           description: formData.description,
+          description_en: formData.descriptionEn || null,
+          description_de: formData.descriptionDe || null,
           price: Number(formData.price),
+          price_eur: formData.priceEur ? Number(formData.priceEur) : null,
           old_price: formData.oldPrice ? Number(formData.oldPrice) : null,
           discount_percentage: formData.discountPercentage
             ? Number(formData.discountPercentage)
@@ -347,8 +501,12 @@ export default function EditProductPage() {
           category_id: formData.categoryId,
           subcategory_id: formData.subcategoryId,
           fabric_composition: formData.fabricComposition,
+          fabric_composition_en: formData.fabricCompositionEn || null,
+          fabric_composition_de: formData.fabricCompositionDe || null,
           has_lining: formData.hasLining,
           lining_description: formData.liningDescription,
+          lining_description_en: formData.liningDescriptionEn || null,
+          lining_description_de: formData.liningDescriptionDe || null,
         }),
       });
 
@@ -374,45 +532,212 @@ export default function EditProductPage() {
           <div className="flex w-full h-auto">
             <div className="w-1/2 p-4">
               <ComponentCard title="Редагувати дані">
-                <Label>Назва Товару</Label>
+                {/* Назва товару + локалізації */}
+                <Label>Назва товару (UA)</Label>
                 <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="mt-2 mb-4 text-xs text-blue-600 hover:underline"
+                  onClick={() => setShowNameLocales((v) => !v)}
+                >
+                  {showNameLocales ? "Сховати локалізації назви" : "Додати локалізацію назви"}
+                </button>
+                {showNameLocales && (
+                  <button
+                    type="button"
+                    className="mb-4 text-xs text-purple-600 hover:underline"
+                    disabled={isTranslatingName}
+                    onClick={async () => {
+                      if (!formData.name?.trim()) return;
+                      try {
+                        setIsTranslatingName(true);
+                        const res = await translateTextAllLangs(
+                          formData.name,
+                          "uk"
+                        );
+                        handleChange("nameEn", res.en);
+                        handleChange("nameDe", res.de);
+                      } finally {
+                        setIsTranslatingName(false);
+                      }
+                    }}
+                  >
+                    {isTranslatingName
+                      ? "Переклад назви..."
+                      : "Автоматично перекласти назву EN/DE"}
+                  </button>
+                )}
+                {showNameLocales && (
+                  <div className="mb-4 space-y-2">
+                    <div>
+                      <Label>Назва (EN)</Label>
+                      <Input
+                        type="text"
+                        value={formData.nameEn}
+                        onChange={(e) => handleChange("nameEn", e.target.value)}
+                        placeholder="Product name in English"
+                      />
+                    </div>
+                    <div>
+                      <Label>Назва (DE)</Label>
+                      <Input
+                        type="text"
+                        value={formData.nameDe}
+                        onChange={(e) => handleChange("nameDe", e.target.value)}
+                        placeholder="Produktname auf Deutsch"
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <Label>Опис</Label>
+                {/* Опис + локалізації */}
+                <Label>Опис (UA)</Label>
                 <TextArea
                   value={formData.description}
                   onChange={(value) => handleChange("description", value)}
                   rows={6}
                 />
+                <button
+                  type="button"
+                  className="mt-2 mb-4 text-xs text-blue-600 hover:underline"
+                  onClick={() => setShowDescriptionLocales((v) => !v)}
+                >
+                  {showDescriptionLocales
+                    ? "Сховати локалізації опису"
+                    : "Додати локалізацію опису"}
+                </button>
+                {showDescriptionLocales && (
+                  <div className="mb-4 space-y-2">
+                    <button
+                      type="button"
+                      className="mb-2 text-xs text-purple-600 hover:underline"
+                      disabled={isTranslatingDescription}
+                      onClick={async () => {
+                        if (!formData.description?.trim()) return;
+                        try {
+                          setIsTranslatingDescription(true);
+                          const res = await translateTextAllLangs(
+                            formData.description,
+                            "uk"
+                          );
+                          handleChange("descriptionEn", res.en);
+                          handleChange("descriptionDe", res.de);
+                        } finally {
+                          setIsTranslatingDescription(false);
+                        }
+                      }}
+                    >
+                      {isTranslatingDescription
+                        ? "Переклад опису..."
+                        : "Автоматично перекласти опис EN/DE"}
+                    </button>
+                    <div>
+                      <Label>Опис (EN)</Label>
+                      <TextArea
+                        value={formData.descriptionEn}
+                        onChange={(value) =>
+                          handleChange("descriptionEn", value)
+                        }
+                        rows={4}
+                        placeholder="Product description in English"
+                      />
+                    </div>
+                    <div>
+                      <Label>Опис (DE)</Label>
+                      <TextArea
+                        value={formData.descriptionDe}
+                        onChange={(value) =>
+                          handleChange("descriptionDe", value)
+                        }
+                        rows={4}
+                        placeholder="Produktbeschreibung auf Deutsch"
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <Label>Ціна</Label>
-                <Input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleChange("price", e.target.value)}
-                  placeholder="Поточна ціна"
-                />
+                {/* Ціни: два стовпчики UAH / EUR */}
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* UAH column */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-700">
+                      Ціни в гривнях (UAH)
+                    </h3>
+                    <div>
+                      <Label>Нова ціна, ₴</Label>
+                      <Input
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => handleChange("price", e.target.value)}
+                        placeholder="Поточна ціна в гривнях"
+                      />
+                    </div>
+                    <div>
+                      <Label>Стара ціна, ₴ (опціонально)</Label>
+                      <Input
+                        type="number"
+                        value={formData.oldPrice}
+                        onChange={(e) =>
+                          handleChange("oldPrice", e.target.value)
+                        }
+                        placeholder="Ціна до знижки в гривнях"
+                      />
+                    </div>
+                    <div>
+                      <Label>Відсоток знижки, %</Label>
+                      <Input
+                        type="number"
+                        value={formData.discountPercentage}
+                        onChange={(e) =>
+                          handleChange("discountPercentage", e.target.value)
+                        }
+                        placeholder="Наприклад: 20"
+                      />
+                    </div>
+                  </div>
 
-                <Label>Стара ціна (опціонально)</Label>
-                <Input
-                  type="number"
-                  value={formData.oldPrice}
-                  onChange={(e) => handleChange("oldPrice", e.target.value)}
-                  placeholder="Ціна до знижки"
-                />
-
-                <Label>Відсоток знижки (опціонально)</Label>
-                <Input
-                  type="number"
-                  value={formData.discountPercentage}
-                  onChange={(e) =>
-                    handleChange("discountPercentage", e.target.value)
-                  }
-                  placeholder="Наприклад: 20"
-                />
+                  {/* EUR column */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-700">
+                      Ціни в євро (EN / DE)
+                    </h3>
+                    <div>
+                      <Label>Нова ціна, €</Label>
+                      <Input
+                        type="number"
+                        value={formData.priceEur}
+                        onChange={(e) =>
+                          handleChange("priceEur", e.target.value)
+                        }
+                        placeholder="Поточна ціна в євро"
+                      />
+                    </div>
+                    {/* Виводимо знижку та «стару» в EUR як інформацію */}
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>
+                        Знижка:{" "}
+                        {formData.discountPercentage
+                          ? `${formData.discountPercentage}%`
+                          : "0%"}
+                      </p>
+                      {formData.priceEur &&
+                        formData.discountPercentage &&
+                        Number(formData.discountPercentage) > 0 && (
+                          <p>
+                            Стара ціна, € (розрахована):{" "}
+                            {(
+                              Number(formData.priceEur) /
+                              (1 - Number(formData.discountPercentage) / 100)
+                            ).toFixed(2)}
+                          </p>
+                        )}
+                    </div>
+                  </div>
+                </div>
 
                 <Label>Пріоритет показу</Label>
                 <Input
@@ -604,7 +929,7 @@ export default function EditProductPage() {
                 {/* Блок: Склад тканини і Підкладка */}
                 <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50 mt-4">
                   <div>
-                    <Label>Склад тканини</Label>
+                    <Label>Склад тканини (UA)</Label>
                     <TextArea
                       value={formData.fabricComposition}
                       onChange={(value) =>
@@ -613,6 +938,64 @@ export default function EditProductPage() {
                       rows={3}
                       placeholder="Наприклад: 80% бавовна, 20% поліестер"
                     />
+                    <button
+                      type="button"
+                      className="mt-1 text-xs text-blue-600 hover:underline"
+                      onClick={() => setShowFabricLocales((v) => !v)}
+                    >
+                      {showFabricLocales
+                        ? "Сховати локалізації складу тканини"
+                        : "Додати локалізацію складу тканини"}
+                    </button>
+                    {showFabricLocales && (
+                      <div className="mt-2 space-y-2">
+                        <button
+                          type="button"
+                          className="mb-2 text-xs text-purple-600 hover:underline"
+                          disabled={isTranslatingFabric}
+                          onClick={async () => {
+                            if (!formData.fabricComposition?.trim()) return;
+                            try {
+                              setIsTranslatingFabric(true);
+                              const res = await translateTextAllLangs(
+                                formData.fabricComposition,
+                                "uk"
+                              );
+                              handleChange("fabricCompositionEn", res.en);
+                              handleChange("fabricCompositionDe", res.de);
+                            } finally {
+                              setIsTranslatingFabric(false);
+                            }
+                          }}
+                        >
+                          {isTranslatingFabric
+                            ? "Переклад складу тканини..."
+                            : "Автоматично перекласти склад тканини EN/DE"}
+                        </button>
+                        <div>
+                          <Label>Склад тканини (EN)</Label>
+                          <TextArea
+                            value={formData.fabricCompositionEn}
+                            onChange={(value) =>
+                              handleChange("fabricCompositionEn", value)
+                            }
+                            rows={2}
+                            placeholder="Fabric composition in English"
+                          />
+                        </div>
+                        <div>
+                          <Label>Склад тканини (DE)</Label>
+                          <TextArea
+                            value={formData.fabricCompositionDe}
+                            onChange={(value) =>
+                              handleChange("fabricCompositionDe", value)
+                            }
+                            rows={2}
+                            placeholder="Stoffzusammensetzung auf Deutsch"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     <Label className="mb-0">Підкладка?</Label>
@@ -623,16 +1006,78 @@ export default function EditProductPage() {
                     />
                   </div>
                   {formData.hasLining && (
-                    <div>
-                      <Label>Опис підкладки</Label>
-                      <TextArea
-                        value={formData.liningDescription}
-                        onChange={(value) =>
-                          handleChange("liningDescription", value)
+                    <div className="space-y-2 mt-2">
+                      <div>
+                        <Label>Опис підкладки (UA)</Label>
+                        <TextArea
+                          value={formData.liningDescription}
+                          onChange={(value) =>
+                            handleChange("liningDescription", value)
+                          }
+                          rows={2}
+                          placeholder="Опис підкладки товару"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="mt-1 text-xs text-blue-600 hover:underline"
+                        onClick={() =>
+                          setShowLiningLocales((v) => !v)
                         }
-                        rows={2}
-                        placeholder="Опис підкладки товару"
-                      />
+                      >
+                        {showLiningLocales
+                          ? "Сховати локалізації підкладки"
+                          : "Додати локалізацію підкладки"}
+                      </button>
+                      {showLiningLocales && (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            className="mb-2 text-xs text-purple-600 hover:underline"
+                            disabled={isTranslatingLining}
+                            onClick={async () => {
+                              if (!formData.liningDescription?.trim()) return;
+                              try {
+                                setIsTranslatingLining(true);
+                                const res = await translateTextAllLangs(
+                                  formData.liningDescription,
+                                  "uk"
+                                );
+                                handleChange("liningDescriptionEn", res.en);
+                                handleChange("liningDescriptionDe", res.de);
+                              } finally {
+                                setIsTranslatingLining(false);
+                              }
+                            }}
+                          >
+                            {isTranslatingLining
+                              ? "Переклад підкладки..."
+                              : "Автоматично перекласти підкладку EN/DE"}
+                          </button>
+                          <div>
+                            <Label>Опис підкладки (EN)</Label>
+                            <TextArea
+                              value={formData.liningDescriptionEn}
+                              onChange={(value) =>
+                                handleChange("liningDescriptionEn", value)
+                              }
+                              rows={2}
+                              placeholder="Lining description in English"
+                            />
+                          </div>
+                          <div>
+                            <Label>Опис підкладки (DE)</Label>
+                            <TextArea
+                              value={formData.liningDescriptionDe}
+                              onChange={(value) =>
+                                handleChange("liningDescriptionDe", value)
+                              }
+                              rows={2}
+                              placeholder="Futterbeschreibung auf Deutsch"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

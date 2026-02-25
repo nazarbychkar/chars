@@ -2,7 +2,7 @@ import FinalCard from "@/components/final-card/FinalCard";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://charsua.com';
 
 export const metadata: Metadata = {
   title: "Оформлення замовлення | CHARS",

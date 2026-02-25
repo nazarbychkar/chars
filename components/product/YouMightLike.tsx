@@ -1,21 +1,67 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
-import { useProducts } from "@/lib/useProducts";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useBasket } from "@/lib/BasketProvider";
+import { buildProductSlug } from "@/lib/slug";
 
-export default function YouMightLike() {
-  const { products: allProducts, loading } = useProducts();
+interface YouMightLikeProps {
+  productId: number;
+}
 
-  // Shuffle and pick 4 random products
-  const products = useMemo(() => {
-    const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4);
-  }, [allProducts]);
+export default function YouMightLike({ productId }: YouMightLikeProps) {
+  const { withLocalePath, messages, locale } = useI18n();
+  const { currency } = useBasket();
+  const isEuro =
+    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) ===
+    "EUR";
 
-  if (loading) return null; // or a spinner
+  interface RecommendedProduct {
+    id: number;
+    name: string;
+    name_en?: string | null;
+    name_de?: string | null;
+    price: number | string;
+    price_eur?: number | string | null;
+    first_media?: { url: string; type: string } | null;
+  }
+
+  const [products, setProducts] = useState<RecommendedProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchRecommendations() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(
+          `/api/products/recommendations?product_id=${productId}`
+        );
+        if (!res.ok) {
+          throw new Error("Failed to load recommendations");
+        }
+        const data = await res.json();
+        const list = Array.isArray(data.products) ? data.products : [];
+        // Take up to 4 items for display
+        setProducts(list.slice(0, 4));
+      } catch (e) {
+        console.error("Failed to load recommendations", e);
+        setError("Failed to load recommendations");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (productId) {
+      fetchRecommendations();
+    }
+  }, [productId]);
+
+  if (loading || !products.length) return null;
 
   return (
     <section className="max-w-[1920px] w-full mx-auto px-4 md:px-0">
@@ -24,18 +70,31 @@ export default function YouMightLike() {
         <div
           className={`mx-0 md:mx-10 text-4xl md:text-7xl font-normal font-['Inter'] leading-tight md:leading-[84.91px] text-center md:text-left`}
         >
-          Доповніть LOOK
+          {messages.product.recommendationsTitle}
         </div>
 
         {/* Products list - Mobile Optimized */}
         <div className="grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap justify-center sm:justify-around gap-4 sm:gap-8">
           {products.map((product) => {
             const isVideo = product.first_media?.type === "video";
+            const displayName =
+              locale === "en"
+                ? product.name_en || product.name
+                : locale === "de"
+                ? product.name_de || product.name
+                : product.name;
+            const basePrice =
+              isEuro && product.price_eur != null
+                ? Number(product.price_eur)
+                : Number(product.price);
+            const currencySymbol = isEuro ? " €" : " ₴";
             
             return (
               <Link
                 key={product.id}
-                href={`/product/${product.id}`}
+                href={withLocalePath(
+                  `/product/${buildProductSlug(product.name, product.id)}`
+                )}
                 className="w-full sm:w-96 relative mx-auto"
               >
                 {isVideo && product.first_media ? (
@@ -66,14 +125,15 @@ export default function YouMightLike() {
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                    Немає зображення
+                    {messages.product.imagePlaceholder}
                   </div>
                 )}
                 <div className="mt-2 text-sm sm:text-lg lg:text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
-                  {product.name}
+                  {displayName}
                 </div>
                 <div className="mt-1 w-24 h-4 mx-auto text-lg sm:text-xl font-normal font-['Inter'] leading-none text-center">
-                  {product.price} ₴
+                  {basePrice}
+                  {currencySymbol}
                 </div>
               </Link>
             );
@@ -83,11 +143,11 @@ export default function YouMightLike() {
         {/* More products button container */}
 <div className="w-full max-w-full sm:max-w-[1824px] h-[300px] sm:h-[679px] bg-[url('/images/bg-def.png')] bg-cover bg-center relative overflow-hidden mx-auto">
           <Link
-            href="/catalog"
+            href={withLocalePath("/catalog")}
             className="absolute bg-white inline-flex justify-center items-center gap-2 px-4 py-2 left-1/2 transform -translate-x-1/2 bottom-30 w-max sm:w-80 h-auto sm:h-16"
           >
             <div className="text-center justify-center text-black text-base sm:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
-              більше товарів
+              {messages.product.moreProductsLabel}
             </div>
           </Link>
         </div>

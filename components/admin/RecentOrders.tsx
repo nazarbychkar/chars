@@ -14,6 +14,8 @@ interface Order {
   post_office: string;
   status: "Delivered" | "Pending" | "Canceled";
   created_at: Date;
+   currency?: "UAH" | "EUR";
+   locale?: string | null;
 }
 
 export default function RecentOrders() {
@@ -89,6 +91,12 @@ export default function RecentOrders() {
                   isHeader
                   className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
+                  Lang / Currency
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
                   Status
                 </TableCell>
                 <TableCell
@@ -118,6 +126,14 @@ export default function RecentOrders() {
                   </TableCell>
                   <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                     {order.city} / {order.post_office}
+                  </TableCell>
+                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    <div className="flex flex-col gap-0.5">
+                      <span>{order.locale ? order.locale.toUpperCase() : "—"}</span>
+                      <span className="text-xs text-gray-400">
+                        {order.currency === "EUR" ? "€ EUR" : "₴ UAH"}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                     <Badge

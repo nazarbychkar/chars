@@ -1,7 +1,10 @@
 // app/api/products/route.ts
 
 import { NextResponse } from "next/server";
-import { sqlGetAllProducts, sqlPostProduct } from "@/lib/sql";
+import {
+  sqlGetAllProductsUncached,
+  sqlPostProduct,
+} from "@/lib/sql";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -42,7 +45,8 @@ export async function GET(request: Request) {
     const limit = searchParams.get("limit");
     const offset = searchParams.get("offset");
 
-    let products = await sqlGetAllProducts();
+    // Use uncached variant so admin/API always see latest data
+    let products = await sqlGetAllProductsUncached();
     console.log("api", products[0])
 
     // Mobile pagination for better performance
@@ -83,8 +87,13 @@ export async function POST(req: Request) {
       const body = await req.json();
       const {
         name,
+        name_en,
+        name_de,
         description,
+        description_en,
+        description_de,
         price,
+        price_eur,
         old_price,
         discount_percentage,
         priority = 0,
@@ -112,8 +121,13 @@ export async function POST(req: Request) {
 
       const product = await sqlPostProduct({
         name,
+        name_en,
+        name_de,
         description,
+        description_en,
+        description_de,
         price,
+        price_eur: typeof price_eur === "number" ? price_eur : null,
         old_price,
         discount_percentage,
         priority,
@@ -144,6 +158,9 @@ export async function POST(req: Request) {
 
     const name = formData.get("name") as string;
     const price = Number(formData.get("price"));
+    const priceEur = formData.get("price_eur")
+      ? Number(formData.get("price_eur"))
+      : null;
     const oldPrice = formData.get("old_price")
       ? Number(formData.get("old_price"))
       : null;
@@ -211,6 +228,7 @@ export async function POST(req: Request) {
       name,
       description,
       price,
+      price_eur: priceEur,
       old_price: oldPrice,
       discount_percentage: discountPercentage,
       priority,

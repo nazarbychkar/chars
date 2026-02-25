@@ -148,6 +148,43 @@ const nextConfig = {
       }
     ];
   },
+  async rewrites() {
+    return [
+      // Locale-prefixed routes for main site pages
+      {
+        source: "/:locale(uk|de|en)",
+        destination: "/",
+      },
+      {
+        source: "/:locale(uk|de|en)/final",
+        destination: "/final",
+      },
+      {
+        source: "/:locale(uk|de|en)/catalog",
+        destination: "/catalog",
+      },
+      {
+        source: "/:locale(uk|de|en)/privacy-policy",
+        destination: "/privacy-policy",
+      },
+      {
+        source: "/:locale(uk|de|en)/terms-of-service",
+        destination: "/terms-of-service",
+      },
+      {
+        source: "/:locale(uk|de|en)/payment/success",
+        destination: "/payment/success",
+      },
+      {
+        source: "/:locale(uk|de|en)/payment/status",
+        destination: "/payment/status",
+      },
+      {
+        source: "/:locale(uk|de|en)/product/:id",
+        destination: "/product/:id",
+      },
+    ];
+  },
 } satisfies NextConfig;
 
 export default withBundleAnalyzer(nextConfig);

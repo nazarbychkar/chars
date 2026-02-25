@@ -93,6 +93,22 @@ export async function PUT(
       : null;
     const color = typeof body.color === "string" ? body.color : null;
     const oldPrice = body.old_price ? Number(body.old_price) : null;
+    const fabricComposition =
+      typeof body.fabric_composition === "string"
+        ? body.fabric_composition
+        : null;
+    const fabricCompositionEn =
+      typeof body.fabric_composition_en === "string"
+        ? body.fabric_composition_en
+        : null;
+    const fabricCompositionDe =
+      typeof body.fabric_composition_de === "string"
+        ? body.fabric_composition_de
+        : null;
+    const priceEur =
+      body.price_eur !== undefined && body.price_eur !== null
+        ? Number(body.price_eur)
+        : null;
     const discountPercentage = body.discount_percentage
       ? Number(body.discount_percentage)
       : null;
@@ -104,6 +120,11 @@ export async function PUT(
       name: body.name.trim(),
       description: body.description || null,
       price: priceNum,
+      price_eur: priceEur,
+      name_en: body.name_en || null,
+      name_de: body.name_de || null,
+      description_en: body.description_en || null,
+      description_de: body.description_de || null,
       old_price: oldPrice,
       discount_percentage: discountPercentage,
       priority,
@@ -121,6 +142,9 @@ export async function PUT(
                 : { size: s.size, stock: Number(s.stock ?? 0) }
           )
         : [],
+      fabric_composition: fabricComposition || undefined,
+      fabric_composition_en: fabricCompositionEn,
+      fabric_composition_de: fabricCompositionDe,
       media: Array.isArray(body.media) ? body.media : [],
       colors: Array.isArray(body.colors)
         ? body.colors.map((c: { label: string; hex?: string | null }) => ({
@@ -129,8 +153,7 @@ export async function PUT(
           }))
         : [],
       has_lining: hasLining,
-      fabric_composition: body.fabric_composition,
-      lining_description: liningDescription, // Pass the lining_description here
+      lining_description: liningDescription,
     });
 
     return NextResponse.json({ updated: true });

@@ -9,6 +9,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { cachedFetch, CACHE_KEYS } from "@/lib/cache";
+import { buildProductSlug, buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 // Video component with proper mobile autoplay
 function VideoWithAutoplay({ src, className }: { src: string; className?: string }) {
@@ -74,6 +76,7 @@ interface Product {
 export default function Catalog() {
   const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
   const searchParams = useSearchParams();
+  const { locale } = useI18n();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
@@ -115,6 +118,11 @@ export default function Catalog() {
   const category = searchParams.get("category");
   const season = searchParams.get("season");
   const subcategory = searchParams.get("subcategory");
+
+  const [categoryLabel, setCategoryLabel] = useState<string | null>(null);
+  const [subcategoryLabel, setSubcategoryLabel] = useState<string | null>(null);
+  const [categoryNameUa, setCategoryNameUa] = useState<string | null>(null);
+  const [subcategoryNameUa, setSubcategoryNameUa] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -167,9 +175,78 @@ export default function Catalog() {
       }
     }
 
+    async function fetchLabels() {
+      try {
+        // Reset labels before loading
+        setCategoryLabel(null);
+        setSubcategoryLabel(null);
+        setCategoryNameUa(null);
+        setSubcategoryNameUa(null);
+
+        // Category label
+        if (category) {
+          const cats = await fetch("/api/categories").then((r) => r.json());
+          if (Array.isArray(cats)) {
+            const found = cats.find(
+              (c: { name: string }) => {
+                const baseName = c.name || "";
+                const slug = buildCategorySlug(baseName);
+                const key = category.toLowerCase();
+                return (
+                  baseName.toLowerCase() === key ||
+                  slug.toLowerCase() === key
+                );
+              }
+            );
+            if (found) {
+              setCategoryNameUa(found.name);
+              const localized =
+                locale === "en"
+                  ? found.name_en || found.name
+                  : locale === "de"
+                  ? found.name_de || found.name
+                  : found.name;
+              setCategoryLabel(localized);
+            }
+          }
+        }
+
+        // Subcategory label
+        if (subcategory) {
+          const subs = await fetch("/api/subcategories/all").then((r) =>
+            r.json()
+          );
+          if (Array.isArray(subs)) {
+            const found = subs.find((s: { name: string }) => {
+              const baseName = s.name || "";
+              const slug = buildSubcategorySlug(baseName);
+              const key = subcategory.toLowerCase();
+              return (
+                baseName.toLowerCase() === key ||
+                slug.toLowerCase() === key
+              );
+            });
+            if (found) {
+              setSubcategoryNameUa(found.name);
+              const localized =
+                locale === "en"
+                  ? found.name_en || found.name
+                  : locale === "de"
+                  ? found.name_de || found.name
+                  : found.name;
+              setSubcategoryLabel(localized);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load category/subcategory labels", e);
+      }
+    }
+
     fetchProducts();
     fetchColors();
-  }, [category, season, subcategory]); // refetch if URL params change
+    fetchLabels();
+  }, [category, season, subcategory, locale]); // refetch if URL params or locale change
 
   if (loading) {
     return (
@@ -237,11 +314,19 @@ export default function Catalog() {
             </button>
             <span>
               {subcategory
-                ? `Підкатегорія ${subcategory}${
-                    category ? ` (Категорія ${category})` : ""
+                ? `Підкатегорія ${
+                    subcategoryLabel ??
+                    subcategoryNameUa ??
+                    subcategory
+                  }${
+                    category
+                      ? ` (Категорія ${
+                          categoryLabel ?? categoryNameUa ?? category
+                        })`
+                      : ""
                   }`
                 : category
-                ? `Категорія ${category}`
+                ? `Категорія ${categoryLabel ?? categoryNameUa ?? category}`
                 : season
                 ? `Сезон ${season}`
                 : "Усі товари"}
@@ -264,12 +349,13 @@ export default function Catalog() {
               console.log(`[Catalog] Product ${product.id} - first_media:`, product.first_media);
             }
             
+            const slug = buildProductSlug(product.name, product.id);
             return (
-            <Link
-              href={`/product/${product.id}`}
-              key={product.id}
-              className="flex flex-col gap-4 group"
-            >
+              <Link
+                href={`/product/${slug}`}
+                key={product.id}
+                className="flex flex-col gap-4 group"
+              >
               {/* Image or Video */}
               <div className="relative w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300 overflow-hidden">
                 {product.first_media?.type === "video" ? (
@@ -297,6 +383,25 @@ export default function Catalog() {
           );
           })}
         </div>
+        {sortedProducts.length > 0 && (
+          <div className="mt-6 flex justify-center">
+            <button
+              className={`cursor-pointer px-6 py-3 ${
+                isDark
+                  ? "bg-stone-100 text-stone-900"
+                  : "bg-stone-900 text-stone-100"
+              }`}
+              onClick={() =>
+                window.scrollTo({
+                  top: document.body.scrollHeight,
+                  behavior: "smooth",
+                })
+              }
+            >
+              Показати ще
+            </button>
+          </div>
+        )}
       </section>
 
       <SidebarFilter

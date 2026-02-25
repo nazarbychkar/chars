@@ -17,7 +17,7 @@ export const revalidate = 300; // ISR every 5 minutes
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = await searchParams;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://charsua.com';
   
   const category = params.category || "";
   const season = params.season || "";
@@ -83,18 +83,19 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function Page({ searchParams }: PageProps) {
     const params = await searchParams;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
-    
-    const breadcrumbItems = [
-      { label: "Головна", href: "/" },
-      { label: "Каталог", href: "/catalog" },
-    ];
-    
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://charsua.com';
+
     return (
         <>
             <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
-                <Breadcrumbs items={breadcrumbItems} />
-                <BreadcrumbsSchema items={breadcrumbItems} baseUrl={baseUrl} />
+                <Breadcrumbs />
+                <BreadcrumbsSchema
+                  items={[
+                    { label: "Головна", href: "/" },
+                    { label: "Каталог", href: "/catalog" },
+                  ]}
+                  baseUrl={baseUrl}
+                />
             </div>
             <Suspense fallback={<CatalogSkeleton count={8} />}>
             <CatalogServer 

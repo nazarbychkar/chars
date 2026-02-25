@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import Image from "next/image";
@@ -12,6 +12,24 @@ import "swiper/css/navigation";
 import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
 import FormField, { validators } from "@/components/shared/FormField";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+
+const COUNTRY_OPTIONS = [
+  { code: "UA", uk: "Україна", en: "Ukraine", de: "Ukraine" },
+  { code: "PL", uk: "Польща", en: "Poland", de: "Polen" },
+  { code: "DE", uk: "Німеччина", en: "Germany", de: "Deutschland" },
+  { code: "CZ", uk: "Чехія", en: "Czech Republic", de: "Tschechien" },
+  { code: "SK", uk: "Словаччина", en: "Slovakia", de: "Slowakei" },
+  { code: "RO", uk: "Румунія", en: "Romania", de: "Rumänien" },
+  { code: "HU", uk: "Угорщина", en: "Hungary", de: "Ungarn" },
+  { code: "IT", uk: "Італія", en: "Italy", de: "Italien" },
+  { code: "ES", uk: "Іспанія", en: "Spain", de: "Spanien" },
+  { code: "FR", uk: "Франція", en: "France", de: "Frankreich" },
+  { code: "GB", uk: "Велика Британія", en: "United Kingdom", de: "Vereinigtes Königreich" },
+  { code: "US", uk: "США", en: "USA", de: "USA" },
+  { code: "CA", uk: "Канада", en: "Canada", de: "Kanada" },
+  { code: "OTHER", uk: "Інша країна", en: "Other country", de: "Anderes Land" },
+] as const;
 
 // interface Product {
 //   id: number;
@@ -29,9 +47,11 @@ import FormField, { validators } from "@/components/shared/FormField";
 export default function FinalCard() {
   // GENERAL
   const { isDark } = useAppContext();
-  const { items, updateQuantity, removeItem, clearBasket } = useBasket();
+  const { items, updateQuantity, removeItem, clearBasket, currency } = useBasket();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const { locale, messages, withLocalePath } = useI18n();
+  const effectiveBasketCurrency =
+    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
 
   // CUSTOMER
   const [customerName, setCustomerName] = useState("");
@@ -52,32 +72,17 @@ export default function FinalCard() {
     }
   }, [deliveryMethod]);
 
-  // Track InitiateCheckout event for Meta Pixel when component mounts with items
-  useEffect(() => {
-    if (items.length > 0 && typeof window !== 'undefined' && window.fbq) {
-      const totalValue = items.reduce((total, item) => {
-        const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
-        const discount = item.discount_percentage 
-          ? (typeof item.discount_percentage === 'string' ? parseFloat(item.discount_percentage) : item.discount_percentage)
-          : 0;
-        const price = discount > 0 ? itemPrice * (1 - discount / 100) : itemPrice;
-        return total + price * item.quantity;
-      }, 0);
-
-      window.fbq('track', 'InitiateCheckout', {
-        content_ids: items.map(item => String(item.id)),
-        content_type: 'product',
-        value: totalValue,
-        currency: 'UAH',
-        num_items: items.reduce((sum, item) => sum + item.quantity, 0)
-      });
-    }
-  }, [items]); // Track when basket changes
+  // Meta Pixel кастомні події (InitiateCheckout) вимкнені
 
   const [comment, setComment] = useState("");
-  const [paymentType, setPaymentType] = useState("");
+  const [paymentType, setPaymentType] = useState<"" | "full" | "prepay">("full");
+  const [countryCode, setCountryCode] = useState<string>("UA");
+  const [countryName, setCountryName] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
   const [submittedOrder, setSubmittedOrder] = useState<{
     items: typeof items;
+    orderCurrency: "UAH" | "EUR";
     customer: {
       name: string;
       email?: string;
@@ -89,20 +94,43 @@ export default function FinalCard() {
     };
   } | null>(null);
 
+  const isUkraineShipping = countryCode === "UA";
+
+  // Keep delivery method in sync with country:
+  // - For Ukraine: default to Nova Poshta branch if current метод не підходить
+  // - For other countries: only international shipping is available
+  useEffect(() => {
+    if (isUkraineShipping) {
+      if (!deliveryMethod.startsWith("nova_poshta") && deliveryMethod !== "showroom_pickup") {
+        setDeliveryMethod("nova_poshta_branch");
+      }
+    } else {
+      if (deliveryMethod !== "international_shipping") {
+        setDeliveryMethod("international_shipping");
+      }
+    }
+  }, [isUkraineShipping, deliveryMethod]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setSuccess(null);
 
+    const needsCustomCountryName = !isUkraineShipping && countryCode === "OTHER";
+
     if (
       !customerName ||
       !phoneNumber ||
       !deliveryMethod ||
       !city ||
-      !postOffice
+      (isUkraineShipping && !postOffice) ||
+      (!isUkraineShipping &&
+        ((needsCustomCountryName && !countryName.trim()) ||
+          !postalCode.trim() ||
+          !streetAddress.trim()))
     ) {
-      setError("Будь ласка, заповніть усі необхідні поля, щоб ми змогли швидко обробити ваше замовлення ✨");
+      setError(messages.checkout.errorRequiredFields);
       setLoading(false);
       return;
     }
@@ -110,66 +138,95 @@ export default function FinalCard() {
     const trimmedName = customerName.trim();
     const nameParts = trimmedName.split(/\s+/);
     if (nameParts.length < 2) {
-      setError("Будь ласка, введіть ваше ім'я та прізвище повністю — це допоможе нам швидше обробити замовлення 😊");
+      setError(messages.checkout.errorFullName);
       setLoading(false);
       return;
     }
 
     if (items.length === 0) {
-      setError("Ваш кошик порожній. Додайте товари, які вам подобаються, і повертайтеся! 🛒");
+      setError(messages.checkout.errorCartEmpty);
       setLoading(false);
       return;
     }
 
-    // Формуємо товари для API (з урахуванням знижки)
+    const isEuro = effectiveBasketCurrency === "EUR";
+    const getItemPrice = (item: (typeof items)[0]) =>
+      isEuro && item.price_eur != null ? item.price_eur : item.price;
+
+    // Формуємо товари для API у вибраній валюті (з урахуванням знижки)
     const apiItems = items.map((item) => {
-      // Перетворюємо ціну в число
-      const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
-      const discount = item.discount_percentage 
-        ? (typeof item.discount_percentage === 'string' ? parseFloat(item.discount_percentage) : item.discount_percentage)
+      const rawItemPrice = getItemPrice(item);
+      const itemPrice =
+        typeof rawItemPrice === "string"
+          ? parseFloat(rawItemPrice)
+          : rawItemPrice;
+      const discount = item.discount_percentage
+        ? typeof item.discount_percentage === "string"
+          ? parseFloat(item.discount_percentage)
+          : item.discount_percentage
         : 0;
-      
-      const discountedPrice = discount > 0
-        ? itemPrice * (1 - discount / 100)
-        : itemPrice;
+      const discountedPrice =
+        discount > 0 ? itemPrice * (1 - discount / 100) : itemPrice;
 
       return {
         product_id: item.id,
         product_name: item.name,
         size: item.size,
         quantity: item.quantity,
-        price: discountedPrice.toFixed(2), // передаємо кінцеву ціну
-        original_price: itemPrice, // можна залишити для запису, якщо треба
+        price: discountedPrice.toFixed(2),
+        original_price: itemPrice,
         discount_percentage: discount || null,
         color: item.color || null,
       };
     });
 
-    // Підрахунок суми до оплати (з урахуванням знижки)
     const fullAmount = items.reduce((total, item) => {
-      // Перетворюємо ціну в число
-      const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
-      const discount = item.discount_percentage 
-        ? (typeof item.discount_percentage === 'string' ? parseFloat(item.discount_percentage) : item.discount_percentage)
+      const rawItemPrice = getItemPrice(item);
+      const itemPrice =
+        typeof rawItemPrice === "string"
+          ? parseFloat(rawItemPrice)
+          : rawItemPrice;
+      const discount = item.discount_percentage
+        ? typeof item.discount_percentage === "string"
+          ? parseFloat(item.discount_percentage)
+          : item.discount_percentage
         : 0;
-      
-      const price = discount > 0
-        ? itemPrice * (1 - discount / 100)
-        : itemPrice;
+      const price =
+        discount > 0 ? itemPrice * (1 - discount / 100) : itemPrice;
       return total + price * item.quantity;
     }, 0);
 
     try {
+      const resolveCountryLabel = (code: string): string => {
+        const found = COUNTRY_OPTIONS.find((c) => c.code === code);
+        if (!found) return code || "International";
+        if (locale === "en") return found.en;
+        if (locale === "de") return found.de;
+        return found.uk;
+      };
+
+      const shippingCountry = isUkraineShipping
+        ? resolveCountryLabel("UA")
+        : countryCode === "OTHER"
+        ? countryName.trim() || "International"
+        : resolveCountryLabel(countryCode);
+      const apiCity = city;
+      const apiPostOffice = isUkraineShipping
+        ? postOffice
+        : `Country: ${shippingCountry}; Postal code: ${postalCode.trim()}; Address: ${streetAddress.trim()}`;
+
       const requestBody = {
         customer_name: customerName,
         phone_number: phoneNumber,
         email: email || null,
         delivery_method: deliveryMethod,
-        city,
-        post_office: postOffice,
+        city: apiCity,
+        post_office: apiPostOffice,
         comment,
         payment_type: paymentType,
         total_amount: fullAmount.toFixed(2),
+        currency: isEuro ? "EUR" : "UAH",
+        locale, // запам'ятовуємо мовну версію сайту
         items: apiItems,
       };
       
@@ -188,7 +245,7 @@ export default function FinalCard() {
       if (!response.ok) {
         const data = await response.json();
         console.error("[FinalCard] Error response:", data);
-        setError(data.error || "Нам шкода, але щось пішло не так. Будь ласка, спробуйте ще раз або зв'яжіться з нами — ми обов'язково допоможемо! 💪");
+        setError(data.error || messages.checkout.errorGeneric);
       } else {
         const data = await response.json();
         console.log("[FinalCard] Success response:", data);
@@ -200,35 +257,18 @@ export default function FinalCard() {
 
         if (!invoiceUrl) {
           console.error("[FinalCard] No invoice URL received!");
-          setError("На жаль, наразі ми не можемо створити посилання для оплати. Будь ласка, спробуйте через кілька хвилин або зв'яжіться з нашою службою підтримки.");
+          setError(messages.checkout.errorNoInvoice);
           return;
         }
 
 
-        // Track Purchase event for Meta Pixel
-        if (typeof window !== 'undefined' && window.fbq) {
-          const totalValue = items.reduce((total, item) => {
-            const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
-            const discount = item.discount_percentage 
-              ? (typeof item.discount_percentage === 'string' ? parseFloat(item.discount_percentage) : item.discount_percentage)
-              : 0;
-            const price = discount > 0 ? itemPrice * (1 - discount / 100) : itemPrice;
-            return total + price * item.quantity;
-          }, 0);
-
-          window.fbq('track', 'Purchase', {
-            content_ids: items.map(item => String(item.id)),
-            content_type: 'product',
-            value: totalValue,
-            currency: 'UAH',
-            num_items: items.reduce((sum, item) => sum + item.quantity, 0)
-          });
-        }
+        // Meta Pixel кастомні події (Purchase) вимкнені
 
         localStorage.setItem(
           "submittedOrder",
           JSON.stringify({
             items,
+            orderCurrency: effectiveBasketCurrency,
             customer: {
               name: customerName,
               email,
@@ -248,7 +288,7 @@ export default function FinalCard() {
         // Store invoiceId separately for payment status check
         localStorage.setItem("currentInvoiceId", invoiceId);
 
-        setSuccess("Замовлення успішно створено! Переходимо до оплати...");
+        setSuccess(messages.checkout.orderCreatedRedirecting);
         // Don't clear basket here - only clear after successful payment
 
         console.log("[FinalCard] Redirecting to invoice URL in 2 seconds...");
@@ -260,7 +300,7 @@ export default function FinalCard() {
       }
     } catch (error) {
       console.error("[FinalCard] Network error:", error);
-      setError("Схоже, виникли проблеми з інтернет-з'єднанням. Будь ласка, перевірте підключення та спробуйте ще раз.");
+      setError(messages.checkout.errorNetwork);
     } finally {
       setLoading(false);
     }
@@ -288,7 +328,7 @@ export default function FinalCard() {
     const paymentStatus = searchParams.get("payment");
     if (paymentStatus === "success") {
       // Show success message
-      setSuccess("✅ Оплата успішна! Ваше замовлення прийнято до обробки. Ми надішлемо вам SMS з номером відправлення після комплектування замовлення.");
+      setSuccess(messages.checkout.paymentSuccess);
       // Clear basket only after successful payment
       clearBasket();
       // Mark payment as successful in localStorage so order details page can be shown
@@ -303,7 +343,7 @@ export default function FinalCard() {
         window.history.replaceState({}, "", url.pathname + url.search);
       }
     }
-  }, [searchParams, router, clearBasket, items.length]);
+  }, [clearBasket, items.length, messages.checkout.paymentSuccess, searchParams]);
 
   // POST OFFICE
   const [cities, setCities] = useState<string[]>([]); // Available cities
@@ -344,12 +384,12 @@ export default function FinalCard() {
             );
           } else {
             setCities([]);
-            setError("На жаль, наразі ми не можемо завантажити список міст. Будь ласка, спробуйте через кілька хвилин.");
+            setError(messages.checkout.errorCitiesGeneric);
           }
         })
         .catch((err) => {
           console.error("Fetch error:", err);
-          setError("Виникла проблема при завантаженні списку міст. Будь ласка, перевірте підключення та спробуйте ще раз.");
+          setError(messages.checkout.errorCitiesNetwork);
         })
         .finally(() => {
           setLoadingCities(false);
@@ -383,7 +423,7 @@ export default function FinalCard() {
         })
         .catch(() => {
           console.error("Error fetching cities");
-          setError("На жаль, наразі ми не можемо завантажити список міст. Будь ласка, спробуйте через кілька хвилин.");
+          setError(messages.checkout.errorCitiesGeneric);
         })
         .finally(() => {
           setLoadingCities(false);
@@ -455,7 +495,7 @@ export default function FinalCard() {
         })
         .catch(() => {
           console.error("Error fetching post offices");
-          setError("На жаль, наразі ми не можемо завантажити список відділень. Будь ласка, спробуйте через кілька хвилин.");
+          setError(messages.checkout.errorWarehousesGeneric);
         })
         .finally(() => {
           setLoadingPostOffices(false);
@@ -525,14 +565,22 @@ export default function FinalCard() {
   
   if (items.length == 0 && submittedOrder && paymentSuccess) {
     const { items: orderItems, customer } = submittedOrder;
+    const orderCurrency =
+      submittedOrder.orderCurrency ??
+      (locale === "en" || locale === "de" ? "EUR" : "UAH");
+    const summarySymbol = orderCurrency === "EUR" ? "€" : "₴";
+    const getSummaryPrice = (item: (typeof orderItems)[0]) =>
+      orderCurrency === "EUR" && item.price_eur != null ? item.price_eur : item.price;
 
     return (
       <section className="max-w-[1280px] w-full mx-auto p-6 flex flex-col items-center gap-10">
         {/* Heading */}
         <div className="text-center">
           <h1 className="text-5xl sm:text-6xl font-normal leading-tight">
-            <span className="text-stone-500">Дякуємо за </span>
-            <span className="">ваше замовлення!</span>
+            <span className="text-stone-500">
+              {messages.checkout.summaryThankYouLine1}{" "}
+            </span>
+            <span className="">{messages.checkout.summaryThankYouLine2}</span>
           </h1>
         </div>
 
@@ -548,7 +596,9 @@ export default function FinalCard() {
               slidesPerView={2.5}
               className="h-full"
             >
-              {orderItems.map((item, idx) => (
+              {orderItems.map((item, idx) => {
+                const displayPrice = getSummaryPrice(item);
+                return (
                 <SwiperSlide key={`${item.id}-${item.size}-${idx}`}>
                   <div className="flex gap-4 items-start p-4 border border-stone-200 rounded">
                     {item.imageUrl ? (
@@ -563,7 +613,9 @@ export default function FinalCard() {
                       </div>
                     ) : (
                       <div className="w-20 h-28 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-gray-400 text-xs">Фото</span>
+                        <span className="text-gray-400 text-xs">
+                          {messages.product.imagePlaceholder}
+                        </span>
                       </div>
                     )}
                     <div className="flex flex-col flex-1 gap-1">
@@ -575,42 +627,42 @@ export default function FinalCard() {
                       </div>
                       {item.color && (
                         <div className="text-base font-['Helvetica']">
-                          Колір: {item.color}
+                          {messages.product.colorLabel}:{" "}
+                          {messages.catalog.colorNames[item.color] || item.color}
                         </div>
                       )}
                       <div className="text-base  font-['Helvetica']">
-                        Кількість: {item.quantity}x
+                        {messages.checkout.itemQtyLabel}: {item.quantity}x
                       </div>
                       <div className="text-base text-zinc-600 font-['Helvetica']">
                         {item.discount_percentage ? (
                           <div className="flex items-center gap-2">
-                            {/* Discounted price */}
                             <span className="font-medium text-red-600">
                               {(
-                                item.price *
+                                displayPrice *
                                 (1 - item.discount_percentage / 100)
                               ).toFixed(2)}
-                              ₴
+                              {summarySymbol}
                             </span>
-
-                            {/* Original (crossed-out) price */}
                             <span className="text-gray-500 line-through">
-                              {item.price}₴
+                              {displayPrice}
+                              {summarySymbol}
                             </span>
-
-                            {/* Optional: show discount percentage */}
                             <span className="text-green-600 text-sm">
                               -{item.discount_percentage}%
                             </span>
                           </div>
                         ) : (
-                          <span className="font-medium">{item.price}₴</span>
+                          <span className="font-medium">
+                            {displayPrice}
+                            {summarySymbol}
+                          </span>
                         )}
                       </div>
                     </div>
                   </div>
                 </SwiperSlide>
-              ))}
+              )})}
             </Swiper>
           </div>
 
@@ -618,11 +670,13 @@ export default function FinalCard() {
           {/* Title */}
           <div className="flex flex-col justify-between gap-3">
             <div className="text-3xl  font-normal text-center">
-              Дані клієнта
+              {messages.checkout.customerDataTitle}
             </div>
             <div className="text-xl font-normal leading-loose w-full max-w-4xl text-left">
               <p className="flex justify-start gap-3">
-                <span className="">Ім&apos;я: </span>
+                <span className="">
+                  {messages.checkout.summaryNameLabel}
+                </span>
                 <span className="text-neutral-400">{customer.name}</span>
               </p>
               {customer.email && (
@@ -632,33 +686,41 @@ export default function FinalCard() {
                 </p>
               )}
               <p className="flex justify-start gap-3">
-                <span className="">Телефон: </span>
+                <span className="">
+                  {messages.checkout.summaryPhoneLabel}
+                </span>
                 <span className="text-neutral-400">{customer.phone}</span>
               </p>
               <p className="flex justify-start gap-3">
-                <span className="">Місто: </span>
+                <span className="">
+                  {messages.checkout.summaryCityLabel}
+                </span>
                 <span className="text-neutral-400">{customer.city}</span>
               </p>
               <p className="flex justify-start gap-3">
-                <span className="">Відділення: </span>
+                <span className="">
+                  {messages.checkout.summaryPostOfficeLabel}
+                </span>
                 <span className="text-neutral-400">{customer.postOffice}</span>
               </p>
               {customer.comment && (
                 <p className="flex justify-start gap-3">
-                  <span className="">Коментар: </span>
+                  <span className="">
+                    {messages.checkout.summaryCommentLabel}
+                  </span>
                   <span className="text-neutral-400">{customer.comment}</span>
                 </p>
               )}
             </div>
             {/* Back to home */}
             <Link
-              href="/"
+              href={withLocalePath("/")}
               className={`w-80 h-16 ${
                 isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
               } inline-flex justify-center items-center gap-2.5 p-2.5 rounded`}
-            >
+              >
               <span className=" text-xl font-medium font-['Inter'] tracking-tight leading-snug">
-                На головну
+                {messages.common.backToHome}
               </span>
             </Link>
           </div>
@@ -682,24 +744,24 @@ export default function FinalCard() {
             height={200}
           />
           <span className="text-center text-2xl sm:text-4xl md:text-6xl font-normal font-['Inter'] leading-tight sm:leading-[64.93px]">
-            Ваш кошик порожній
+            {messages.checkout.emptyTitle}
           </span>
           <Link
-            href="/catalog"
+            href={withLocalePath("/catalog")}
             className={`${
               isDark
                 ? "bg-stone-100 text-stone-900"
                 : "bg-stone-900 text-stone-100"
             } w-full sm:w-80 h-14 sm:h-16 px-6 py-3 inline-flex items-center justify-center gap-2.5 text-base sm:text-xl text-center `}
-          >
-            Продовжити покупки
+            >
+            {messages.checkout.continueShopping}
           </Link>
         </div>
       ) : (
         <>
           <div className="flex flex-col sm:flex-row justify-center gap-10 sm:gap-50">
             <div className="mt-10 text-center sm:text-left text-3xl sm:text-6xl font-normal font-['Inter'] leading-snug sm:leading-[64.93px] mb-5">
-              Заповніть всі поля
+              {messages.checkout.title}
             </div>
 
             <div className="w-full sm:w-1/4"></div>
@@ -712,12 +774,12 @@ export default function FinalCard() {
               noValidate
             >
               <FormField
-                label="Ім'я та прізвище"
+                label={messages.checkout.nameLabel}
                 id="name"
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Ваше імʼя та прізвище"
+                placeholder={messages.checkout.namePlaceholder}
                 required
                 autoComplete="name"
                 validation={(value) => {
@@ -728,23 +790,23 @@ export default function FinalCard() {
               />
 
               <FormField
-                label="Email"
+                label={messages.checkout.emailLabel}
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Ваш Email"
+                placeholder={messages.checkout.emailPlaceholder}
                 autoComplete="email"
                 validation={validators.email}
               />
 
               <FormField
-                label="Телефон"
+                label={messages.checkout.phoneLabel}
                 id="phone"
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Ваш телефон (наприклад: +380501234567)"
+                placeholder={messages.checkout.phonePlaceholder}
                 required
                 autoComplete="tel"
                 validation={(value) => {
@@ -755,11 +817,53 @@ export default function FinalCard() {
               />
 
               {/* Add delivery method, city, and post office fields */}
+              {/* Country selector */}
+              <label
+                htmlFor="country"
+                className="text-xl sm:text-2xl font-normal font-['Arial']"
+              >
+                {messages.checkout.countryLabel}
+              </label>
+              <select
+                id="country"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded mb-2"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+              >
+                {COUNTRY_OPTIONS.map((opt) => (
+                  <option key={opt.code} value={opt.code}>
+                    {locale === "en"
+                      ? opt.en
+                      : locale === "de"
+                      ? opt.de
+                      : opt.uk}
+                  </option>
+                ))}
+              </select>
+              {!isUkraineShipping && countryCode === "OTHER" && (
+                <div className="flex flex-col mb-2">
+                  <label
+                    htmlFor="countryName"
+                    className="text-base sm:text-lg font-normal font-['Arial']"
+                  >
+                    {messages.checkout.countryOtherLabel}
+                  </label>
+                  <input
+                    id="countryName"
+                    type="text"
+                    value={countryName}
+                    onChange={(e) => setCountryName(e.target.value)}
+                    placeholder={messages.checkout.countryOtherPlaceholder}
+                    className="border p-3 sm:p-4 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                  />
+                </div>
+              )}
+
               <label
                 htmlFor="deliveryMethod"
                 className="text-xl sm:text-2xl font-normal font-['Arial']"
               >
-                Спосіб доставки *
+                {messages.checkout.deliveryMethodLabel}
               </label>
               <select
                 id="deliveryMethod"
@@ -768,23 +872,32 @@ export default function FinalCard() {
                 onChange={(e) => setDeliveryMethod(e.target.value)}
                 required
               >
-                <option value="">Оберіть спосіб доставки</option>
-                <option value="nova_poshta_branch">
-                  Нова пошта — у відділення
+                <option value="">
+                  {messages.checkout.deliveryMethodPlaceholder}
                 </option>
-                <option value="nova_poshta_locker">
-                  Нова пошта — у поштомат
-                </option>
-                <option value="nova_poshta_courier">
-                  Нова пошта — кур’єром
-                </option>
-                {/* <option value="ukrposhta">Укрпошта</option> */}
-                <option value="showroom_pickup">
-                  Самовивіз з шоуруму (13:00–19:00)
-                </option>
+                {isUkraineShipping ? (
+                  <>
+                    <option value="nova_poshta_branch">
+                      {messages.checkout.deliveryOptionNpBranch}
+                    </option>
+                    <option value="nova_poshta_locker">
+                      {messages.checkout.deliveryOptionNpLocker}
+                    </option>
+                    <option value="nova_poshta_courier">
+                      {messages.checkout.deliveryOptionNpCourier}
+                    </option>
+                    <option value="showroom_pickup">
+                      {messages.checkout.deliveryOptionShowroom}
+                    </option>
+                  </>
+                ) : (
+                  <option value="international_shipping">
+                    {messages.checkout.deliveryOptionInternational}
+                  </option>
+                )}
               </select>
 
-              {deliveryMethod.startsWith("nova_poshta") && (
+              {isUkraineShipping && deliveryMethod.startsWith("nova_poshta") && (
                 <>
                   <div className="flex flex-col">
                     <label
@@ -792,20 +905,20 @@ export default function FinalCard() {
                       className="text-xl sm:text-2xl font-normal font-['Arial']"
                     >
                       {deliveryMethod === "nova_poshta_courier"
-                        ? "Місто для доставки кур’єром *"
-                        : "Місто *"}
+                        ? messages.checkout.cityCourierLabel
+                        : messages.checkout.cityLabel}
                     </label>
                     <input
                       type="text"
                       id="city"
                       value={city}
                       onChange={handleCityChange} // Update city on input change
-                      placeholder="Введіть назву міста"
+                      placeholder={messages.checkout.cityPlaceholder}
                       className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                       required
                     />
                     {loadingCities ? (
-                      <p>Завантаження міст...</p>
+                      <p>{messages.checkout.citiesLoading}</p>
                     ) : (
                       cityListVisible && (
                         <div className="max-h-40 overflow-y-auto shadow-lg rounded border mt-2">
@@ -832,14 +945,14 @@ export default function FinalCard() {
                         htmlFor="postOffice"
                         className="text-xl sm:text-2xl font-normal font-['Arial']"
                       >
-                        Адреса доставки (вулиця, будинок, квартира) *
+                        {messages.checkout.addressLabel}
                       </label>
                       <input
                         type="text"
                         id="postOffice"
                         value={postOffice}
                         onChange={(e) => setPostOffice(e.target.value)}
-                        placeholder="Напр.: вул. Січових Стрільців, 10, кв. 25"
+                        placeholder={messages.checkout.addressPlaceholder}
                         className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                         required
                       />
@@ -851,8 +964,8 @@ export default function FinalCard() {
                         className="text-xl sm:text-2xl font-normal font-['Arial']"
                       >
                         {deliveryMethod === "nova_poshta_locker"
-                          ? "Поштомат *"
-                          : "Відділення *"}
+                          ? messages.checkout.postOfficeLockerLabel
+                          : messages.checkout.postOfficeLabel}
                       </label>
                       <input
                         type="text"
@@ -861,14 +974,14 @@ export default function FinalCard() {
                         onChange={handlePostOfficeChange}
                         placeholder={
                           deliveryMethod === "nova_poshta_locker"
-                            ? "Введіть назву поштомата"
-                            : "Введіть назву відділення"
+                            ? messages.checkout.postOfficeLockerPlaceholder
+                            : messages.checkout.postOfficePlaceholder
                         }
                         className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                         required
                       />
                       {loadingPostOffices ? (
-                        <p>Завантаження відділень...</p>
+                        <p>{messages.checkout.postOfficesLoading}</p>
                       ) : (
                         postOfficeListVisible && (
                           <div className="max-h-40 overflow-y-auto shadow-lg rounded border mt-2">
@@ -897,21 +1010,77 @@ export default function FinalCard() {
 
               {deliveryMethod === "showroom_pickup" && (
                 <div className="text-base sm:text-lg text-gray-700">
-                  Самовивіз з шоуруму з 13:00 до 19:00, Київ, вул.
-                  Костянтинівська, 21
+                  {messages.checkout.showroomInfo}
                 </div>
+              )}
+
+              {/* International shipping fields */}
+              {!isUkraineShipping && deliveryMethod === "international_shipping" && (
+                <>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="city"
+                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                    >
+                      {messages.checkout.cityLabel}
+                    </label>
+                    <input
+                      type="text"
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder={messages.checkout.cityPlaceholder}
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="postalCode"
+                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                    >
+                      {messages.checkout.postalCodeLabel}
+                    </label>
+                    <input
+                      type="text"
+                      id="postalCode"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder={messages.checkout.postalCodePlaceholder}
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label
+                      htmlFor="streetAddress"
+                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                    >
+                      {messages.checkout.addressLabel}
+                    </label>
+                    <input
+                      type="text"
+                      id="streetAddress"
+                      value={streetAddress}
+                      onChange={(e) => setStreetAddress(e.target.value)}
+                      placeholder={messages.checkout.addressPlaceholder}
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                    />
+                  </div>
+                  <p className="text-sm sm:text-base text-gray-600 mt-2">
+                    {messages.checkout.internationalInfo}
+                  </p>
+                </>
               )}
 
               <label
                 htmlFor="comment"
                 className="text-xl sm:text-2xl font-normal font-['Arial']"
               >
-                Коментар
+                {messages.checkout.commentLabel}
               </label>
               <input
                 type="text"
                 id="comment"
-                placeholder="Ваш коментар"
+                placeholder={messages.checkout.commentPlaceholder}
                 className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -921,18 +1090,28 @@ export default function FinalCard() {
                 htmlFor="paymentType"
                 className="text-xl sm:text-2xl font-normal font-['Arial']"
               >
-                Спосіб оплати *
+                {messages.checkout.paymentMethodLabel}
               </label>
               <select
                 id="paymentType"
                 className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                 value={paymentType}
-                onChange={(e) => setPaymentType(e.target.value)}
+                onChange={(e) => setPaymentType(e.target.value as "full" | "prepay" | "")}
                 required
               >
-                <option value="">Оберіть спосіб оплати</option>
-                <option value="full">Повна оплата</option>
-                <option value="prepay">Передоплата 300 ₴</option>
+                {!isUkraineShipping && (
+                  <option value="">
+                    {messages.checkout.paymentMethodPlaceholder}
+                  </option>
+                )}
+                <option value="full">
+                  {messages.checkout.paymentOptionFull}
+                </option>
+                {isUkraineShipping && (
+                  <option value="prepay">
+                    {messages.checkout.paymentOptionPrepay}
+                  </option>
+                )}
               </select>
 
               <button
@@ -942,7 +1121,9 @@ export default function FinalCard() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Відправка..." : "Відправити"}
+                {loading
+                  ? messages.checkout.submitSending
+                  : messages.checkout.submitLabel}
               </button>
 
               {error && (
@@ -1001,7 +1182,7 @@ export default function FinalCard() {
 
             <div className="w-full sm:w-1/4 px-4 sm:px-0 flex flex-col gap-4">
               {items.length === 0 ? (
-                <p>Ваш кошик порожній</p>
+                <p>{messages.checkout.basketEmptyInline}</p>
               ) : (
                 items.map((item) => (
                   <div
@@ -1024,37 +1205,44 @@ export default function FinalCard() {
                         {item.name}
                       </div>
                       <div className="text-zinc-600 text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-                        {item.discount_percentage ? (
-                          <div className="flex items-center gap-2">
-                            {/* Discounted price */}
-                            <span className="font-medium text-red-600">
-                              {(
-                                item.price *
-                                (1 - item.discount_percentage / 100)
-                              ).toFixed(2)}
-                              ₴
+                        {(() => {
+                          const symbol = effectiveBasketCurrency === "EUR" ? "€" : "₴";
+                          const displayPrice =
+                            effectiveBasketCurrency === "EUR" && item.price_eur != null
+                              ? item.price_eur
+                              : item.price;
+                          return item.discount_percentage ? (
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-red-600">
+                                {(
+                                  displayPrice *
+                                  (1 - item.discount_percentage / 100)
+                                ).toFixed(2)}
+                                {symbol}
+                              </span>
+                              <span className="text-gray-500 line-through">
+                                {displayPrice}
+                                {symbol}
+                              </span>
+                              <span className="text-green-600 text-sm">
+                                -{item.discount_percentage}%
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-medium">
+                              {displayPrice}
+                              {symbol}
                             </span>
-
-                            {/* Original (crossed-out) price */}
-                            <span className="text-gray-500 line-through">
-                              {item.price}₴
-                            </span>
-
-                            {/* Optional: show discount percentage */}
-                            <span className="text-green-600 text-sm">
-                              -{item.discount_percentage}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="font-medium">{item.price}₴</span>
-                        )}
+                          );
+                        })()}
                       </div>
                       <div className="text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
                         {item.size}
                       </div>
                       {item.color && (
                         <div className="text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-                          Колір: {item.color}
+                          {messages.checkout.itemColorLabel}:{" "}
+                          {messages.catalog.colorNames[item.color] || item.color}
                         </div>
                       )}
 
@@ -1081,8 +1269,10 @@ export default function FinalCard() {
                             disabled={item.stock !== undefined && item.quantity >= item.stock}
                             title={
                               item.stock !== undefined && item.quantity >= item.stock
-                                ? `Максимальна кількість в наявності: ${item.stock} шт.`
-                                : "Збільшити кількість"
+                                ? messages.checkout.maxStockTitle(
+                                    item.stock as number
+                                  )
+                                : messages.checkout.increaseQtyTitle
                             }
                           >
                             +
@@ -1126,19 +1316,23 @@ export default function FinalCard() {
                 ))
               )}
 
-              {/* Total price container */}
+              {/* Total price container — у вибраній валюті з хедера */}
               <div className="p-5 border-t flex justify-between text-base sm:text-2xl font-normal font-['Arial'] mt-4">
-                <div>Всього</div>
+                <div>{messages.checkout.totalLabel}</div>
                 <div className="font-['Helvetica'] leading-relaxed tracking-wide">
                   {items
                     .reduce((total, item) => {
+                      const unitPrice =
+                        effectiveBasketCurrency === "EUR" && item.price_eur != null
+                          ? item.price_eur
+                          : item.price;
                       const price = item.discount_percentage
-                        ? item.price * (1 - item.discount_percentage / 100)
-                        : item.price;
+                        ? unitPrice * (1 - item.discount_percentage / 100)
+                        : unitPrice;
                       return total + price * item.quantity;
                     }, 0)
                     .toFixed(2)}{" "}
-                  ₴
+                  {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
                 </div>
               </div>
             </div>

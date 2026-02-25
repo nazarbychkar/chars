@@ -28,8 +28,13 @@ interface Category {
 
 export default function FormElements() {
   const [name, setName] = useState("");
+  const [nameEn, setNameEn] = useState("");
+  const [nameDe, setNameDe] = useState("");
   const [description, setDescription] = useState("");
+  const [descriptionEn, setDescriptionEn] = useState("");
+  const [descriptionDe, setDescriptionDe] = useState("");
   const [price, setPrice] = useState("");
+  const [priceEur, setPriceEur] = useState("");
   const [oldPrice, setOldPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [priority, setPriority] = useState("0");
@@ -55,12 +60,149 @@ export default function FormElements() {
   const [subcategories, setSubcategories] = useState<Category[]>([]);
 
   const [fabricComposition, setFabricComposition] = useState("");
+  const [fabricCompositionEn, setFabricCompositionEn] = useState("");
+  const [fabricCompositionDe, setFabricCompositionDe] = useState("");
   const [hasLining, setHasLining] = useState(false);
   const [liningDescription, setLiningDescription] = useState("");
+  const [liningDescriptionEn, setLiningDescriptionEn] = useState("");
+  const [liningDescriptionDe, setLiningDescriptionDe] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [showNameLocales, setShowNameLocales] = useState(false);
+  const [showDescriptionLocales, setShowDescriptionLocales] = useState(false);
+  const [showFabricLocales, setShowFabricLocales] = useState(false);
+  const [showLiningLocales, setShowLiningLocales] = useState(false);
+  const [isTranslatingName, setIsTranslatingName] = useState(false);
+  const [isTranslatingDescription, setIsTranslatingDescription] =
+    useState(false);
+  const [isTranslatingFabric, setIsTranslatingFabric] = useState(false);
+  const [isTranslatingLining, setIsTranslatingLining] = useState(false);
+
+  // -------- Simple free translators (Google + MyMemory) --------
+  const translateWithGoogleFree = async (
+    text: string,
+    targetLang: "uk" | "en" | "de",
+    sourceLang: "uk" | "en" | "de" = "uk"
+  ): Promise<string> => {
+    if (!text || !text.trim()) return "";
+
+    const langMap: Record<string, string> = {
+      uk: "uk",
+      en: "en",
+      de: "de",
+    };
+
+    const source = langMap[sourceLang] ?? "uk";
+    const target = langMap[targetLang] ?? "en";
+
+    if (source === target) return text;
+
+    try {
+      const params = new URLSearchParams({
+        client: "gtx",
+        sl: source,
+        tl: target,
+        dt: "t",
+        q: text,
+      });
+
+      const res = await fetch(
+        `https://translate.googleapis.com/translate_a/single?${params.toString()}`
+      );
+      if (!res.ok) return text;
+      const data = await res.json();
+      if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
+        const translated = (data[0] as unknown[])
+          .map((item) => (Array.isArray(item) ? item[0] : ""))
+          .join("");
+        return (translated || "").trim();
+      }
+    } catch (e) {
+      console.warn("Translation error (google):", e);
+    }
+
+    return text;
+  };
+
+  const translateWithMyMemory = async (
+    text: string,
+    targetLang: "uk" | "en" | "de",
+    sourceLang: "uk" | "en" | "de" = "uk"
+  ): Promise<string> => {
+    if (!text || !text.trim()) return "";
+
+    const langMap: Record<string, string> = {
+      uk: "uk-UA",
+      en: "en-US",
+      de: "de-DE",
+    };
+
+    const source = langMap[sourceLang] ?? "uk-UA";
+    const target = langMap[targetLang] ?? "en-US";
+
+    if (source === target) return text;
+
+    try {
+      const params = new URLSearchParams({
+        q: text,
+        langpair: `${source}|${target}`,
+      });
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?${params.toString()}`
+      );
+      if (!res.ok) return text;
+      const data = await res.json();
+      if (data?.responseStatus === 200) {
+        const translated = data?.responseData?.translatedText;
+        if (
+          translated &&
+          typeof translated === "string" &&
+          translated.toLowerCase() !== text.toLowerCase()
+        ) {
+          return translated.trim();
+        }
+      }
+    } catch (e) {
+      console.warn("Translation error (mymemory):", e);
+    }
+
+    return text;
+  };
+
+  const translateTextAllLangs = async (
+    text: string,
+    sourceLang: "uk" | "en" | "de" = "uk"
+  ): Promise<{ uk: string; en: string; de: string }> => {
+    if (!text || !text.trim()) {
+      return { uk: "", en: "", de: "" };
+    }
+
+    const baseText = text.trim();
+
+    const textUk =
+      sourceLang === "uk"
+        ? baseText
+        : await translateWithGoogleFree(baseText, "uk", sourceLang);
+
+    let textEn = await translateWithGoogleFree(baseText, "en", sourceLang);
+    let textDe = await translateWithGoogleFree(baseText, "de", sourceLang);
+
+    if (!textEn || textEn === baseText) {
+      textEn = await translateWithMyMemory(baseText, "en", sourceLang);
+    }
+    if (!textDe || textDe === baseText) {
+      textDe = await translateWithMyMemory(baseText, "de", sourceLang);
+    }
+
+    return {
+      uk: textUk || baseText,
+      en: textEn || baseText,
+      de: textDe || baseText,
+    };
+  };
 
   // Fetch categories on mount
   useEffect(() => {
@@ -206,8 +348,13 @@ export default function FormElements() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          name_en: nameEn || null,
+          name_de: nameDe || null,
           description,
+          description_en: descriptionEn || null,
+          description_de: descriptionDe || null,
           price: Number(price),
+          price_eur: priceEur ? Number(priceEur) : null,
           old_price: oldPrice ? Number(oldPrice) : null,
           discount_percentage: discountPercentage
             ? Number(discountPercentage)
@@ -223,8 +370,12 @@ export default function FormElements() {
           subcategory_id: subcategoryId,
           media: uploadedMedia,
           fabric_composition: fabricComposition,
+          fabric_composition_en: fabricCompositionEn || null,
+          fabric_composition_de: fabricCompositionDe || null,
           has_lining: hasLining,
           lining_description: liningDescription,
+          lining_description_en: liningDescriptionEn || null,
+          lining_description_de: liningDescriptionDe || null,
         }),
       });
 
@@ -235,8 +386,13 @@ export default function FormElements() {
 
       setSuccess("Товар успішно створено!");
       setName("");
+      setNameEn("");
+      setNameDe("");
       setDescription("");
+      setDescriptionEn("");
+      setDescriptionDe("");
       setPrice("");
+      setPriceEur("");
       setOldPrice("");
       setDiscountPercentage("");
       setPriority("0");
@@ -250,8 +406,12 @@ export default function FormElements() {
       setSeason([]);
       setCategoryId(null);
       setFabricComposition("");
+      setFabricCompositionEn("");
+      setFabricCompositionDe("");
       setHasLining(false);
       setLiningDescription("");
+      setLiningDescriptionEn("");
+      setLiningDescriptionDe("");
       setSubcategoryId(null);
       setSubcategories([]);
     } catch (err) {
@@ -272,21 +432,131 @@ export default function FormElements() {
           <div className="p-4">
             <ComponentCard title="Дані Товару">
               <div className="space-y-5">
+                {/* Назва товару + локалізації */}
                 <div>
-                  <Label>Назва Товару</Label>
+                  <Label>Назва товару (UA)</Label>
                   <Input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    className="mt-2 mb-2 text-xs text-blue-600 hover:underline"
+                    onClick={() => setShowNameLocales((v) => !v)}
+                  >
+                    {showNameLocales
+                      ? "Сховати локалізації назви"
+                      : "Додати локалізацію назви"}
+                  </button>
+                  {showNameLocales && (
+                    <>
+                      <button
+                        type="button"
+                        className="mb-3 text-xs text-purple-600 hover:underline"
+                        disabled={isTranslatingName}
+                        onClick={async () => {
+                          if (!name?.trim()) return;
+                          try {
+                            setIsTranslatingName(true);
+                            const res = await translateTextAllLangs(name, "uk");
+                            setNameEn(res.en);
+                            setNameDe(res.de);
+                          } finally {
+                            setIsTranslatingName(false);
+                          }
+                        }}
+                      >
+                        {isTranslatingName
+                          ? "Переклад назви..."
+                          : "Автоматично перекласти назву EN/DE"}
+                      </button>
+                      <div className="space-y-2 mb-4">
+                        <div>
+                          <Label>Назва (EN)</Label>
+                          <Input
+                            type="text"
+                            value={nameEn}
+                            onChange={(e) => setNameEn(e.target.value)}
+                            placeholder="Product name in English"
+                          />
+                        </div>
+                        <div>
+                          <Label>Назва (DE)</Label>
+                          <Input
+                            type="text"
+                            value={nameDe}
+                            onChange={(e) => setNameDe(e.target.value)}
+                            placeholder="Produktname auf Deutsch"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
+
+                {/* Опис + локалізації */}
                 <div>
-                  <Label>Опис</Label>
+                  <Label>Опис (UA)</Label>
                   <TextArea
                     value={description}
                     onChange={setDescription}
                     rows={6}
                   />
+                  <button
+                    type="button"
+                    className="mt-2 mb-2 text-xs text-blue-600 hover:underline"
+                    onClick={() => setShowDescriptionLocales((v) => !v)}
+                  >
+                    {showDescriptionLocales
+                      ? "Сховати локалізації опису"
+                      : "Додати локалізацію опису"}
+                  </button>
+                  {showDescriptionLocales && (
+                    <div className="space-y-2 mb-4">
+                      <button
+                        type="button"
+                        className="mb-2 text-xs text-purple-600 hover:underline"
+                        disabled={isTranslatingDescription}
+                        onClick={async () => {
+                          if (!description?.trim()) return;
+                          try {
+                            setIsTranslatingDescription(true);
+                            const res = await translateTextAllLangs(
+                              description,
+                              "uk"
+                            );
+                            setDescriptionEn(res.en);
+                            setDescriptionDe(res.de);
+                          } finally {
+                            setIsTranslatingDescription(false);
+                          }
+                        }}
+                      >
+                        {isTranslatingDescription
+                          ? "Переклад опису..."
+                          : "Автоматично перекласти опис EN/DE"}
+                      </button>
+                      <div>
+                        <Label>Опис (EN)</Label>
+                        <TextArea
+                          value={descriptionEn}
+                          onChange={setDescriptionEn}
+                          rows={4}
+                          placeholder="Product description in English"
+                        />
+                      </div>
+                      <div>
+                        <Label>Опис (DE)</Label>
+                        <TextArea
+                          value={descriptionDe}
+                          onChange={setDescriptionDe}
+                          rows={4}
+                          placeholder="Produktbeschreibung auf Deutsch"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label>Ціна</Label>
@@ -295,6 +565,15 @@ export default function FormElements() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="Поточна ціна"
+                  />
+                </div>
+                <div>
+                  <Label>Ціна в EUR (опціонально)</Label>
+                  <Input
+                    type="number"
+                    value={priceEur}
+                    onChange={(e) => setPriceEur(e.target.value)}
+                    placeholder="Ціна в євро для EN/DE"
                   />
                 </div>
                 <div>
@@ -499,13 +778,67 @@ export default function FormElements() {
                 {/* Блок: Склад тканини і Підкладка */}
                 <div className="border rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50">
                   <div>
-                    <Label>Склад тканини</Label>
+                    <Label>Склад тканини (UA)</Label>
                     <TextArea
                       value={fabricComposition}
                       onChange={setFabricComposition}
                       rows={3}
                       placeholder="Наприклад: 80% бавовна, 20% поліестер"
                     />
+                    <button
+                      type="button"
+                      className="mt-1 text-xs text-blue-600 hover:underline"
+                      onClick={() => setShowFabricLocales((v) => !v)}
+                    >
+                      {showFabricLocales
+                        ? "Сховати локалізації складу тканини"
+                        : "Додати локалізацію складу тканини"}
+                    </button>
+                    {showFabricLocales && (
+                      <div className="mt-2 space-y-2">
+                        <button
+                          type="button"
+                          className="mb-2 text-xs text-purple-600 hover:underline"
+                          disabled={isTranslatingFabric}
+                          onClick={async () => {
+                            if (!fabricComposition?.trim()) return;
+                            try {
+                              setIsTranslatingFabric(true);
+                              const res = await translateTextAllLangs(
+                                fabricComposition,
+                                "uk"
+                              );
+                              setFabricCompositionEn(res.en);
+                              setFabricCompositionDe(res.de);
+                            } finally {
+                              setIsTranslatingFabric(false);
+                            }
+                          }}
+                        >
+                          {isTranslatingFabric
+                            ? "Переклад складу тканини..."
+                            : "Автоматично перекласти склад тканини EN/DE"}
+                        </button>
+                        <div>
+                          <Label>Склад тканини (EN)</Label>
+                          <TextArea
+                            value={fabricCompositionEn}
+                            onChange={setFabricCompositionEn}
+                            rows={2}
+                            placeholder="Fabric composition in English"
+                          />
+                        </div>
+                        <div>
+                          <Label>Склад тканини (DE)</Label>
+                          <TextArea
+                            value={fabricCompositionDe}
+                            onChange={setFabricCompositionDe}
+                            rows={2}
+                            placeholder="Stoffzusammensetzung auf Deutsch"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     <Label className="mb-0">Підкладка?</Label>
@@ -519,13 +852,67 @@ export default function FormElements() {
                 {/* Lining description input */}
                 {hasLining && (
                   <div>
-                    <Label>Опис підкладки</Label>
+                    <Label>Опис підкладки (UA)</Label>
                     <TextArea
                       value={liningDescription}
                       onChange={setLiningDescription}
                       rows={2}
                       placeholder="Опис підкладки товару"
                     />
+                    <button
+                      type="button"
+                      className="mt-1 text-xs text-blue-600 hover:underline"
+                      onClick={() => setShowLiningLocales((v) => !v)}
+                    >
+                      {showLiningLocales
+                        ? "Сховати локалізації підкладки"
+                        : "Додати локалізацію підкладки"}
+                    </button>
+                    {showLiningLocales && (
+                      <div className="space-y-2 mt-2">
+                        <button
+                          type="button"
+                          className="mb-2 text-xs text-purple-600 hover:underline"
+                          disabled={isTranslatingLining}
+                          onClick={async () => {
+                            if (!liningDescription?.trim()) return;
+                            try {
+                              setIsTranslatingLining(true);
+                              const res = await translateTextAllLangs(
+                                liningDescription,
+                                "uk"
+                              );
+                              setLiningDescriptionEn(res.en);
+                              setLiningDescriptionDe(res.de);
+                            } finally {
+                              setIsTranslatingLining(false);
+                            }
+                          }}
+                        >
+                          {isTranslatingLining
+                            ? "Переклад підкладки..."
+                            : "Автоматично перекласти підкладку EN/DE"}
+                        </button>
+                        <div>
+                          <Label>Опис підкладки (EN)</Label>
+                          <TextArea
+                            value={liningDescriptionEn}
+                            onChange={setLiningDescriptionEn}
+                            rows={2}
+                            placeholder="Lining description in English"
+                          />
+                        </div>
+                        <div>
+                          <Label>Опис підкладки (DE)</Label>
+                          <TextArea
+                            value={liningDescriptionDe}
+                            onChange={setLiningDescriptionDe}
+                            rows={2}
+                            placeholder="Futterbeschreibung auf Deutsch"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

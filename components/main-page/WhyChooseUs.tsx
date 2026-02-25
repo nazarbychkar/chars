@@ -1,7 +1,8 @@
-"use client";
+ "use client";
 
 import { useAppContext } from "@/lib/GeneralProvider";
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 // import { useState, useEffect, useRef } from "react";
 
 // TODO: somehow with this optimizations images didn't load on first load,
@@ -9,39 +10,33 @@ import Image from "next/image";
 
 export default function WhyChooseUs() {
   const { isDark } = useAppContext();
-  // const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
-  // const observerRef = useRef<IntersectionObserver | null>(null);
+  const { messages } = useI18n();
 
   const info = [
     {
       pic: "/images/IMG_0043.JPG",
-      top_text: "Власне виробництво",
-      bottom_text:
-        "Ми контролюємо кожен етап — від викрійки до останнього стібка.",
+      top_text: messages.home.whyChooseUsItems[0].top,
+      bottom_text: messages.home.whyChooseUsItems[0].bottom,
     },
     {
       pic: "/images/IMAGE-2025-10-17_21-48-37.jpg",
-      top_text: "Пошиття під індивідуальні параметри",
-      bottom_text:
-        "Ми не створюємо 'середньостатистичний' одяг — ми створюємо твій.",
+      top_text: messages.home.whyChooseUsItems[1].top,
+      bottom_text: messages.home.whyChooseUsItems[1].bottom,
     },
     {
       pic: "/images/IMG_0045.JPG",
-      top_text: "Створення образу за 24 години",
-      bottom_text:
-        "У нас немає 'довгого очікування' — є уважність до твого часу.",
+      top_text: messages.home.whyChooseUsItems[2].top,
+      bottom_text: messages.home.whyChooseUsItems[2].bottom,
     },
     {
       pic: "/images/IMAGE-2025-10-17_21-48-55.jpg",
-      top_text: "Якість котру відчуваєш",
-      bottom_text:
-        "Кожен виріб проходить через руки майстра, а не лише машину.",
+      top_text: messages.home.whyChooseUsItems[3].top,
+      bottom_text: messages.home.whyChooseUsItems[3].bottom,
     },
     {
       pic: "/images/IMG_0042.JPG",
-      top_text: "Локальний український бренд",
-      bottom_text:
-        "Ми підтримуємо локальне виробництво, чесну працю та створюємо речі, які говорять тихо, але точно.",
+      top_text: messages.home.whyChooseUsItems[4].top,
+      bottom_text: messages.home.whyChooseUsItems[4].bottom,
     },
   ];
 
@@ -87,10 +82,10 @@ export default function WhyChooseUs() {
     >
       <div className="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center m-10">
         <div className="text-start lg:text-center justify-center text-3xl lg:text-5xl font-normal font-['Inter'] uppercase">
-          Чому обирають нас
+          {messages.home.whyChooseUsTitle}
         </div>
         <div className=" justify-center opacity-70 lg:text-xl font-normal font-['Inter'] leading-normal">
-          Chars — коли естетика не потребує зайвих слів.
+          {messages.home.whyChooseUsSubtitle}
         </div>
       </div>
 

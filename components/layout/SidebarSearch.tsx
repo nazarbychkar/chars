@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useState, useMemo } from "react";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useProducts } from "@/lib/useProducts";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useBasket } from "@/lib/BasketProvider";
+import { buildProductSlug } from "@/lib/slug";
 
 interface SearchSidebarProps {
   isOpen: boolean;
@@ -19,14 +22,32 @@ export default function SearchSidebar({
 }: SearchSidebarProps) {
   const [query, setQuery] = useState("");
   const { products: allProducts, loading } = useProducts();
+  const { locale, messages, withLocalePath } = useI18n();
 
-  const filteredProducts = useMemo(
-    () =>
-      allProducts.filter((product) =>
-        product.name.toLowerCase().includes(query.toLowerCase())
-      ),
-    [allProducts, query]
-  );
+  const { currency } = useBasket();
+  const isEuro =
+    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+
+  const filteredProducts = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    return allProducts.filter((product) => {
+      // Search across all localized names + descriptions
+      const fields = [
+        product.name,
+        product.name_en,
+        product.name_de,
+        product.description,
+        product.description_en,
+        product.description_de,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return fields.includes(q);
+    });
+  }, [allProducts, query]);
 
   return (
     <div className="relative z-50">
@@ -49,7 +70,7 @@ export default function SearchSidebar({
         <div className="flex flex-col p-4 sm:p-6 space-y-6 text-base sm:text-lg">
           {/* Header */}
           <div className="flex justify-between items-center text-xl sm:text-2xl font-semibold">
-            <span>Пошук</span>
+            <span>{messages.header.searchOpenAria}</span>
             <button
               className="hover:text-[#8C7461] text-2xl"
               onClick={() => setIsOpen(false)}
@@ -63,7 +84,7 @@ export default function SearchSidebar({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Введіть запит..."
+            placeholder="Search..."
             className={`p-3 border text-lg rounded w-full focus:outline-none ${
               isDark
                 ? "bg-stone-800 text-white border-stone-700 placeholder-stone-400"
@@ -73,45 +94,68 @@ export default function SearchSidebar({
 
           {/* Search Results */}
           <div className="mt-4">
-            {loading && <p className="text-neutral-500">Завантаження...</p>}
+            {loading && (
+              <p className="text-neutral-500">{messages.common.loading}</p>
+            )}
 
             {!loading && query && filteredProducts.length === 0 && (
-              <p className="text-neutral-500">Нічого не знайдено.</p>
+              <p className="text-neutral-500">
+                {messages.common.noResults}
+              </p>
             )}
 
             {!loading && query && filteredProducts.length > 0 && (
               <ul className="flex flex-col gap-4">
-                {filteredProducts.map((product) => (
-                  <li key={product.id}>
-                    <Link
-                      href={`/product/${product.id}`}
-                      onClick={() => setIsOpen(false)}
-                      className={`flex items-center gap-4 p-2 rounded hover:bg-opacity-80 transition ${
-                        isDark ? "hover:bg-stone-800" : "hover:bg-stone-200"
-                      }`}
-                    >
-                      <Image
-                        src={getProductImageSrc(product.first_media, "https://placehold.co/64x64")}
-                        alt={product.name}
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 object-cover rounded border"
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium">{product.name}</span>
-                        <span className="text-sm text-gray-500">
-                          {product.price} ₴
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
+                {filteredProducts.map((product) => {
+                  const displayName =
+                    locale === "en"
+                      ? product.name_en || product.name
+                      : locale === "de"
+                      ? product.name_de || product.name
+                      : product.name;
+                  const basePrice =
+                    isEuro && product.price_eur != null
+                      ? product.price_eur
+                      : product.price;
+                  const currencySymbol = isEuro ? "€" : "₴";
+
+                  return (
+                    <li key={product.id}>
+                      <Link
+                        href={withLocalePath(
+                          `/product/${buildProductSlug(product.name, product.id)}`
+                        )}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center gap-4 p-2 rounded hover:bg-opacity-80 transition ${
+                          isDark ? "hover:bg-stone-800" : "hover:bg-stone-200"
+                        }`}
+                      >
+                        <Image
+                          src={getProductImageSrc(
+                            product.first_media,
+                            "https://placehold.co/64x64"
+                          )}
+                          alt={displayName}
+                          width={64}
+                          height={64}
+                          className="w-16 h-16 object-cover rounded border"
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-medium">{displayName}</span>
+                          <span className="text-sm text-gray-500">
+                            {basePrice} {currencySymbol}
+                          </span>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             )}
 
             {!query && !loading && (
               <p className="text-neutral-500">
-                Введіть запит для пошуку товарів.
+                Type a query to search products.
               </p>
             )}
           </div>

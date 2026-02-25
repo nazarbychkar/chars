@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 interface SidebarSeasonProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ export default function SidebarSeason({
   setIsOpen,
   isDark,
 }: SidebarSeasonProps) {
+  const { withLocalePath } = useI18n();
+
   const season_data = [
     {
       name: "Осінь",
@@ -64,7 +67,9 @@ export default function SidebarSeason({
           {season_data.map((item, i) => (
             <Link
               key={i}
-              href={`/catalog?season=${item.name}`}
+              href={withLocalePath(
+                `/catalog?season=${encodeURIComponent(item.name)}`
+              )}
               onClick={() => setIsOpen(false)}
               className="block h-[120px] rounded overflow-hidden relative text-white text-xl sm:text-2xl font-bold text-center flex items-center justify-center"
               style={{

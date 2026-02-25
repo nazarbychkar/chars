@@ -8,6 +8,9 @@ import "swiper/css/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useBasket } from "@/lib/BasketProvider";
+import { buildProductSlug } from "@/lib/slug";
 
 // Video component with proper mobile autoplay
 function VideoWithAutoplay({ src, className }: { src: string; className?: string }) {
@@ -64,7 +67,10 @@ function VideoWithAutoplay({ src, className }: { src: string; className?: string
 interface Product {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
   price: number;
+  price_eur?: number | null;
   first_media?: { url: string; type: string } | null;
 }
 
@@ -73,9 +79,15 @@ interface TopSaleClientProps {
 }
 
 export default function TopSaleClient({ products }: TopSaleClientProps) {
+  const { locale, messages, withLocalePath } = useI18n();
+  const { currency } = useBasket();
+  const isEuro =
+    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
   if (products.length === 0) {
     return (
-      <div className="text-center py-10">Наразі немає топових товарів.</div>
+      <div className="text-center py-10">
+        {messages.home.topSaleSubtitle}
+      </div>
     );
   }
 
@@ -85,21 +97,34 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
     <section className="max-w-[1920px] mx-auto w-full mb-35 relative overflow-hidden flex flex-col gap-10">
       <div className="border-b-2 pb-10 flex flex-col lg:flex-row justify-between mt-20 mx-10 lg:items-center">
         <div className="lg:text-center justify-center text-2xl lg:text-5xl font-normal font-['Inter'] uppercase">
-          Топ продажів | CHARS
+          {messages.home.topSaleTitle}
         </div>
         <div className="text-left opacity-70 text-base lg:text-xl font-normal font-['Inter'] capitalize leading-normal">
-          Улюблені образи наших клієнтів.
+          {messages.home.topSaleSubtitle}
         </div>
       </div>
 
       {/* Desktop layout */}
       <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 px-6">
-        {limitedProducts.map((product, index) => (
-          <Link
-            href={`/product/${product.id}`}
-            key={product.id}
-            className="flex flex-col gap-3 group w-full"
-          >
+        {limitedProducts.map((product, index) => {
+          const displayName =
+            locale === "en"
+              ? product.name_en || product.name
+              : locale === "de"
+              ? product.name_de || product.name
+              : product.name;
+          const basePrice =
+            isEuro && product.price_eur != null ? product.price_eur : product.price;
+          const currencySymbol = isEuro ? "€" : "₴";
+
+          return (
+            <Link
+              href={withLocalePath(
+                `/product/${buildProductSlug(product.name, product.id)}`
+              )}
+              key={product.id}
+              className="flex flex-col gap-3 group w-full"
+            >
             <div className="aspect-[2/3] w-full overflow-hidden relative">
               {product.first_media?.type === "video" ? (
                 <VideoWithAutoplay
@@ -113,7 +138,7 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                     product.first_media,
                     "https://placehold.co/432x613"
                   )}
-                  alt={product.name}
+                  alt={displayName}
                   fill
                   sizes="(max-width: 420px) 90vw, (max-width: 640px) 45vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                   priority={index < 2} // Only first 2 images get priority for mobile
@@ -126,11 +151,12 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
             </div>
 
             <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
-              {product.name} <br />
-              {product.price.toLocaleString()} ₴
+              {displayName} <br />
+              {basePrice.toLocaleString()} {currencySymbol}
             </div>
           </Link>
-        ))}
+        );
+        })}
       </div>
 
       {/* Mobile swiper carousel */}
@@ -142,12 +168,25 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
           centeredSlides
           grabCursor
         >
-          {limitedProducts.map((product, index) => (
-            <SwiperSlide key={product.id}>
-              <Link
-                href={`/product/${product.id}`}
-                className="relative flex flex-col gap-3 group"
-              >
+          {limitedProducts.map((product, index) => {
+            const displayName =
+              locale === "en"
+                ? product.name_en || product.name
+                : locale === "de"
+                ? product.name_de || product.name
+                : product.name;
+            const basePrice =
+              isEuro && product.price_eur != null ? product.price_eur : product.price;
+            const currencySymbol = isEuro ? "€" : "₴";
+
+            return (
+              <SwiperSlide key={product.id}>
+                <Link
+                  href={withLocalePath(
+                    `/product/${buildProductSlug(product.name, product.id)}`
+                  )}
+                  className="relative flex flex-col gap-3 group"
+                >
                 <div className="relative w-full h-[350px]">
                   {product.first_media?.type === "video" ? (
                     <VideoWithAutoplay
@@ -161,7 +200,7 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                         product.first_media,
                         "https://placehold.co/432x613"
                       )}
-                      alt={product.name}
+                      alt={displayName}
                       fill
                       sizes="85vw"
                       priority={index === 0} // Only first image gets priority on mobile
@@ -173,12 +212,13 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                   )}
                 </div>
                 <div className="justify-center text-lg font-normal font-['Inter'] capitalize leading-normal text-center">
-                  {product.name} <br />
-                  {product.price.toLocaleString()} ₴
+                  {displayName} <br />
+                  {basePrice.toLocaleString()} {currencySymbol}
                 </div>
               </Link>
             </SwiperSlide>
-          ))}
+          );
+          })}
         </Swiper>
       </div>
     </section>

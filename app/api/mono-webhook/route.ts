@@ -39,9 +39,19 @@ export async function POST(req: NextRequest) {
       const PUBLIC_URL =
         process.env.NEXT_PUBLIC_PUBLIC_URL || 
         process.env.PUBLIC_URL || 
-        "https://chars.ua";
+        "https://charsua.com";
       
       const adminOrderUrl = `${PUBLIC_URL}/admin/orders/${order.id}/edit`;
+
+      const currencySymbol = order.currency === "EUR" ? "€" : "₴";
+      const localeLabel =
+        order.locale === "en"
+          ? "EN"
+          : order.locale === "de"
+          ? "DE"
+          : order.locale === "uk"
+          ? "UK"
+          : order.locale || "—";
 
       const orderMessage = `
 🛒 <b>Нове замовлення (ОПЛАЧЕНО ✅)</b>
@@ -53,12 +63,13 @@ export async function POST(req: NextRequest) {
 🏙️ <b>Місто:</b> ${order.city}
 🏤 <b>Відділення:</b> ${order.post_office}
 📝 <b>Коментар:</b> ${order.comment || "—"}
+🌐 <b>Мова сайту:</b> ${localeLabel}
 💰 <b>Оплата:</b> ${
         order.payment_type === "prepay"
           ? "Передплата (300 грн)"
           : "Повна оплата"
       }
-🧾 <b>Сума:</b> ${amount / 100} грн
+🧾 <b>Сума:</b> ${(amount / 100).toFixed(2)} ${currencySymbol}
 💳 <b>Статус:</b> ОПЛАЧЕНО ✅
 
 📦 <b>Товари:</b>
@@ -76,7 +87,7 @@ ${order.items
     ) =>
       `${i + 1}. ${item.product_name}${
         item.color ? ` (${item.color})` : ""
-      } | ${item.size} | x${item.quantity} | ${item.price} грн`
+      } | ${item.size} | x${item.quantity} | ${item.price} ${currencySymbol}`
   )
   .join("\n")}
 

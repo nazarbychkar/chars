@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sqlGetAllOrders, sqlPostOrder } from "@/lib/sql";
+import { sqlGetAllOrders, sqlPostOrder, sql } from "@/lib/sql";
 import crypto from "crypto";
 
 type IncomingOrderItem = {
@@ -28,7 +28,38 @@ type NormalizedOrderItem = {
 export async function GET() {
   try {
     const orders = await sqlGetAllOrders();
-    return NextResponse.json(orders);
+
+    // Also return pre-calculated totals per order based on order_items
+    const ids = orders.map((o: { id: number }) => o.id);
+    if (!ids.length) {
+      return NextResponse.json([]);
+    }
+
+    const totals = await sql`
+      SELECT
+        order_id,
+        SUM(price * quantity) AS total_amount
+      FROM order_items
+      WHERE order_id = ANY(${ids}::int[])
+      GROUP BY order_id;
+    `;
+
+    const totalsMap = new Map<number, number>();
+    for (const row of totals as { order_id: number; total_amount: string | number }[]) {
+      const raw = typeof row.total_amount === "string"
+        ? Number(row.total_amount)
+        : row.total_amount;
+      totalsMap.set(row.order_id, Number(raw || 0));
+    }
+
+    const withTotals = orders.map(
+      (o: { id: number } & Record<string, unknown>) => ({
+      ...o,
+      total_amount: totalsMap.get(o.id) ?? 0,
+      })
+    );
+
+    return NextResponse.json(withTotals);
   } catch (error) {
     console.error("[GET /orders]", error);
     return NextResponse.json(
@@ -42,6 +73,9 @@ export async function GET() {
 // POST /api/orders
 // ==========================
 export async function POST(req: NextRequest) {
+  // Will be filled from request body and reused in error handler
+  let requestLocale: string | null = null;
+
   try {
     console.log("=".repeat(50));
     console.log("[POST /api/orders] Starting order creation...");
@@ -59,7 +93,11 @@ export async function POST(req: NextRequest) {
       comment,
       payment_type, // "full" або "prepay"
       items,
+      currency,
+      locale,
     } = body;
+
+    requestLocale = typeof locale === "string" ? locale : null;
 
     console.log("[POST /api/orders] Extracted data:", {
       customer_name,
@@ -143,22 +181,34 @@ export async function POST(req: NextRequest) {
       0
     );
 
+    // Вибрана валюта на сайті
+    const isEuroSelected = currency === "EUR";
+    // В дев-режимі Monobank працює тільки в гривні
+    const IS_DEV =
+      process.env.DEV === "True" ||
+      process.env.DEV === "true" ||
+      process.env.DEV === "1";
+    const isEuroForMono = !IS_DEV && isEuroSelected;
     const amountToPay = payment_type === "prepay" ? 300 : fullAmount;
-    const amountInKopecks = Math.round(amountToPay * 100);
+    const amountInMinorUnits = Math.round(amountToPay * 100);
     
     console.log("[POST /api/orders] Amount calculation:", {
       fullAmount,
       amountToPay,
-      amountInKopecks,
+      amountInMinorUnits,
       payment_type,
+      currency,
+      isEuroSelected,
+      isEuroForMono,
+      DEV: process.env.DEV,
     });
 
     const basketOrder = normalizedItems.map((item) => ({
       name: item.color ? `${item.product_name} (${item.color})` : item.product_name,
-        qty: item.quantity,
-        sum: Math.round(item.price * item.quantity * 100),
-        total: Math.round(item.price * item.quantity * 100),
-        unit: "шт.",
+      qty: item.quantity,
+      sum: Math.round(item.price * item.quantity * 100),
+      total: Math.round(item.price * item.quantity * 100),
+      unit: "шт.",
       code: item.color
         ? `${item.product_id}-${item.size}-${item.color}`
         : `${item.product_id}-${item.size}`,
@@ -182,21 +232,30 @@ export async function POST(req: NextRequest) {
     const PUBLIC_URL =
       process.env.NEXT_PUBLIC_PUBLIC_URL || 
       process.env.PUBLIC_URL || 
-      "https://chars.ua";
+      "https://charsua.com";
     
     console.log("[POST /api/orders] PUBLIC_URL:", PUBLIC_URL);
     console.log("[POST /api/orders] MONO_TOKEN exists:", !!process.env.NEXT_PUBLIC_MONO_TOKEN);
 
+    // Determine locale-specific path prefix for redirect
+    const orderLocale = typeof locale === "string" ? locale : null;
+    const localePath =
+      orderLocale === "uk" || orderLocale === "de" || orderLocale === "en"
+        ? `/${orderLocale}`
+        : "";
+
     const invoicePayload = {
-      amount: amountInKopecks,
-      ccy: 980,
+      amount: amountInMinorUnits,
+      // Якщо DEV=True, завжди гривня (980)
+      ccy: isEuroForMono ? 978 : 980,
       merchantPaymInfo: {
         reference,
         destination: "Оплата замовлення",
         comment: comment || "Оплата замовлення",
         basketOrder,
       },
-      redirectUrl: `${PUBLIC_URL}/payment/status`, // Payment status page will check localStorage for invoiceId
+      // Redirect back to locale-specific payment status page
+      redirectUrl: `${PUBLIC_URL}${localePath}/payment/status`, // Payment status page will check localStorage for invoiceId
       webHookUrl: `${PUBLIC_URL}/api/mono-webhook`,
       validity: 3600,
       paymentType: "debit",
@@ -250,6 +309,9 @@ export async function POST(req: NextRequest) {
       payment_type,
       invoice_id: invoiceId,
       payment_status: "pending", // замовлення створено, але ще не оплачено
+      // У БД зберігаємо саме вибрану валюту на сайті
+      currency: isEuroSelected ? "EUR" : "UAH",
+      locale: typeof locale === "string" ? locale : null,
       items: normalizedItems.map(
         ({ product_id, size, quantity, price, color }) => ({
           product_id,
@@ -288,12 +350,38 @@ export async function POST(req: NextRequest) {
         : error.message
       : "На жаль, сталася неочікувана помилка";
     
-    // Перевіряємо тип помилки та надаємо дружнє повідомлення
-    let friendlyMessage = "Нам шкода, але щось пішло не так під час обробки вашого замовлення. Будь ласка, спробуйте ще раз або зв'яжіться з нами — ми обов'язково допоможемо! 💪";
-    
-    if (errorMessage.includes("Недостатньо товару")) {
-      friendlyMessage = "На жаль, одного з товарів у вашому замовленні більше немає в наявності. Будь ласка, перевірте кошик та оновіть замовлення. Якщо питання залишаються, напишіть нам — підберемо альтернативу! ✨";
-    }
+    // Перевіряємо тип помилки та надаємо дружнє повідомлення, локалізоване за requestLocale
+    const buildFriendlyMessage = (
+      locale: string | null,
+      type: "generic" | "noStock"
+    ): string => {
+      const lang = locale === "de" || locale === "en" ? locale : "uk";
+
+      if (type === "noStock") {
+        if (lang === "de") {
+          return "Leider ist einer der Artikel in Ihrer Bestellung nicht mehr auf Lager. Bitte überprüfen Sie Ihren Warenkorb und aktualisieren Sie die Bestellung. Wenn Sie Fragen haben, schreiben Sie uns – wir finden gerne eine Alternative! ✨";
+        }
+        if (lang === "en") {
+          return "Unfortunately, one of the items in your order is no longer in stock. Please check your cart and update the order. If you still have questions, write to us — we will help you find an alternative! ✨";
+        }
+        // uk
+        return "На жаль, одного з товарів у вашому замовленні більше немає в наявності. Будь ласка, перевірте кошик та оновіть замовлення. Якщо питання залишаються, напишіть нам — підберемо альтернативу! ✨";
+      }
+
+      // generic
+      if (lang === "de") {
+        return "Es tut uns leid, aber bei der Verarbeitung Ihrer Bestellung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie uns – wir helfen Ihnen gerne! 💪";
+      }
+      if (lang === "en") {
+        return "We’re sorry, but something went wrong while processing your order. Please try again or contact us — we’ll be happy to help! 💪";
+      }
+      // uk
+      return "Нам шкода, але щось пішло не так під час обробки вашого замовлення. Будь ласка, спробуйте ще раз або зв'яжіться з нами — ми обов'язково допоможемо! 💪";
+    };
+
+    const friendlyMessage = errorMessage.includes("Недостатньо товару")
+      ? buildFriendlyMessage(requestLocale, "noStock")
+      : buildFriendlyMessage(requestLocale, "generic");
     
     return NextResponse.json(
       { error: friendlyMessage, details: errorMessage },

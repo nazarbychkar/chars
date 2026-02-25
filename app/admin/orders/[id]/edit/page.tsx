@@ -28,6 +28,8 @@ export default function EditOrderPage() {
     post_office: "",
     status: "",
     payment_type: "",
+    currency: "UAH",
+    locale: "",
     items: [],
   });
 
@@ -46,6 +48,8 @@ export default function EditOrderPage() {
           post_office: data.post_office || "",
           status: data.status || "",
           payment_type: data.payment_type || "",
+          currency: data.currency === "EUR" ? "EUR" : "UAH",
+          locale: data.locale || "",
           items: data.items || [],
         });
       } catch (err) {
@@ -105,7 +109,7 @@ export default function EditOrderPage() {
       <PageBreadcrumb pageTitle="Редагувати Замовлення" />
 
       {/* Customer Info */}
-      <div className="px-4">
+          <div className="px-4">
         <ComponentCard title="Інформація про замовлення">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -165,6 +169,22 @@ export default function EditOrderPage() {
               />
             </div>
             <div>
+              <Label>Мова сайту</Label>
+              <Input
+                type="text"
+                value={formData.locale || ""}
+                disabled
+              />
+            </div>
+            <div>
+              <Label>Валюта замовлення</Label>
+              <Input
+                type="text"
+                value={formData.currency === "EUR" ? "€ EUR" : "₴ UAH"}
+                disabled
+              />
+            </div>
+            <div>
               <Label>Спосіб оплати</Label>
               <Input
                 type="text"
@@ -217,10 +237,10 @@ export default function EditOrderPage() {
                       Кількість
                     </th>
                     <th className="px-4 py-3 text-left font-semibold">
-                      Ціна (₴)
+                      Ціна ({formData.currency === "EUR" ? "€" : "₴"})
                     </th>
                     <th className="px-4 py-3 text-left font-semibold">
-                      Сума (₴)
+                      Сума ({formData.currency === "EUR" ? "€" : "₴"})
                     </th>
                   </tr>
                 </thead>

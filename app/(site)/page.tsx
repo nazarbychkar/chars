@@ -26,7 +26,7 @@ const Reviews = dynamic(() => import("@/components/main-page/Reviews"), {
 
 export const revalidate = 300; // ISR every 5 minutes
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chars.ua';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://charsua.com";
 
 export const metadata: Metadata = {
   title: "Головна | CHARS — Український Бренд Чоловічого Одягу",
@@ -36,6 +36,11 @@ export const metadata: Metadata = {
     "CHARS, український бренд одягу, чоловічий одяг, стильний одяг, смарт-кежуал, кежуал-класик, українська мода, одяг для чоловіків, київ, купити одяг онлайн, доставка по Україні",
   alternates: {
     canonical: baseUrl,
+    languages: {
+      uk: `${baseUrl}/uk`,
+      de: `${baseUrl}/de`,
+      en: `${baseUrl}/en`,
+    },
   },
   openGraph: {
     title: "CHARS — Український Бренд Чоловічого Одягу",

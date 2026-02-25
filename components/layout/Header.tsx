@@ -6,22 +6,30 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import type { Locale } from "@/lib/i18n/config";
 import SidebarBasket from "./SidebarBasket";
 import SidebarSearch from "./SidebarSearch";
 import SidebarMenu from "./SidebarMenu";
+import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
 
 interface Category {
   id: number;
   name: string;
   priority: number;
+  name_en?: string | null;
+  name_de?: string | null;
 }
 
 interface Subcategory {
   id: number;
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
 }
 
 export default function Header() {
+  const { locale, messages, switchLocale } = useI18n();
   const {
     isDark,
     setIsDark,
@@ -33,29 +41,30 @@ export default function Header() {
     setIsSearchOpen,
   } = useAppContext();
 
-  const { items } = useBasket();
+  const { items, currency, setCurrency } = useBasket();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const effectiveCurrency =
+    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
   const toggleTheme = () => setIsDark((prev) => !prev);
   const pathname = usePathname();
-  
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const isHomePage = pathname === '/';
 
-  // Ensure component is mounted before using scroll state (prevents hydration mismatch)
+  // Treat localized home routes as "home" for transparent hero header
+  const isHomePage =
+    pathname === "/" ||
+    pathname === `/${locale}` ||
+    pathname === `/${locale}/`;
+
+  // Track scroll position for solid header after hero
   useEffect(() => {
-    setIsMounted(true);
-    
     const handleScroll = () => {
       const scrollY = window.scrollY;
       setIsScrolled(scrollY > 20);
     };
 
-    // Initial check after mount
     handleScroll();
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -70,6 +79,21 @@ export default function Header() {
   const [pinnedCatalog, setPinnedCatalog] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
+
+  const getCategoryLabel = (category: Category) => {
+    if (locale === "en") return category.name_en || category.name;
+    if (locale === "de") return category.name_de || category.name;
+    return category.name;
+  };
+  const getSubcategoryLabel = (sub: Subcategory) => {
+    const name_en: string | null | undefined = sub.name_en;
+    const name_de: string | null | undefined = sub.name_de;
+    if (locale === "en") return name_en || sub.name;
+    if (locale === "de") return name_de || sub.name;
+    return sub.name;
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -130,12 +154,12 @@ export default function Header() {
 
   const customSeasonCategory = {
     id: -1, // Use a negative ID or something unique to avoid conflicts
-    name: "Сезон",
+    name: messages.header.seasonCategory,
     subcategories: [
-      { id: -101, name: "Весна" },
-      { id: -102, name: "Літо" },
-      { id: -103, name: "Осінь" },
-      { id: -104, name: "Зима" },
+      { id: -101, name: messages.header.seasonSpring },
+      { id: -102, name: messages.header.seasonSummer },
+      { id: -103, name: messages.header.seasonAutumn },
+      { id: -104, name: messages.header.seasonWinter },
     ],
   };
 
@@ -143,11 +167,11 @@ export default function Header() {
     <>
       <header
         className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 transform -translate-x-1/2 w-full z-50 transition-all duration-300 ${
-          isMounted && isHomePage && !isScrolled
-            ? "bg-transparent text-white" 
-            : isDark 
-              ? "bg-[#1e1e1e] text-white shadow-md" 
-              : "bg-stone-100 text-black shadow-md"
+          isHomePage && !isScrolled
+            ? "bg-transparent text-white"
+            : isDark
+            ? "bg-[#1e1e1e] text-white shadow-md"
+            : "bg-stone-100 text-black shadow-md"
         }`}
         onMouseLeave={() => {
           if (!pinnedCatalog) {
@@ -159,12 +183,14 @@ export default function Header() {
         }}
       >
         {/* === WRAPPER: everything inside shares same bg and styles === */}
-        <div className={`w-full transition-all duration-300 ${
-          isMounted && isHomePage && !isScrolled ? '' : 'shadow-md'
-        }`}>
+        <div
+          className={`w-full transition-all duration-300 ${
+            !isScrolled ? "" : "shadow-md"
+          }`}
+        >
           {/* Top nav */}
           <div className="hidden lg:flex justify-between items-center h-20 px-10">
-            <Link href="/">
+            <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
               <Image
                 height="57"
                 width="200"
@@ -177,7 +203,7 @@ export default function Header() {
               />
             </Link>
 
-            <div className="flex items-center gap-10 text-xl font-normal font-['Inter']">
+            <div className="flex items-center gap-8 text-xl font-normal font-['Inter']">
               {/* Product Categories shown directly in top nav */}
               {Array.isArray(categories) && categories.map((category) => (
                 <div
@@ -198,34 +224,41 @@ export default function Header() {
                   }}
                 >
                   <button
-                    onClick={() =>
-                      (window.location.href = `/catalog?category=${encodeURIComponent(
-                        category.name
-                      )}`)
-                    }
-                    className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter'] focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded px-2"
-                    aria-label={`Перейти до категорії ${category.name}`}
+                    onClick={() => {
+                      const target = `/${locale}/catalog?category=${encodeURIComponent(
+                        buildCategorySlug(category.name)
+                      )}`;
+                      window.location.href = target;
+                    }}
+                    className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-sm font-normal font-['Inter'] focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded px-2"
+                    aria-label={messages.header.goToCategoryAria(
+                      getCategoryLabel(category)
+                    )}
                     aria-expanded={catalogOpen && hoveredCategoryId === category.id}
                     aria-haspopup="true"
                   >
-                    {category.name}
+                    {getCategoryLabel(category)}
                   </button>
 
                   {/* Subcategories dropdown */}
                   {hoveredCategoryId === category.id &&
                     subcategories.length > 0 && (
-                      <div className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
-                        isMounted && isHomePage && !isScrolled ? 'bg-white/95 backdrop-blur-sm' : 'bg-white'
-                      }`}>
+                      <div
+                        className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
+                          isHomePage && !isScrolled
+                            ? "bg-white/95 backdrop-blur-sm"
+                            : "bg-white"
+                        }`}
+                      >
                         {subcategories.map((subcat) => (
                           <Link
                             key={subcat.id}
                             href={`/catalog?subcategory=${encodeURIComponent(
-                              subcat.name
+                              buildSubcategorySlug(subcat.name)
                             )}`}
                             className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
                           >
-                            {subcat.name}
+                            {getSubcategoryLabel(subcat)}
                           </Link>
                         ))}
                       </div>
@@ -252,18 +285,17 @@ export default function Header() {
                 <button
                   className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter']"
                   disabled
-                  onClick={() =>
-                    (window.location.href = `/catalog?category=${encodeURIComponent(
-                      customSeasonCategory.name
-                    )}`)
-                  }
                 >
                   {customSeasonCategory.name}
                 </button>
                 {hoveredCategoryId === customSeasonCategory.id && (
-                  <div className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
-                    isMounted && isHomePage && !isScrolled ? 'bg-white/95 backdrop-blur-sm' : 'bg-white'
-                  }`}>
+                  <div
+                    className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
+                      isHomePage && !isScrolled
+                        ? "bg-white/95 backdrop-blur-sm"
+                        : "bg-white"
+                    }`}
+                  >
                     {customSeasonCategory.subcategories.map((subcat) => (
                       <Link
                         key={subcat.id}
@@ -292,12 +324,14 @@ export default function Header() {
                 }}
               >
                 <span className="cursor-default whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter']">
-                  Інформація
+                  {messages.header.info}
                 </span>
 
                 <div
                   className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 transition-opacity duration-200 ${
-                    isMounted && isHomePage && !isScrolled ? 'bg-white/95 backdrop-blur-sm' : 'bg-white'
+                    isHomePage && !isScrolled
+                      ? "bg-white/95 backdrop-blur-sm"
+                      : "bg-white"
                   } ${
                     infoMenuOpen
                       ? "opacity-100 pointer-events-auto"
@@ -305,39 +339,175 @@ export default function Header() {
                   }`}
                 >
                   <Link
-                    href="/#about"
+                    href={`/${locale}/#about`}
                     className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
                   >
-                    Про нас
+                    {messages.header.about}
                   </Link>
                   <Link
-                    href="/#payment-and-delivery"
+                    href={`/${locale}/#payment-and-delivery`}
                     className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
                   >
-                    Оплата і доставка
+                    {messages.header.paymentAndDelivery}
                   </Link>
                   <Link
-                    href="/#reviews"
+                    href={`/${locale}/#reviews`}
                     className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
                   >
-                    Відгуки
+                    {messages.header.reviews}
                   </Link>
                   <Link
-                    href="/#contacts"
+                    href={`/${locale}/#contacts`}
                     className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
                   >
-                    Контакти
+                    {messages.header.contacts}
                   </Link>
+                </div>
+              </div>
+              {/* Currency + Language switchers (desktop) */}
+              <div className="flex items-center gap-3">
+                {/* Currency switcher (desktop) – dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCurrencyMenuOpen((prev) => !prev)}
+                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border border-stone-300 gap-1"
+                    aria-label="Змінити валюту"
+                    aria-expanded={isCurrencyMenuOpen}
+                  >
+                    <span className="font-medium whitespace-nowrap">
+                      {effectiveCurrency === "EUR" ? "€ EUR" : "₴ UAH"}
+                    </span>
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        d="M7 10l5 5 5-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {isCurrencyMenuOpen && (
+                    <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 backdrop-blur-sm min-w-[140px]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrency("UAH");
+                          setIsCurrencyMenuOpen(false);
+                        }}
+                        className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
+                          effectiveCurrency === "UAH"
+                            ? "bg-[#8C7461] text-white border-[#8C7461]"
+                            : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                        }`}
+                        aria-pressed={effectiveCurrency === "UAH"}
+                      >
+                        ₴ UAH
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrency("EUR");
+                          setIsCurrencyMenuOpen(false);
+                        }}
+                        className={`mt-1 px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
+                          effectiveCurrency === "EUR"
+                            ? "bg-[#8C7461] text-white border-[#8C7461]"
+                            : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                        }`}
+                        aria-pressed={effectiveCurrency === "EUR"}
+                      >
+                        € EUR
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Language switcher (desktop) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsLangMenuOpen((prev) => !prev)}
+                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border border-stone-300"
+                    aria-label={messages.header.langSwitcherAria}
+                    aria-expanded={isLangMenuOpen}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="w-6 h-6"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M3 12h18"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.3"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M12 3c2.5 2.2 3.5 4.9 3.5 9s-1 6.8-3.5 9c-2.5-2.2-3.5-4.9-3.5-9s1-6.8 3.5-9Z"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.1"
+                      />
+                      <path
+                        d="M6 7c1.6.8 3.3 1.1 6 1.1s4.4-.3 6-1.1M6 17c1.6-.8 3.3-1.1 6-1.1s4.4.3 6 1.1"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.1"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                  {isLangMenuOpen && (
+                    <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 backdrop-blur-sm min-w-[140px]">
+                      {["uk", "de", "en"].map((lng) => (
+                        <button
+                          key={lng}
+                          type="button"
+                          onClick={() => {
+                            switchLocale(lng as Locale);
+                            setIsLangMenuOpen(false);
+                          }}
+                          className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide uppercase transition-colors ${
+                            locale === lng
+                              ? "bg-[#8C7461] text-white border-[#8C7461]"
+                              : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                          }`}
+                          aria-current={locale === lng ? "page" : undefined}
+                        >
+                          {lng.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Right Icons */}
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3">
               <button
                 className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 onClick={toggleTheme}
-                aria-label={isDark ? "Увімкнути світлу тему" : "Увімкнути темну тему"}
+                aria-label={
+                  isDark
+                    ? messages.header.themeToggleAriaLight
+                    : messages.header.themeToggleAriaDark
+                }
                 aria-pressed={isDark}
               >
                 <Image
@@ -355,7 +525,7 @@ export default function Header() {
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                aria-label="Відкрити пошук"
+                aria-label={messages.header.searchOpenAria}
                 aria-expanded={isSearchOpen}
               >
                 <Image
@@ -374,7 +544,7 @@ export default function Header() {
               <button
                 className="cursor-pointer relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
-                aria-label={`Відкрити кошик. Товарів в кошику: ${totalItems}`}
+                aria-label={messages.header.basketOpenAria(totalItems)}
                 aria-expanded={isBasketOpen}
               >
                 <Image
@@ -391,7 +561,7 @@ export default function Header() {
                 {totalItems > 0 && (
                   <span
                     className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                    aria-label={`${totalItems} товарів в кошику`}
+                    aria-label={messages.header.basketCountAria(totalItems)}
                   >
                     {totalItems > 99 ? "99+" : totalItems}
                   </span>
@@ -402,26 +572,44 @@ export default function Header() {
         </div>
 
         {/* Mobile Header */}
-        <div className={`lg:hidden w-full h-16 relative overflow-hidden px-4 flex items-center justify-between transition-all duration-300 ${
-          isMounted && isHomePage && !isScrolled
-            ? "bg-transparent text-white"
-            : isDark 
-              ? "bg-[#1e1e1e] text-white" 
+        <div
+          className={`lg:hidden w-full h-16 relative overflow-hidden px-4 flex items-center justify-between transition-all duration-300 ${
+            isHomePage && !isScrolled
+              ? "bg-transparent text-white"
+              : isDark
+              ? "bg-[#1e1e1e] text-white"
               : "bg-stone-100 text-black"
-        }`}>
-          <div className="flex gap-4">
+          }`}
+        >
+          <div className="flex gap-1 items-center">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="relative w-12 h-12 text-3xl focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="relative w-12 h-12 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Відкрити меню"
               aria-expanded={isSidebarOpen}
             >
-              ☰
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="w-7 h-7"
+              >
+                <path
+                  d="M4 7h16M4 12h16M4 17h16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
             <button
               className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
               onClick={toggleTheme}
-              aria-label={isDark ? "Увімкнути світлу тему" : "Увімкнути темну тему"}
+              aria-label={
+                isDark
+                  ? messages.header.themeToggleAriaLight
+                  : messages.header.themeToggleAriaDark
+              }
               aria-pressed={isDark}
             >
               <Image
@@ -438,7 +626,7 @@ export default function Header() {
             </button>
           </div>
 
-          <Link href="/">
+          <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
             <Image
               height="28"
               width="100"
@@ -451,11 +639,11 @@ export default function Header() {
             />
           </Link>
 
-          <div className="flex gap-4">
+          <div className="flex gap-2 items-center">
             <button
               onClick={() => setIsSearchOpen(true)}
               className="focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Відкрити пошук"
+              aria-label={messages.header.searchOpenAria}
               aria-expanded={isSearchOpen}
             >
               <Image
@@ -473,7 +661,7 @@ export default function Header() {
             <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
               className="relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label={`Відкрити кошик. Товарів в кошику: ${totalItems}`}
+              aria-label={messages.header.basketOpenAria(totalItems)}
               aria-expanded={isBasketOpen}
             >
               <Image
@@ -490,7 +678,7 @@ export default function Header() {
               {totalItems > 0 && (
                 <span
                   className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                  aria-label={`${totalItems} товарів в кошику`}
+                  aria-label={messages.header.basketCountAria(totalItems)}
                 >
                   {totalItems > 99 ? "99+" : totalItems}
                 </span>

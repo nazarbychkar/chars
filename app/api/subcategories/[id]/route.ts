@@ -53,7 +53,7 @@ export async function PUT(
 
   try {
     const body = await req.json();
-    const { name, parent_category_id } = body;
+    const { name, parent_category_id, name_en, name_de } = body;
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -73,7 +73,9 @@ export async function PUT(
     const updatedSubcategory = await sqlPutSubcategory(
       subcategoryId,
       name,
-      categoryId
+      categoryId,
+      name_en ?? null,
+      name_de ?? null
     );
 
     return NextResponse.json(updatedSubcategory);

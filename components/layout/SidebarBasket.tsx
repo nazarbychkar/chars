@@ -3,6 +3,7 @@
 import { useBasket } from "@/lib/BasketProvider";
 import Link from "next/link";
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 interface SidebarBasketProps {
   isOpen: boolean;
@@ -15,7 +16,10 @@ export default function SidebarBasket({
   setIsOpen,
   isDark,
 }: SidebarBasketProps) {
-  const { items, removeItem, updateQuantity } = useBasket();
+  const { items, removeItem, updateQuantity, currency } = useBasket();
+  const { messages, withLocalePath, locale } = useI18n();
+  const effectiveBasketCurrency =
+    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
 
   return (
     <div className="relative z-50">
@@ -35,7 +39,7 @@ export default function SidebarBasket({
       >
         <nav className="flex flex-col p-4 sm:p-6 space-y-6 text-base sm:text-lg">
           <div className="flex justify-between items-center text-xl sm:text-2xl font-semibold">
-            <span>Кошик</span>
+            <span>{messages.basket.title}</span>
             <button
               className="hover:text-[#8C7461] text-2xl"
               onClick={() => setIsOpen(false)}
@@ -45,9 +49,15 @@ export default function SidebarBasket({
           </div>
 
           <div className="flex flex-col gap-6">
-            {items.length === 0 && <p>Ваш кошик порожній</p>}
+            {items.length === 0 && <p>{messages.basket.empty}</p>}
 
-            {items.map((item) => (
+            {items.map((item) => {
+              const symbol = effectiveBasketCurrency === "EUR" ? "€" : "₴";
+              const displayPrice =
+                effectiveBasketCurrency === "EUR" && item.price_eur != null
+                  ? item.price_eur
+                  : item.price;
+              return (
               <div
                 key={`${item.id}-${item.size}`}
                 className="flex gap-4 border-b pb-4 last:border-none"
@@ -71,21 +81,29 @@ export default function SidebarBasket({
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-red-600">
                             {(
-                              item.price *
+                              displayPrice *
                               (1 - item.discount_percentage / 100)
                             ).toFixed(2)}
-                            ₴
+                            {symbol}
                           </span>
-                          <span className="line-through">{item.price}₴</span>
+                          <span className="line-through">
+                            {displayPrice}
+                            {symbol}
+                          </span>
                           <span className="text-green-600 text-sm">
                             -{item.discount_percentage}%
                           </span>
                         </div>
                       ) : (
-                        <span className="font-medium">{item.price}₴</span>
+                        <span className="font-medium">
+                          {displayPrice}
+                          {symbol}
+                        </span>
                       )}
                     </div>
-                    <p className="text-stone-900 mt-1">Розмір: {item.size}</p>
+                    <p className="text-stone-900 mt-1">
+                      {messages.basket.sizeLabel}: {item.size}
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between mt-2">
@@ -117,11 +135,11 @@ export default function SidebarBasket({
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
 
             {items.length > 0 && (
               <Link
-                href="/final"
+                href={withLocalePath("/final")}
                 className={`text-center py-3 rounded-md mt-4 ${
                   isDark ? "bg-white text-black" : "bg-black text-white"
                 }`}
@@ -129,11 +147,11 @@ export default function SidebarBasket({
                   e.preventDefault();
                   setIsOpen(false);
                   setTimeout(() => {
-                    window.location.href = "/final";
+                    window.location.href = withLocalePath("/final");
                   }, 100);
                 }}
               >
-                Оформити замовлення
+                {messages.basket.checkoutButton}
               </Link>
             )}
           </div>

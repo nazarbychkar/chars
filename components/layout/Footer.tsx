@@ -4,11 +4,13 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { Montserrat } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
 export default function Footer() {
   const { isDark } = useAppContext();
+  const { locale, messages } = useI18n();
 
   return (
     <footer className="max-w-[1858px] mx-auto lg:mt-20 m-6 h-auto relative overflow-hidden flex flex-col justify-between">
@@ -46,9 +48,9 @@ export default function Footer() {
               target="_blank"
               className="w-48 h-8 md:w-56 md:h-11 text-sm md:text-xl flex justify-start my-3 transition-all duration-300 hover:text-stone-500 dark:hover:text-stone-400"
             >
-              Адреса шоуруму:
+              {messages.footer.showroomAddressLabel}
               <br />
-              Київ, вул. Костянтинівська, 21
+              {messages.footer.showroomAddressValue}
             </Link>
           </div>
 
@@ -125,12 +127,18 @@ export default function Footer() {
 
         <div className="flex flex-col gap-10">
           <div className="space-y-4">
-            <h3 className="text-lg md:text-2xl font-semibold mb-4">Графік роботи</h3>
-            <p className="text-sm md:text-lg opacity-70">Пн-Пт 13:00-19:00</p>
+            <h3 className="text-lg md:text-2xl font-semibold mb-4">
+              {messages.footer.workingHoursTitle}
+            </h3>
+            <p className="text-sm md:text-lg opacity-70">
+              {messages.footer.workingHoursValue}
+            </p>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg md:text-2xl font-semibold mb-4">Телефон</h3>
+            <h3 className="text-lg md:text-2xl font-semibold mb-4">
+              {messages.footer.phoneTitle}
+            </h3>
             <a href="tel:+380508673048" className="text-sm md:text-lg opacity-70 hover:opacity-100 transition-opacity">
               +380 5086 730 48
             </a>
@@ -138,35 +146,37 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg md:text-2xl font-semibold mb-2">Навігація</h3>
+          <h3 className="text-lg md:text-2xl font-semibold mb-2">
+            {messages.footer.navigationTitle}
+          </h3>
           <Link
-            href="/#about"
+            href={`/${locale}/#about`}
             className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-stone-500 dark:hover:text-stone-400"
           >
-            Про нас
+            {messages.footer.navigationAbout}
           </Link>
           <Link
-            href="/#payment-and-delivery"
+            href={`/${locale}/#payment-and-delivery`}
             className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-stone-500 dark:hover:text-stone-400"
           >
-            Оплата і доставка
+            {messages.footer.navigationPaymentAndDelivery}
           </Link>
           <Link
-            href="/#reviews"
+            href={`/${locale}/#reviews`}
             className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-stone-500 dark:hover:text-stone-400"
           >
-            Відгуки
+            {messages.footer.navigationReviews}
           </Link>
           <Link
-            href="/#contacts"
+            href={`/${locale}/#contacts`}
             className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-stone-500 dark:hover:text-stone-400"
           >
-            Контакти
+            {messages.footer.navigationContacts}
           </Link>
         </div>
 
         <Link
-          href="/"
+          href={locale === "uk" ? "/uk" : `/${locale}`}
           className={`w-48 h-48 md:w-60 md:h-60 rounded-full flex justify-center transition-all duration-300 hover:scale-105 shadow-lg ${
             isDark ? "bg-stone-100 hover:bg-stone-50" : "bg-stone-900 hover:bg-stone-800"
           }`}
@@ -176,7 +186,7 @@ export default function Footer() {
               isDark ? "text-stone-900" : "text-stone-100"
             }`}
           >
-            На головну
+            {messages.common.backToHome}
           </span>
         </Link>
       </div>
@@ -187,21 +197,27 @@ export default function Footer() {
           <div className="flex flex-col gap-5">
             <div className="flex justify-start gap-4 md:gap-6">
               <div className="w-40 h-8 md:w-56 md:h-11 flex flex-col justify-start my-auto">
-                <span className="text-lg md:text-2xl">Графік роботи:</span>
-                <span className="text-sm md:text-lg">Пн-Пт 13:00-19:00</span>
+                <span className="text-lg md:text-2xl">
+                  {messages.footer.workingHoursTitle}
+                </span>
+                <span className="text-sm md:text-lg">
+                  {messages.footer.workingHoursValue}
+                </span>
               </div>
             </div>
 
             <div className="flex justify-start gap-4 md:gap-6">
               <div className="w-40 h-8 md:w-56 md:h-11 flex flex-col justify-start my-auto">
-                <span className="text-lg md:text-2xl">Телефон</span>
+                <span className="text-lg md:text-2xl">
+                  {messages.footer.phoneTitle}
+                </span>
                 <span className="text-sm md:text-lg">+380 5086 730 48</span>
               </div>
             </div>
           </div>
 
           <Link
-            href="/"
+            href={locale === "uk" ? "/uk" : `/${locale}`}
             className={`w-40 h-40 md:w-60 md:h-60 rounded-full flex justify-center ${
               isDark ? "bg-stone-100" : "bg-stone-900"
             }`}
@@ -211,37 +227,39 @@ export default function Footer() {
                 isDark ? "text-stone-900" : "text-stone-100"
               }`}
             >
-              На головну
+              {messages.common.backToHome}
             </span>
           </Link>
         </div>
 
         <div>
-          <span className="text-lg md:text-2xl">Навігація</span>
+          <span className="text-lg md:text-2xl">
+            {messages.footer.navigationTitle}
+          </span>
           <div className="flex justify-around gap-4 md:gap-6">
             <Link
-              href="/#about"
+              href={`/${locale}/#about`}
               className="text-sm md:text-lg hover:text-[#8C7461]"
             >
-              Про нас
+              {messages.footer.navigationAbout}
             </Link>
             <Link
-              href="/#payment-and-delivery"
+              href={`/${locale}/#payment-and-delivery`}
               className="text-sm md:text-lg hover:text-[#8C7461]"
             >
-              Оплата і доставка
+              {messages.footer.navigationPaymentAndDelivery}
             </Link>
             <Link
-              href="/#reviews"
+              href={`/${locale}/#reviews`}
               className="text-sm md:text-lg hover:text-[#8C7461]"
             >
-              Відгуки
+              {messages.footer.navigationReviews}
             </Link>
             <Link
-              href="/#contacts"
+              href={`/${locale}/#contacts`}
               className="text-sm md:text-lg hover:text-[#8C7461]"
             >
-              Контакти
+              {messages.footer.navigationContacts}
             </Link>
           </div>
         </div>
@@ -267,9 +285,9 @@ export default function Footer() {
                 target="_blank"
                 className="w-48 h-8 md:w-56 md:h-11 text-sm md:text-xl flex justify-start my-3 hover:underline"
               >
-                Адреса шоуруму:
+                {messages.footer.showroomAddressLabel}
                 <br />
-                Київ, вул. Костянтинівська, 21
+                {messages.footer.showroomAddressValue}
               </Link>
             </div>
 
@@ -353,14 +371,14 @@ export default function Footer() {
             href="/privacy-policy"
             className="text-sm md:text-lg hover:opacity-100 opacity-60 transition-opacity duration-300 text-center"
           >
-            Політика конфіденційності
+            {messages.footer.privacyPolicy}
           </Link>
           <span className="text-sm md:text-lg hidden sm:inline opacity-30">|</span>
           <Link
             href="/terms-of-service"
             className="text-sm md:text-lg hover:opacity-100 opacity-60 transition-opacity duration-300 text-center"
           >
-            Договір оферти
+            {messages.footer.termsOfService}
           </Link>
         </div>
       </div>
@@ -368,7 +386,11 @@ export default function Footer() {
       {/* Centered developer credit */}
       <div className="mt-8 mb-6 flex flex-col lg:flex-row items-center gap-3 lg:gap-6 justify-center">
         <Link
-          href="https://new.telebots.site/?utm_source=chars_ua_brand"
+          href={
+            locale === "uk"
+              ? "https://telebots.site/?utm_source=chars_ua_brand"
+              : "https://telebots.site/en?utm_source=chars_ua_brand"
+          }
           target="_blank"
           className={`px-6 py-3 rounded-full border-2 transition-all duration-300 text-sm md:text-base tracking-wide hover:scale-105 ${
             isDark
@@ -376,7 +398,7 @@ export default function Footer() {
               : "border-black/20 text-black/70 hover:border-black/40 hover:text-black hover:bg-black/5"
           }`}
         >
-          Telebots | Розробка сайтів
+          {messages.footer.devCredit}
         </Link>
         
         {/* Designer credit - same style as dev credit */}
@@ -389,7 +411,7 @@ export default function Footer() {
               : "border-black/20 text-black/70 hover:border-black/40 hover:text-black hover:bg-black/5"
           }`}
         >
-          Sviat | Дизайн сайту
+          {messages.footer.designCredit}
         </Link>
       </div>
     </footer>

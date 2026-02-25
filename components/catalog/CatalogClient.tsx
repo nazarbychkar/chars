@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import SidebarFilter from "../layout/SidebarFilter";
 import { useAppContext } from "@/lib/GeneralProvider";
@@ -9,11 +9,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useBasket } from "@/lib/BasketProvider";
+import {
+  buildProductSlug,
+  buildCategorySlug,
+  buildSubcategorySlug,
+} from "@/lib/slug";
+
+interface CategoryForLabel {
+  name: string;
+  name_en?: string | null;
+  name_de?: string | null;
+}
 
 interface Product {
   id: number;
   name: string;
   price: number;
+  name_en?: string | null;
+  name_de?: string | null;
+  price_eur?: number | null;
   first_media?: { url: string; type: string } | null;
   sizes?: { size: string; stock: string }[];
   color?: string;
@@ -38,6 +54,10 @@ export default function CatalogClient({
   });
   const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
   const searchParams = useSearchParams();
+  const { locale, withLocalePath, messages } = useI18n();
+  const { currency } = useBasket();
+  const isEuro =
+    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
@@ -58,24 +78,108 @@ export default function CatalogClient({
         selectedColors.length === 0 ||
         (product.color && selectedColors.includes(product.color));
 
-      const matchesMinPrice = minPrice === null || product.price >= minPrice;
-      const matchesMaxPrice = maxPrice === null || product.price <= maxPrice;
+      const basePrice =
+        isEuro && product.price_eur != null ? product.price_eur : product.price;
+
+      const matchesMinPrice = minPrice === null || basePrice >= minPrice;
+      const matchesMaxPrice = maxPrice === null || basePrice <= maxPrice;
 
       return matchesSize && matchesMinPrice && matchesMaxPrice && matchesColor;
     });
-  }, [initialProducts, selectedSizes, minPrice, maxPrice, selectedColors]);
+  }, [initialProducts, selectedSizes, minPrice, maxPrice, selectedColors, isEuro]);
 
   const sortedProducts = useMemo(() => {
     return [...filteredProducts].sort((a, b) =>
-      sortOrder === "asc" ? a.price - b.price : b.price - a.price
+      sortOrder === "asc"
+        ? (isEuro && a.price_eur != null ? a.price_eur : a.price) -
+          (isEuro && b.price_eur != null ? b.price_eur : b.price)
+        : (isEuro && b.price_eur != null ? b.price_eur : b.price) -
+          (isEuro && a.price_eur != null ? a.price_eur : a.price)
     );
-  }, [filteredProducts, sortOrder]);
+  }, [filteredProducts, sortOrder, isEuro]);
 
   const category = searchParams.get("category");
   const season = searchParams.get("season");
   const subcategory = searchParams.get("subcategory");
 
+  const [categoryLabel, setCategoryLabel] = useState<string | null>(null);
+  const [subcategoryLabel, setSubcategoryLabel] = useState<string | null>(null);
+  const [categoryNameUa, setCategoryNameUa] = useState<string | null>(null);
+  const [subcategoryNameUa, setSubcategoryNameUa] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(12);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchLabels() {
+      try {
+        setCategoryLabel(null);
+        setSubcategoryLabel(null);
+        setCategoryNameUa(null);
+        setSubcategoryNameUa(null);
+
+        // Category label
+        if (category) {
+          const cats = await fetch("/api/categories").then((r) => r.json());
+          if (cancelled || !Array.isArray(cats)) return;
+          const found = cats.find((c: CategoryForLabel) => {
+            const baseName = c.name || "";
+            const slug = buildCategorySlug(baseName);
+            const key = category.toLowerCase();
+            return (
+              baseName.toLowerCase() === key ||
+              slug.toLowerCase() === key
+            );
+          });
+          if (found) {
+            setCategoryNameUa(found.name);
+            const label =
+              locale === "en"
+                ? found.name_en || found.name
+                : locale === "de"
+                ? found.name_de || found.name
+                : found.name;
+            setCategoryLabel(label);
+          }
+        }
+
+        // Subcategory label
+        if (subcategory) {
+          const subs = await fetch("/api/subcategories/all").then((r) =>
+            r.json()
+          );
+          if (!Array.isArray(subs)) return;
+          const found = subs.find((s: { name?: string }) => {
+            const baseName = s.name || "";
+            const slug = buildSubcategorySlug(baseName);
+            const key = subcategory.toLowerCase();
+            return (
+              baseName.toLowerCase() === key ||
+              slug.toLowerCase() === key
+            );
+          });
+          if (found) {
+            setSubcategoryNameUa(found.name);
+            const localized =
+              locale === "en"
+                ? found.name_en || found.name
+                : locale === "de"
+                ? found.name_de || found.name
+                : found.name;
+            setSubcategoryLabel(localized);
+          }
+        }
+      } catch (e) {
+        console.error("[CatalogClient] Failed to load labels", e);
+      }
+    }
+
+    fetchLabels();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category, subcategory, locale]);
 
   const visibleProducts = useMemo(() => {
     return sortedProducts.slice(0, visibleCount);
@@ -95,14 +199,14 @@ export default function CatalogClient({
             </button>
             <span>
               {subcategory
-                ? `Підкатегорія ${subcategory}${
-                    category ? ` (Категорія ${category})` : ""
-                  }`
+                ? subcategoryLabel ??
+                  subcategoryNameUa ??
+                  subcategory
                 : category
-                ? `Категорія ${category}`
+                ? categoryLabel ?? categoryNameUa ?? category
                 : season
-                ? `Сезон ${season}`
-                : "Усі товари"}
+                ? season
+                : messages.catalog.allProductsLabel}
             </span>
           </div>
 
@@ -110,7 +214,7 @@ export default function CatalogClient({
             className="cursor-pointer text-base sm:text-lg"
             onClick={() => setIsFilterOpen(true)}
           >
-            Фільтри
+            {messages.catalog.filtersLabel}
           </button>
         </div>
 
@@ -122,13 +226,23 @@ export default function CatalogClient({
               console.log(`[CatalogClient] Product ${product.id} - first_media:`, product.first_media);
             }
             
+            const slug = buildProductSlug(product.name, product.id);
+            const displayName =
+              locale === "en"
+                ? product.name_en || product.name
+                : locale === "de"
+                ? product.name_de || product.name
+                : product.name;
+            const basePrice =
+              isEuro && product.price_eur != null ? product.price_eur : product.price;
+            const currencySymbol = isEuro ? "€" : "₴";
             return (
-            <Link
-              href={`/product/${product.id}`}
-              key={product.id}
-              className="flex flex-col gap-2 sm:gap-4 group product-card"
-              aria-label={`Перейти до товару ${product.name}`}
-            >
+              <Link
+                href={withLocalePath(`/product/${slug}`)}
+                key={product.id}
+                className="flex flex-col gap-2 sm:gap-4 group product-card"
+                aria-label={`Перейти до товару ${displayName}`}
+              >
               {/* Image or Video */}
               <div className="relative w-full aspect-[2/3] bg-gray-200 group-hover:filter group-hover:brightness-90 transition duration-300 overflow-hidden">
                 {product.first_media?.type === "video" ? (
@@ -144,7 +258,7 @@ export default function CatalogClient({
                 ) : (
                   <Image
                     src={getProductImageSrc(product.first_media)}
-                    alt={product.name}
+                    alt={displayName}
                     className="object-cover transition-all duration-300 group-hover:brightness-90"
                     fill
                     sizes="(max-width: 420px) 45vw, (max-width: 640px) 45vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
@@ -159,22 +273,23 @@ export default function CatalogClient({
 
               {/* Product Title + Price */}
               <span className="text-sm sm:text-base lg:text-lg leading-tight">
-                {product.name}
+                {displayName}
                 <br />
                 {product.discount_percentage ? (
                   <div className="flex items-center gap-2">
                     {/* Discounted price */}
                     <span className="font-medium text-red-600">
                       {(
-                        product.price *
+                        basePrice *
                         (1 - product.discount_percentage / 100)
                       ).toFixed(2)}
-                      ₴
+                      {currencySymbol}
                     </span>
 
                     {/* Original (crossed-out) price */}
                     <span className="text-gray-500 line-through">
-                      {product.price}₴
+                      {basePrice}
+                      {currencySymbol}
                     </span>
 
                     {/* Optional: show discount percentage */}
@@ -183,7 +298,10 @@ export default function CatalogClient({
                     </span>
                   </div>
                 ) : (
-                  <span className="font-medium">{product.price}₴</span>
+                  <span className="font-medium">
+                    {basePrice}
+                    {currencySymbol}
+                  </span>
                 )}
               </span>
               </Link>
@@ -200,7 +318,7 @@ export default function CatalogClient({
                   : "bg-stone-900 text-stone-100"
               }`}
             >
-              Показати ще
+              {messages.catalog.showMoreLabel}
             </button>
           </div>
         )}

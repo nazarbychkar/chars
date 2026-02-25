@@ -3,9 +3,11 @@
 import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
 import Image from "next/image";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export default function SocialMedia() {
   const { isDark } = useAppContext();
+  const { messages } = useI18n();
 
   return (
     // h-[977px]
@@ -34,15 +36,15 @@ export default function SocialMedia() {
         <div className="flex flex-col gap-10 m-8 lg:ml-25 lg:m-18">
           <div className="flex flex-col">
             <span className="text-stone-500 text-5xl lg:text-8xl font-normal font-['Inter']">
-              Ми ближче,{" "}
+              {messages.home.socialTitleLine1}{" "}
             </span>
             <span className="text-5xl lg:text-8xl font-normal font-['Inter']">
-              ніж здається!
+              {messages.home.socialTitleLine2}
             </span>
           </div>
 
           <div className="border-b lg:border-0 lg:w-[465px] justify-center text-lg lg:text-3xl font-normal font-['Inter'] capitalize leading-9">
-            Лімітована колекція — для тих кому важлива унікальність.
+            {messages.home.socialSubtitle}
           </div>
 
           <div className="flex justify-start gap-10 lg:justify-between items-center w-full lg:w-115">
@@ -52,7 +54,7 @@ export default function SocialMedia() {
                 isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
               } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
             >
-              МИ В TIKTOK
+              {messages.home.socialTikTok}
             </Link>
             <Image
               width={39}
@@ -72,7 +74,7 @@ export default function SocialMedia() {
                 isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
               } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
             >
-              МИ В ІНСТАГРАМ
+              {messages.home.socialInstagram}
             </Link>
             <Image
               width={39}

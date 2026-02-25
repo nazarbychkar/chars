@@ -70,8 +70,13 @@ async function _sqlGetAllProducts() {
     SELECT
       p.id,
       p.name,
-      p.price,
+      p.name_en,
+      p.name_de,
       p.description,
+      p.description_en,
+      p.description_de,
+      p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -97,6 +102,11 @@ async function _sqlGetAllProducts() {
   `;
 }
 
+// Uncached variant for APIs / admin panels that must always see fresh data
+export async function sqlGetAllProductsUncached() {
+  return _sqlGetAllProducts();
+}
+
 export const sqlGetAllProducts = unstable_cache(
   _sqlGetAllProducts,
   ['all-products'],
@@ -112,8 +122,13 @@ export async function sqlGetProduct(id: number) {
     SELECT
       p.id,
       p.name,
+      p.name_en,
+      p.name_de,
       p.description,
+      p.description_en,
+      p.description_de,
       p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -123,8 +138,12 @@ export async function sqlGetProduct(id: number) {
       p.category_id,
       p.subcategory_id,
       p.fabric_composition,
+      p.fabric_composition_en,
+      p.fabric_composition_de,
       p.has_lining,
       p.lining_description,
+      p.lining_description_en,
+      p.lining_description_de,
       c.name AS category_name,
       sc.name AS subcategory_name,
       COALESCE(s.sizes, '[]') AS sizes,
@@ -221,7 +240,10 @@ export async function sqlGetProductsByCategory(categoryName: string) {
     SELECT
       p.id,
       p.name,
+      p.name_en,
+      p.name_de,
       p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -249,7 +271,10 @@ export async function sqlGetProductsBySubcategoryName(name: string) {
     SELECT
       p.id,
       p.name,
+      p.name_en,
+      p.name_de,
       p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -280,7 +305,10 @@ export async function sqlGetProductsBySeason(season: string) {
     SELECT
       p.id,
       p.name,
+      p.name_en,
+      p.name_de,
       p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -309,7 +337,10 @@ export async function sqlGetTopSaleProducts() {
     SELECT
       p.id,
       p.name,
+      p.name_en,
+      p.name_de,
       p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -334,7 +365,10 @@ export async function sqlGetLimitedEditionProducts() {
     SELECT
       p.id,
       p.name,
+      p.name_en,
+      p.name_de,
       p.price,
+      p.price_eur,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -399,8 +433,13 @@ export async function sqlGetAllColors() {
 // Create new product
 export async function sqlPostProduct(product: {
   name: string;
+  name_en?: string | null;
+  name_de?: string | null;
   description?: string;
+  description_en?: string | null;
+  description_de?: string | null;
   price: number;
+  price_eur?: number | null;
   old_price?: number | null;
   discount_percentage?: number | null;
   priority?: number;
@@ -411,6 +450,8 @@ export async function sqlPostProduct(product: {
   category_id?: number | null;
   subcategory_id?: number | null; // ✅ NEW
   fabric_composition?: string;
+  fabric_composition_en?: string | null;
+  fabric_composition_de?: string | null;
   has_lining?: boolean;
   lining_description?: string;
   sizes?: { size: string; stock: number }[];
@@ -419,14 +460,23 @@ export async function sqlPostProduct(product: {
 }) {
   const inserted = await sql`
     INSERT INTO products (
-      name, description, price, old_price, discount_percentage, priority,
+      name, name_en, name_de,
+      description, description_en, description_de,
+      price, price_eur, old_price, discount_percentage, priority,
       top_sale, limited_edition, season, color,
-      category_id, subcategory_id, fabric_composition, has_lining, lining_description
+      category_id, subcategory_id,
+      fabric_composition, fabric_composition_en, fabric_composition_de,
+      has_lining, lining_description
     )
     VALUES (
       ${product.name},
+      ${product.name_en || null},
+      ${product.name_de || null},
       ${product.description || null},
+      ${product.description_en || null},
+      ${product.description_de || null},
       ${product.price},
+      ${product.price_eur ?? null},
       ${product.old_price || null},
       ${product.discount_percentage || null},
       ${product.priority || 0},
@@ -437,6 +487,8 @@ export async function sqlPostProduct(product: {
       ${product.category_id || null},
       ${product.subcategory_id || null},
       ${product.fabric_composition || null},
+      ${product.fabric_composition_en || null},
+      ${product.fabric_composition_de || null},
       ${product.has_lining || false},
       ${product.lining_description || null}
     )
@@ -482,6 +534,11 @@ export async function sqlPutProduct(
     name: string;
     description?: string;
     price: number;
+    name_en?: string | null;
+    name_de?: string | null;
+    description_en?: string | null;
+    description_de?: string | null;
+    price_eur?: number | null;
     old_price?: number | null;
     discount_percentage?: number | null;
     priority?: number;
@@ -492,6 +549,8 @@ export async function sqlPutProduct(
     category_id?: number | null;
     subcategory_id?: number | null;
     fabric_composition?: string;
+    fabric_composition_en?: string | null;
+    fabric_composition_de?: string | null;
     has_lining?: boolean;
     lining_description?: string;
     sizes?: { size: string; stock: number }[];
@@ -514,6 +573,15 @@ export async function sqlPutProduct(
       name = ${update.name},
       description = ${update.description || null},
       price = ${Number(update.price)},
+      price_eur = ${
+        update.price_eur !== undefined && update.price_eur !== null
+          ? Number(update.price_eur)
+          : null
+      },
+      name_en = ${update.name_en || null},
+      name_de = ${update.name_de || null},
+      description_en = ${update.description_en || null},
+      description_de = ${update.description_de || null},
       old_price = ${update.old_price ? Number(update.old_price) : null},
       discount_percentage = ${update.discount_percentage ? Number(update.discount_percentage) : null},
       priority = ${Number(update.priority || 0)},
@@ -524,6 +592,8 @@ export async function sqlPutProduct(
       category_id = ${update.category_id ? Number(update.category_id) : null},
       subcategory_id = ${update.subcategory_id ? Number(update.subcategory_id) : null},
       fabric_composition = ${update.fabric_composition || null},
+      fabric_composition_en = ${update.fabric_composition_en || null},
+      fabric_composition_de = ${update.fabric_composition_de || null},
       has_lining = ${update.has_lining || false},
       lining_description = ${update.lining_description || null}
     WHERE id = ${id};
@@ -656,6 +726,8 @@ type OrderInput = {
   payment_type: "prepay" | "full";
   invoice_id: string;
   payment_status: "pending" | "paid" | "canceled";
+  currency: "UAH" | "EUR";
+  locale?: string | null;
   items: {
     product_id: number;
     size: string;
@@ -682,16 +754,22 @@ export async function sqlPostOrder(order: OrderInput) {
       return result.rows;
     };
 
+    // Ensure new columns exist (idempotent for Postgres 9.6+)
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
+
     const inserted = await query`
       INSERT INTO orders (
         customer_name, phone_number, email,
         delivery_method, city, post_office,
-        comment, payment_type, invoice_id, payment_status
+        comment, payment_type, invoice_id, payment_status,
+        currency, locale
       )
       VALUES (
         ${order.customer_name}, ${order.phone_number}, ${order.email || null},
         ${order.delivery_method}, ${order.city}, ${order.post_office},
-        ${order.comment || null}, ${order.payment_type}, ${order.invoice_id}, ${order.payment_status}
+        ${order.comment || null}, ${order.payment_type}, ${order.invoice_id}, ${order.payment_status},
+        ${order.currency}, ${order.locale || null}
       )
       RETURNING id;
     `;
@@ -888,11 +966,18 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
       o.comment,
       o.payment_type,
       o.payment_status,
+      o.currency,
+      o.locale,
       o.created_at,
       COALESCE(
         JSON_AGG(
           JSONB_BUILD_OBJECT(
-            'product_name', p.name,
+            'product_name',
+              CASE
+                WHEN o.locale = 'en' THEN COALESCE(p.name_en, p.name)
+                WHEN o.locale = 'de' THEN COALESCE(p.name_de, p.name)
+                ELSE p.name
+              END,
             'size', oi.size,
             'quantity', oi.quantity,
             'price', oi.price,
@@ -931,10 +1016,18 @@ export async function sqlGetCategory(id: number) {
 }
 
 // Create a new category
-export async function sqlPostCategory(name: string, priority: number = 0) {
+export async function sqlPostCategory(
+  name: string,
+  priority: number = 0,
+  name_en?: string | null,
+  name_de?: string | null,
+  recommended_look_config?: string | null
+) {
   const result = await sql`
-    INSERT INTO categories (name, priority)
-    VALUES (${name}, ${priority})
+    INSERT INTO categories (name, name_en, name_de, priority, recommended_look_config)
+    VALUES (${name}, ${name_en || null}, ${name_de || null}, ${priority}, ${
+      recommended_look_config || null
+    })
     RETURNING *;
   `;
   return result[0];
@@ -944,11 +1037,19 @@ export async function sqlPostCategory(name: string, priority: number = 0) {
 export async function sqlPutCategory(
   id: number,
   name: string,
-  priority: number = 0
+  priority: number = 0,
+  name_en?: string | null,
+  name_de?: string | null,
+  recommended_look_config?: string | null
 ) {
   const result = await sql`
     UPDATE categories
-    SET name = ${name}, priority = ${priority}
+    SET
+      name = ${name},
+      name_en = ${name_en || null},
+      name_de = ${name_de || null},
+      priority = ${priority},
+      recommended_look_config = ${recommended_look_config || null}
     WHERE id = ${id}
     RETURNING *;
   `;
@@ -994,10 +1095,15 @@ export async function sqlGetSubcategory(id: number) {
 }
 
 // Create a new subcategory
-export async function sqlPostSubcategory(name: string, categoryId: number) {
+export async function sqlPostSubcategory(
+  name: string,
+  categoryId: number,
+  name_en?: string | null,
+  name_de?: string | null
+) {
   const result = await sql`
-    INSERT INTO subcategories (name, category_id)
-    VALUES (${name}, ${categoryId})
+    INSERT INTO subcategories (name, category_id, name_en, name_de)
+    VALUES (${name}, ${categoryId}, ${name_en ?? null}, ${name_de ?? null})
     RETURNING *;
   `;
   return result[0];
@@ -1007,11 +1113,14 @@ export async function sqlPostSubcategory(name: string, categoryId: number) {
 export async function sqlPutSubcategory(
   id: number,
   name: string,
-  categoryId: number
+  categoryId: number,
+  name_en?: string | null,
+  name_de?: string | null
 ) {
   const result = await sql`
     UPDATE subcategories
-    SET name = ${name}, category_id = ${categoryId}
+    SET name = ${name}, category_id = ${categoryId},
+        name_en = ${name_en ?? null}, name_de = ${name_de ?? null}
     WHERE id = ${id}
     RETURNING *;
   `;
