@@ -344,11 +344,6 @@ export default function Catalog() {
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedProducts.map((product) => {
-            // Debug logging
-            if (product.first_media) {
-              console.log(`[Catalog] Product ${product.id} - first_media:`, product.first_media);
-            }
-            
             const slug = buildProductSlug(product.name, product.id);
             return (
               <Link

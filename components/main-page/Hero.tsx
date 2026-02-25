@@ -41,16 +41,14 @@ export default function Hero() {
           // First try: direct play
           await video.play();
           setShowPlayButton(false);
-        } catch (error) {
-          console.log("Video autoplay failed, trying again:", error);
+        } catch {
           
           // Second try: after a small delay (sometimes helps on mobile)
           setTimeout(async () => {
             try {
               await video.play();
               setShowPlayButton(false);
-            } catch (error2) {
-              console.log("Video autoplay failed again:", error2);
+            } catch {
               
               // Third try: user interaction simulation (sometimes mobile needs this)
               // But we'll show play button only if all attempts fail
@@ -60,8 +58,7 @@ export default function Hero() {
                   try {
                     await video.play();
                     setShowPlayButton(false);
-                  } catch (error3) {
-                    console.log("Final autoplay attempt failed:", error3);
+                  } catch {
                     setShowPlayButton(true);
                   }
                 }, 500);
@@ -107,19 +104,14 @@ export default function Hero() {
               onLoadedData={() => {
                 const video = videoRef.current;
                 if (video) {
-                  video.play().catch((error) => {
-                    console.log("Play on loadeddata failed:", error);
-                    // Don't show play button immediately, let useEffect handle it
-                  });
+                  void video.play();
                   video.style.backgroundColor = "transparent";
                 }
               }}
               onCanPlay={() => {
                 const video = videoRef.current;
                 if (video) {
-                  video.play().catch((error) => {
-                    console.log("Play on canplay failed:", error);
-                  });
+                  void video.play();
                 }
               }}
               onLoadStart={() => {
@@ -137,8 +129,8 @@ export default function Hero() {
                   try {
                     await videoRef.current?.play();
                     setShowPlayButton(false);
-                  } catch (error) {
-                    console.log("Manual play failed:", error);
+                  } catch {
+                    // If manual play still fails, keep button visible
                   }
                 }}
                 className="absolute inset-0 flex items-center justify-center bg-black/30 z-10"

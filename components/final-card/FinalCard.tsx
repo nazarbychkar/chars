@@ -229,9 +229,7 @@ export default function FinalCard() {
         locale, // запам'ятовуємо мовну версію сайту
         items: apiItems,
       };
-      
-      console.log("[FinalCard] Sending order request with:", JSON.stringify(requestBody, null, 2));
-      
+
       // Надсилаємо дані замовлення
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -239,21 +237,13 @@ export default function FinalCard() {
         body: JSON.stringify(requestBody),
       });
 
-      console.log("[FinalCard] Response status:", response.status);
-      console.log("[FinalCard] Response ok:", response.ok);
-
       if (!response.ok) {
         const data = await response.json();
         console.error("[FinalCard] Error response:", data);
         setError(data.error || messages.checkout.errorGeneric);
       } else {
         const data = await response.json();
-        console.log("[FinalCard] Success response:", data);
-        
         const { invoiceUrl, invoiceId } = data;
-        
-        console.log("[FinalCard] Invoice URL:", invoiceUrl);
-        console.log("[FinalCard] Invoice ID:", invoiceId);
 
         if (!invoiceUrl) {
           console.error("[FinalCard] No invoice URL received!");
@@ -290,11 +280,8 @@ export default function FinalCard() {
 
         setSuccess(messages.checkout.orderCreatedRedirecting);
         // Don't clear basket here - only clear after successful payment
-
-        console.log("[FinalCard] Redirecting to invoice URL in 2 seconds...");
         // Перехід на сторінку оплати через 2 сек
         setTimeout(() => {
-          console.log("[FinalCard] Redirecting to:", invoiceUrl);
           window.location.href = invoiceUrl;
         }, 2000);
       }

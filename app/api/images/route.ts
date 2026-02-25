@@ -24,6 +24,11 @@ async function convertToWebP(
 
   await sharp(inputPath)
     .rotate() // auto-orient
+    // ✅ Hard-limit max width to reduce file size while keeping quality
+    .resize({
+      width: 1600, // enough for large desktop, smaller on mobile via <Image sizes>
+      withoutEnlargement: true,
+    })
     .webp({ quality: 80 })
     .toFile(outputPath);
 

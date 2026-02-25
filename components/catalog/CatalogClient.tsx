@@ -108,6 +108,19 @@ export default function CatalogClient({
   const [subcategoryNameUa, setSubcategoryNameUa] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(12);
 
+  // Restore how many products user had loaded previously (Show more)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.sessionStorage.getItem("catalogVisibleCount");
+    if (!saved) return;
+    const num = Number(saved);
+    if (!Number.isFinite(num) || num <= 0) return;
+
+    setVisibleCount((current) =>
+      Math.max(current, Math.min(num, sortedProducts.length))
+    );
+  }, [sortedProducts.length]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -220,12 +233,7 @@ export default function CatalogClient({
 
         {/* Product Grid - Mobile Optimized */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-          {visibleProducts.map((product, index) => {
-            // Debug logging
-            if (product.first_media) {
-              console.log(`[CatalogClient] Product ${product.id} - first_media:`, product.first_media);
-            }
-            
+        {visibleProducts.map((product, index) => {
             const slug = buildProductSlug(product.name, product.id);
             const displayName =
               locale === "en"
@@ -311,7 +319,18 @@ export default function CatalogClient({
         {visibleCount < sortedProducts.length && (
           <div className="mt-6 flex justify-center">
             <button
-              onClick={() => setVisibleCount((prev) => prev + 12)}
+              onClick={() =>
+                setVisibleCount((prev) => {
+                  const next = prev + 12;
+                  if (typeof window !== "undefined") {
+                    window.sessionStorage.setItem(
+                      "catalogVisibleCount",
+                      String(next)
+                    );
+                  }
+                  return next;
+                })
+              }
               className={`cursor-pointer px-6 py-3 ${
                 isDark
                   ? "bg-stone-100 text-stone-900"

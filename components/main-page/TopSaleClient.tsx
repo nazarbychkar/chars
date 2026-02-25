@@ -29,12 +29,12 @@ function VideoWithAutoplay({ src, className }: { src: string; className?: string
         try {
           await video.play();
         } catch {
-          // Retry after delay for mobile
+          // Retry after delay for mobile (silently fail if still blocked)
           setTimeout(async () => {
             try {
               await video.play();
-            } catch (e) {
-              console.log("Video autoplay failed:", e);
+            } catch {
+              // ignore
             }
           }, 200);
         }

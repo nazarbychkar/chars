@@ -59,10 +59,6 @@ export default function SidebarFilter({
     );
   };
 
-  useEffect(() => {
-    console.log("Selected colors updated:", selectedColors);
-  }, [selectedColors]);
-
   return (
     <div className="relative z-50">
       {isOpen && (
