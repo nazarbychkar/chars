@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PrivacyPolicyContent from "./PrivacyPolicyContent";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://chars.ua";
+const baseUrl = process.env.PUBLIC_URL || "https://charsua.com/";
 
 export const metadata: Metadata = {
   title: "Політика конфіденційності | CHARS",
