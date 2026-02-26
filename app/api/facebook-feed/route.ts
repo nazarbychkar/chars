@@ -6,6 +6,20 @@ const baseUrl = process.env.PUBLIC_URL || "https://charsua.com";
 
 type FeedLocale = "uk" | "en" | "de";
 
+type ProductRow = {
+  id: number;
+  name: string;
+  name_en?: string | null;
+  name_de?: string | null;
+  description?: string | null;
+  description_en?: string | null;
+  description_de?: string | null;
+  category_name?: string | null;
+  price: number | string;
+  price_eur?: number | string | null;
+  first_media?: { url: string; type: string } | null;
+};
+
 // Helper to escape CSV fields (Facebook accepts standard RFC4180 CSV)
 function csvEscape(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
@@ -34,7 +48,7 @@ function getLocaleFromRequest(request: Request): FeedLocale {
 export async function GET(request: Request) {
   try {
     const locale = getLocaleFromRequest(request);
-    const products = await sqlGetAllProductsUncached();
+    const products = (await sqlGetAllProductsUncached()) as ProductRow[];
 
     // Facebook Commerce Manager typical headers
     const headers = [
@@ -47,13 +61,14 @@ export async function GET(request: Request) {
       "link",
       "image_link",
       "brand",
+      "category_name",
       "google_product_category",
     ];
 
     const lines: string[] = [];
     lines.push(headers.join(","));
 
-    for (const p of products as any[]) {
+    for (const p of products) {
       const id = p.id;
 
       let title: string = p.name;
@@ -117,6 +132,7 @@ export async function GET(request: Request) {
       }
 
       const brand = "CHARS";
+      const categoryName = p.category_name ?? "";
 
       // Можна залишити порожнім або підставити загальну категорію
       const googleProductCategory = "";
@@ -131,6 +147,7 @@ export async function GET(request: Request) {
         csvEscape(link),
         csvEscape(imageLink),
         csvEscape(brand),
+        csvEscape(categoryName),
         csvEscape(googleProductCategory),
       ].join(",");
 

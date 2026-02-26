@@ -6,6 +6,19 @@ const baseUrl = process.env.PUBLIC_URL || "https://charsua.com";
 
 type FeedLocale = "uk" | "en" | "de";
 
+type ProductRow = {
+  id: number;
+  name: string;
+  name_en?: string | null;
+  name_de?: string | null;
+  description?: string | null;
+  description_en?: string | null;
+  description_de?: string | null;
+  price: number | string;
+  price_eur?: number | string | null;
+  first_media?: { url: string; type: string } | null;
+};
+
 function xmlEscape(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
   return String(value)
@@ -32,11 +45,11 @@ function getLocaleFromRequest(request: Request): FeedLocale {
 export async function GET(request: Request) {
   try {
     const locale = getLocaleFromRequest(request);
-    const products = await sqlGetAllProductsUncached();
+    const products = (await sqlGetAllProductsUncached()) as ProductRow[];
 
     let itemsXml = "";
 
-    for (const p of products as any[]) {
+    for (const p of products) {
       const id = p.id;
 
       let title: string = p.name;
