@@ -44,6 +44,10 @@ export async function POST() {
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS fabric_composition_de TEXT`;
     console.log("✅ Added fabric_composition_de column");
 
+    // Availability status for manual stock control
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS availability_status TEXT DEFAULT 'available'`;
+    console.log("✅ Added products.availability_status column");
+
     // Category localizations
     await sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS name_en TEXT`;
     console.log("✅ Added categories.name_en column");

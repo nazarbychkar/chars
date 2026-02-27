@@ -59,6 +59,10 @@ export default function FormElements() {
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [subcategories, setSubcategories] = useState<Category[]>([]);
 
+  type AvailabilityStatus = "available" | "sold_out" | "coming_soon";
+  const [availabilityStatus, setAvailabilityStatus] =
+    useState<AvailabilityStatus>("available");
+
   const [fabricComposition, setFabricComposition] = useState("");
   const [fabricCompositionEn, setFabricCompositionEn] = useState("");
   const [fabricCompositionDe, setFabricCompositionDe] = useState("");
@@ -369,6 +373,7 @@ export default function FormElements() {
           category_id: categoryId,
           subcategory_id: subcategoryId,
           media: uploadedMedia,
+          availability_status: availabilityStatus,
           fabric_composition: fabricComposition,
           fabric_composition_en: fabricCompositionEn || null,
           fabric_composition_de: fabricCompositionDe || null,
@@ -405,6 +410,7 @@ export default function FormElements() {
       setLimitedEdition(false);
       setSeason([]);
       setCategoryId(null);
+      setAvailabilityStatus("available");
       setFabricComposition("");
       setFabricCompositionEn("");
       setFabricCompositionDe("");
@@ -931,6 +937,42 @@ export default function FormElements() {
                     setEnabled={setLimitedEdition}
                     label="Limited Edition"
                   />
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <Label>Статус на сайті</Label>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="availabilityStatus"
+                        value="available"
+                        checked={availabilityStatus === "available"}
+                        onChange={() => setAvailabilityStatus("available")}
+                      />
+                      <span>В наявності (можна купити)</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="availabilityStatus"
+                        value="sold_out"
+                        checked={availabilityStatus === "sold_out"}
+                        onChange={() => setAvailabilityStatus("sold_out")}
+                      />
+                      <span>Товар продано (не можна додати в кошик)</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="availabilityStatus"
+                        value="coming_soon"
+                        checked={availabilityStatus === "coming_soon"}
+                        onChange={() => setAvailabilityStatus("coming_soon")}
+                      />
+                      <span>Очікуємо поставку (не можна додати в кошик)</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </ComponentCard>

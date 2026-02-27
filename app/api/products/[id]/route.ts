@@ -115,6 +115,10 @@ export async function PUT(
     const priority = body.priority ? Number(body.priority) : 0;
     const hasLining = body.has_lining === true;
     const liningDescription = body.lining_description || ""; // Add this line to handle it
+    const availabilityStatus =
+      typeof body.availability_status === "string"
+        ? body.availability_status
+        : "available";
 
     await sqlPutProduct(id, {
       name: body.name.trim(),
@@ -131,6 +135,7 @@ export async function PUT(
       top_sale: topSale,
       limited_edition: limitedEdition,
       season,
+      availability_status: availabilityStatus,
       color,
       category_id: categoryId,
       subcategory_id: subcategoryId,

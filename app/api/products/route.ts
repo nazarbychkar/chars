@@ -110,6 +110,7 @@ export async function POST(req: Request) {
         fabric_composition = "",
         has_lining = false,
         lining_description = "",
+        availability_status = "available",
       } = body || {};
 
       if (!name || typeof price !== "number") {
@@ -148,6 +149,7 @@ export async function POST(req: Request) {
         has_lining,
         lining_description,
         colors,
+        availability_status,
       });
 
       return NextResponse.json(product, { status: 201 });

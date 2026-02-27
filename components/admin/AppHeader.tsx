@@ -129,14 +129,14 @@ const AppHeader: React.FC = () => {
               width={154}
               height={32}
               className="dark:hidden"
-              src="/images/logo/logo.svg"
+              src="/images/light-theme/chars-logo-header-light.png"
               alt="Logo"
             />
             <Image
               width={154}
               height={32}
               className="hidden dark:block"
-              src="/images/logo/logo-dark.svg"
+              src="/images/dark-theme/chars-logo-header-dark.png"
               alt="Logo"
             />
           </Link>
@@ -161,7 +161,7 @@ const AppHeader: React.FC = () => {
             </svg>
           </button>
 
-          <div className="hidden lg:block">
+          <div className="w-full max-w-xl lg:max-w-none lg:block">
             <form>
               <div className="relative">
                 <span className="absolute -translate-y-1/2 left-4 top-1/2 pointer-events-none">

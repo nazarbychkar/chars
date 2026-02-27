@@ -85,6 +85,7 @@ async function _sqlGetAllProducts() {
       p.category_id,
       p.subcategory_id,
       p.created_at,
+      p.availability_status,
       c.name AS category_name,
       sc.name AS subcategory_name,
       m.first_media
@@ -134,6 +135,7 @@ export async function sqlGetProduct(id: number) {
       p.top_sale,
       p.limited_edition,
       p.season,
+      p.availability_status,
       p.color,
       p.category_id,
       p.subcategory_id,
@@ -449,6 +451,7 @@ export async function sqlPostProduct(product: {
   color?: string;
   category_id?: number | null;
   subcategory_id?: number | null; // ✅ NEW
+  availability_status?: string | null;
   fabric_composition?: string;
   fabric_composition_en?: string | null;
   fabric_composition_de?: string | null;
@@ -466,7 +469,8 @@ export async function sqlPostProduct(product: {
       top_sale, limited_edition, season, color,
       category_id, subcategory_id,
       fabric_composition, fabric_composition_en, fabric_composition_de,
-      has_lining, lining_description
+      has_lining, lining_description,
+      availability_status
     )
     VALUES (
       ${product.name},
@@ -490,7 +494,8 @@ export async function sqlPostProduct(product: {
       ${product.fabric_composition_en || null},
       ${product.fabric_composition_de || null},
       ${product.has_lining || false},
-      ${product.lining_description || null}
+      ${product.lining_description || null},
+      ${product.availability_status || 'available'}
     )
     RETURNING id;
   `;
@@ -545,6 +550,7 @@ export async function sqlPutProduct(
     top_sale?: boolean;
     limited_edition?: boolean;
     season?: string[] | string;
+    availability_status?: string | null;
     color?: string;
     category_id?: number | null;
     subcategory_id?: number | null;
@@ -588,6 +594,7 @@ export async function sqlPutProduct(
       top_sale = ${update.top_sale || false},
       limited_edition = ${update.limited_edition || false},
       season = ${seasonValue},
+      availability_status = ${update.availability_status || 'available'},
       color = ${update.color || null},
       category_id = ${update.category_id ? Number(update.category_id) : null},
       subcategory_id = ${update.subcategory_id ? Number(update.subcategory_id) : null},

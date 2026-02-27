@@ -7,6 +7,7 @@ interface ProductClientWrapperProps {
   product: {
     id: number;
     name: string;
+    availability_status?: string | null;
     price: number;
     old_price?: number;
     discount_percentage?: number;

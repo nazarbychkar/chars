@@ -99,6 +99,10 @@ export default function EditProductPage() {
   const [isTranslatingFabric, setIsTranslatingFabric] = useState(false);
   const [isTranslatingLining, setIsTranslatingLining] = useState(false);
 
+  type AvailabilityStatus = "available" | "sold_out" | "coming_soon";
+  const [availabilityStatus, setAvailabilityStatus] =
+    useState<AvailabilityStatus>("available");
+
   // -------- Simple free translators (Google + MyMemory) --------
   const translateWithGoogleFree = async (
     text: string,
@@ -280,6 +284,10 @@ export default function EditProductPage() {
 
         setCategoryOptions(categoryData);
         setColors(productData.colors || []);
+
+        setAvailabilityStatus(
+          (productData.availability_status as AvailabilityStatus) || "available"
+        );
       } catch (err) {
         console.error("Failed to fetch product or categories", err);
         setError("Помилка при завантаженні товару або категорій");
@@ -507,6 +515,7 @@ export default function EditProductPage() {
           lining_description: formData.liningDescription,
           lining_description_en: formData.liningDescriptionEn || null,
           lining_description_de: formData.liningDescriptionDe || null,
+          availability_status: availabilityStatus,
         }),
       });
 
@@ -529,8 +538,8 @@ export default function EditProductPage() {
       ) : (
         <form onSubmit={handleSubmit}>
           <PageBreadcrumb pageTitle="Редагувати Товар" />
-          <div className="flex w-full h-auto">
-            <div className="w-1/2 p-4">
+          <div className="flex w-full h-auto flex-col lg:flex-row">
+            <div className="w-full p-4 lg:w-1/2">
               <ComponentCard title="Редагувати дані">
                 {/* Назва товару + локалізації */}
                 <Label>Назва товару (UA)</Label>
@@ -1101,10 +1110,46 @@ export default function EditProductPage() {
                     label="Limited Edition"
                   />
                 </div>
+
+              <div className="mt-4 space-y-2">
+                <Label>Статус на сайті</Label>
+                <div className="flex flex-col gap-1 text-sm">
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="availabilityStatus"
+                      value="available"
+                      checked={availabilityStatus === "available"}
+                      onChange={() => setAvailabilityStatus("available")}
+                    />
+                    <span>В наявності (можна купити)</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="availabilityStatus"
+                      value="sold_out"
+                      checked={availabilityStatus === "sold_out"}
+                      onChange={() => setAvailabilityStatus("sold_out")}
+                    />
+                    <span>Товар продано (не можна додати в кошик)</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="availabilityStatus"
+                      value="coming_soon"
+                      checked={availabilityStatus === "coming_soon"}
+                      onChange={() => setAvailabilityStatus("coming_soon")}
+                    />
+                    <span>Очікуємо поставку (не можна додати в кошик)</span>
+                  </label>
+                </div>
+              </div>
               </ComponentCard>
             </div>
 
-            <div className="w-1/2 p-4">
+            <div className="w-full p-4 lg:w-1/2">
               <DropzoneComponent onDrop={handleDrop} />
               <div className="mt-2 flex flex-wrap gap-4 text-sm">
                 {formData.media.map((item, i) => (

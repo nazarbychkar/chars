@@ -204,6 +204,7 @@ type Messages = {
     viewColorAria: (label: string) => string;
     recommendationsTitle: string;
     moreProductsLabel: string;
+    comingSoonLabel: string;
   };
   admin?: {
     ordersFetchError: string;
@@ -514,6 +515,7 @@ export const messages: MessagesMap = {
       viewColorAria: (label) => `Переглянути ${label}`,
       recommendationsTitle: "Доповніть свій LOOK",
       moreProductsLabel: "Більше товарів",
+      comingSoonLabel: "Очікуємо поставку",
     },
     admin: {
       ordersFetchError: "Не вдалося завантажити замовлення",
@@ -824,6 +826,7 @@ export const messages: MessagesMap = {
       viewColorAria: (label) => `${label} ansehen`,
       recommendationsTitle: "Ergänzen Sie Ihren LOOK",
       moreProductsLabel: "Mehr Produkte",
+      comingSoonLabel: "Bald verfügbar",
     },
     admin: {
       ordersFetchError: "Bestellungen konnten nicht geladen werden",
@@ -1131,6 +1134,7 @@ export const messages: MessagesMap = {
       viewColorAria: (label) => `View ${label}`,
       recommendationsTitle: "Complete your LOOK",
       moreProductsLabel: "More products",
+      comingSoonLabel: "Coming soon",
     },
     admin: {
       ordersFetchError: "Failed to fetch orders",

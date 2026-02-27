@@ -14,6 +14,7 @@ type ProductRow = {
   description?: string | null;
   description_en?: string | null;
   description_de?: string | null;
+  availability_status?: string | null;
   category_name?: string | null;
   price: number | string;
   price_eur?: number | string | null;
@@ -85,9 +86,13 @@ export async function GET(request: Request) {
           p.description_de || p.description || p.description_en || p.name;
       }
 
-      // Availability: in stock if є хоч один розмір зі stock > 0, інакше out of stock.
-      // Тут products з _sqlGetAllProducts не мають sizes, тому вважаємо in stock.
-      const availability = "in stock";
+      // Availability based on manual status
+      let availability = "in stock";
+      if (p.availability_status === "sold_out") {
+        availability = "out of stock";
+      } else if (p.availability_status === "coming_soon") {
+        availability = "preorder";
+      }
 
       const condition = "new";
 

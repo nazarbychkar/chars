@@ -14,6 +14,7 @@ type ProductRow = {
   description?: string | null;
   description_en?: string | null;
   description_de?: string | null;
+  availability_status?: string | null;
   price: number | string;
   price_eur?: number | string | null;
   first_media?: { url: string; type: string } | null;
@@ -105,7 +106,12 @@ export async function GET(request: Request) {
       }
 
       const brand = "CHARS";
-      const availability = "in stock";
+      let availability = "in stock";
+      if (p.availability_status === "sold_out") {
+        availability = "out of stock";
+      } else if (p.availability_status === "coming_soon") {
+        availability = "preorder";
+      }
       const condition = "new";
       const googleProductCategory = "";
 

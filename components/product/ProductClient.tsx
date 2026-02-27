@@ -76,6 +76,7 @@ interface ProductClientProps {
     lining_description?: string;
     lining_description_en?: string | null;
     lining_description_de?: string | null;
+    availability_status?: string | null;
   };
 }
 
@@ -331,6 +332,12 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     "l",
     "xl",
   ];
+  const availabilityStatus =
+    (product.availability_status as "available" | "sold_out" | "coming_soon" | null) ||
+    "available";
+  const manuallyUnavailable =
+    availabilityStatus === "sold_out" || availabilityStatus === "coming_soon";
+
   const outOfStock = sizes.length === 0;
 
   // SWIPER
@@ -520,7 +527,11 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         <div className="flex flex-col gap-4 md:gap-5 px-4 md:px-0 w-full lg:w-1/2">
           {/* Availability */}
           <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-            {messages.product.inStockLabel}
+            {manuallyUnavailable
+              ? availabilityStatus === "sold_out"
+                ? messages.product.outOfStockLabel
+                : messages.product.comingSoonLabel
+              : messages.product.inStockLabel}
           </div>
 
           {/* Product Name */}
@@ -582,9 +593,13 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           </div>
 
           {/* Size Options */}
-          {sizes.length === 0 ? (
+          {sizes.length === 0 || manuallyUnavailable ? (
             <div className="inline-flex items-center gap-2 px-3 py-2 rounded border text-sm uppercase tracking-wide bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 w-fit">
-              {messages.product.outOfStockLabel}
+              {manuallyUnavailable
+                ? availabilityStatus === "sold_out"
+                  ? messages.product.outOfStockLabel
+                  : messages.product.comingSoonLabel
+                : messages.product.outOfStockLabel}
             </div>
           ) : (
           <div className="flex flex-wrap gap-2 md:gap-3">
@@ -680,18 +695,22 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
           {/* Add to Cart Button */}
           <div
-            onClick={outOfStock ? undefined : handleAddToCart}
+            onClick={outOfStock || manuallyUnavailable ? undefined : handleAddToCart}
             className={`w-full text-center ${
               isDark
                 ? "bg-white text-black hover:bg-gray-100"
                 : "bg-black text-white hover:bg-gray-800"
             } p-3 text-lg md:text-xl font-medium font-['Inter'] uppercase tracking-tight transition-all duration-200 ${
-              outOfStock
+              outOfStock || manuallyUnavailable
                 ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             }`}
           >
-            {messages.product.addToCartLabel}
+            {manuallyUnavailable
+              ? availabilityStatus === "sold_out"
+                ? messages.product.outOfStockLabel
+                : messages.product.comingSoonLabel
+              : messages.product.addToCartLabel}
           </div>
 
           {/* Telegram Manager Link */}
