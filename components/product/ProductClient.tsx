@@ -335,8 +335,9 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   const availabilityStatus =
     (product.availability_status as "available" | "sold_out" | "coming_soon" | null) ||
     "available";
-  const manuallyUnavailable =
-    availabilityStatus === "sold_out" || availabilityStatus === "coming_soon";
+  // Only fully block purchase when marked as sold out.
+  // Products in "coming_soon" status can still be added to the basket (pre-order).
+  const manuallyUnavailable = availabilityStatus === "sold_out";
 
   const outOfStock = sizes.length === 0;
 
@@ -593,12 +594,10 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           </div>
 
           {/* Size Options */}
-          {sizes.length === 0 || manuallyUnavailable ? (
+          {sizes.length === 0 || availabilityStatus === "sold_out" ? (
             <div className="inline-flex items-center gap-2 px-3 py-2 rounded border text-sm uppercase tracking-wide bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 w-fit">
-              {manuallyUnavailable
-                ? availabilityStatus === "sold_out"
-                  ? messages.product.outOfStockLabel
-                  : messages.product.comingSoonLabel
+              {availabilityStatus === "sold_out"
+                ? messages.product.outOfStockLabel
                 : messages.product.outOfStockLabel}
             </div>
           ) : (
@@ -695,21 +694,21 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
           {/* Add to Cart Button */}
           <div
-            onClick={outOfStock || manuallyUnavailable ? undefined : handleAddToCart}
+            onClick={outOfStock || availabilityStatus === "sold_out" ? undefined : handleAddToCart}
             className={`w-full text-center ${
               isDark
                 ? "bg-white text-black hover:bg-gray-100"
                 : "bg-black text-white hover:bg-gray-800"
             } p-3 text-lg md:text-xl font-medium font-['Inter'] uppercase tracking-tight transition-all duration-200 ${
-              outOfStock || manuallyUnavailable
+              outOfStock || availabilityStatus === "sold_out"
                 ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             }`}
           >
-            {manuallyUnavailable
-              ? availabilityStatus === "sold_out"
-                ? messages.product.outOfStockLabel
-                : messages.product.comingSoonLabel
+            {availabilityStatus === "sold_out"
+              ? messages.product.outOfStockLabel
+              : availabilityStatus === "coming_soon"
+              ? messages.product.comingSoonLabel
               : messages.product.addToCartLabel}
           </div>
 
