@@ -1142,7 +1142,7 @@ export default function EditProductPage() {
                       checked={availabilityStatus === "coming_soon"}
                       onChange={() => setAvailabilityStatus("coming_soon")}
                     />
-                    <span>Очікуємо поставку (не можна додати в кошик)</span>
+                    <span>Очікуємо поставку (можна додати в кошик)</span>
                   </label>
                 </div>
               </div>

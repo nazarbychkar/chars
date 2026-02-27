@@ -335,8 +335,10 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   const availabilityStatus =
     (product.availability_status as "available" | "sold_out" | "coming_soon" | null) ||
     "available";
-  // Only fully block purchase when marked as sold out.
-  // Products in "coming_soon" status can still be added to the basket (pre-order).
+  // Для фронту:
+  // - "available" → можна купити
+  // - "sold_out" → не можна купити
+  // - "coming_soon" → показуємо "Очікуємо поставку", але можна додати в кошик (pre-order)
   const manuallyUnavailable = availabilityStatus === "sold_out";
 
   const outOfStock = sizes.length === 0;
