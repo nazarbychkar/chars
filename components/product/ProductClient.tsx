@@ -338,7 +338,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   // Для фронту:
   // - "available" → можна купити
   // - "sold_out" → не можна купити
-  // - "coming_soon" → показуємо "Очікуємо поставку", але можна додати в кошик (pre-order)
+  // - "coming_soon" → показуємо як "немає в наявності" у статусі, але можна додати в кошик (pre-order)
   const manuallyUnavailable = availabilityStatus === "sold_out";
 
   const outOfStock = sizes.length === 0;
@@ -530,10 +530,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         <div className="flex flex-col gap-4 md:gap-5 px-4 md:px-0 w-full lg:w-1/2">
           {/* Availability */}
           <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide">
-            {manuallyUnavailable
-              ? availabilityStatus === "sold_out"
-                ? messages.product.outOfStockLabel
-                : messages.product.comingSoonLabel
+            {availabilityStatus === "sold_out" || availabilityStatus === "coming_soon"
+              ? messages.product.outOfStockLabel
               : messages.product.inStockLabel}
           </div>
 
@@ -710,7 +708,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             {availabilityStatus === "sold_out"
               ? messages.product.outOfStockLabel
               : availabilityStatus === "coming_soon"
-              ? messages.product.comingSoonLabel
+              ? "pre order"
               : messages.product.addToCartLabel}
           </div>
 
