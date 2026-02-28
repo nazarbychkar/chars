@@ -48,6 +48,13 @@ export default function Header() {
   const toggleTheme = () => setIsDark((prev) => !prev);
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isFbTestMode, setIsFbTestMode] = useState(false);
+
+  useEffect(() => {
+    setIsFbTestMode(
+      new URLSearchParams(window.location.search).has("test_event_code")
+    );
+  }, []);
 
   // Treat localized home routes as "home" for transparent hero header
   const isHomePage =
@@ -523,13 +530,13 @@ export default function Header() {
                 />
               </button>
               <button
-                onClick={() => setIsSearchOpen(true)}
-                className="focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                onClick={() => !isFbTestMode && setIsSearchOpen(true)}
+                className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
                 aria-label={messages.header.searchOpenAria}
                 aria-expanded={isSearchOpen}
+                aria-disabled={isFbTestMode}
               >
                 <Image
-                  className="cursor-pointer"
                   height="32"
                   width="32"
                   alt=""
@@ -641,10 +648,11 @@ export default function Header() {
 
           <div className="flex gap-2 items-center">
             <button
-              onClick={() => setIsSearchOpen(true)}
-              className="focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              onClick={() => !isFbTestMode && setIsSearchOpen(true)}
+              className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
               aria-label={messages.header.searchOpenAria}
               aria-expanded={isSearchOpen}
+              aria-disabled={isFbTestMode}
             >
               <Image
                 height="32"
