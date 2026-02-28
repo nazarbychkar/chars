@@ -529,7 +529,7 @@ export default function Header() {
                   }
                 />
               </button>
-              <button
+              {/* <button
                 onClick={() => !isFbTestMode && setIsSearchOpen(true)}
                 className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
                 aria-label={messages.header.searchOpenAria}
@@ -547,7 +547,7 @@ export default function Header() {
                       : "/images/light-theme/search.svg"
                   }
                 />
-              </button>
+              </button> */}
               <button
                 className="cursor-pointer relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
@@ -647,7 +647,7 @@ export default function Header() {
           </Link>
 
           <div className="flex gap-2 items-center">
-            <button
+            {/* <button
               onClick={() => !isFbTestMode && setIsSearchOpen(true)}
               className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
               aria-label={messages.header.searchOpenAria}
@@ -665,7 +665,7 @@ export default function Header() {
                     : "/images/light-theme/search.svg"
                 }
               />
-            </button>
+            </button> */}
             <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
               className="relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
