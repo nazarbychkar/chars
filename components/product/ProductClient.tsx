@@ -692,8 +692,10 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             </div>
           ) : null}
 
-          {/* Add to Cart Button */}
-          <div
+          {/* Add to Cart Button — <button> щоб Meta/Facebook розпізнавав кнопку для подій (AddToCart) */}
+          <button
+            type="button"
+            disabled={outOfStock || availabilityStatus === "sold_out"}
             onClick={outOfStock || availabilityStatus === "sold_out" ? undefined : handleAddToCart}
             className={`w-full text-center ${
               isDark
@@ -704,13 +706,20 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                 ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
             }`}
+            aria-label={
+              availabilityStatus === "sold_out"
+                ? messages.product.outOfStockLabel
+                : availabilityStatus === "coming_soon"
+                ? "pre order"
+                : messages.product.addToCartLabel
+            }
           >
             {availabilityStatus === "sold_out"
               ? messages.product.outOfStockLabel
               : availabilityStatus === "coming_soon"
               ? "pre order"
               : messages.product.addToCartLabel}
-          </div>
+          </button>
 
           {/* Telegram Manager Link */}
           <a
