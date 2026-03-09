@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       city,
       post_office,
       comment,
-      payment_type, // "full" або "prepay"
+      payment_type, // "full", "prepay" або "paypal_full"
       items,
       currency,
       locale,
@@ -243,6 +243,168 @@ export async function POST(req: NextRequest) {
       orderLocale === "uk" || orderLocale === "de" || orderLocale === "en"
         ? `/${orderLocale}`
         : "";
+
+    // ==========================
+    // PayPal full payment flow
+    // ==========================
+    if (payment_type === "paypal_full") {
+      console.log("[POST /api/orders] Using PayPal full payment flow");
+
+      const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+      const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+      const env = process.env.PAYPAL_ENV || "sandbox";
+
+      if (!clientId || !clientSecret) {
+        console.error("[POST /api/orders] PayPal keys missing");
+        return NextResponse.json(
+          {
+            error:
+              "На жаль, наразі ми не можемо створити посилання на оплату PayPal. Будь ласка, спробуйте пізніше або оберіть інший спосіб оплати.",
+          },
+          { status: 500 }
+        );
+      }
+
+      const paypalBaseUrl =
+        env === "live"
+          ? "https://api-m.paypal.com"
+          : "https://api-m.sandbox.paypal.com";
+
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+        "base64"
+      );
+
+      const tokenRes = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${basicAuth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: "grant_type=client_credentials",
+      });
+
+      if (!tokenRes.ok) {
+        const err = await tokenRes.text();
+        console.error("[POST /api/orders] PayPal token error:", err);
+        return NextResponse.json(
+          {
+            error:
+              "На жаль, наразі ми не можемо створити посилання на оплату PayPal. Будь ласка, спробуйте пізніше або оберіть інший спосіб оплати.",
+          },
+          { status: 500 }
+        );
+      }
+
+      const tokenData = await tokenRes.json();
+      const accessToken = tokenData.access_token as string;
+
+      const paypalOrderBody = {
+        intent: "CAPTURE",
+        purchase_units: [
+          {
+            reference_id: reference,
+            amount: {
+              currency_code: isEuroSelected ? "EUR" : "UAH",
+              value: amountToPay.toFixed(2),
+            },
+          },
+        ],
+        application_context: {
+          brand_name: "CHARS",
+          landing_page: "NO_PREFERENCE",
+          user_action: "PAY_NOW",
+          return_url: `${PUBLIC_URL}${localePath}/payment/status`,
+          cancel_url: `${PUBLIC_URL}${localePath}/final`,
+        },
+      };
+
+      console.log(
+        "[POST /api/orders] Creating PayPal order with body:",
+        JSON.stringify(paypalOrderBody, null, 2)
+      );
+
+      const orderRes = await fetch(`${paypalBaseUrl}/v2/checkout/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(paypalOrderBody),
+      });
+
+      const orderData = await orderRes.json();
+      console.log(
+        "[POST /api/orders] PayPal order response:",
+        JSON.stringify(orderData, null, 2)
+      );
+
+      if (!orderRes.ok) {
+        console.error("[POST /api/orders] PayPal order error:", orderData);
+        return NextResponse.json(
+          {
+            error:
+              "На жаль, наразі ми не можемо створити посилання на оплату PayPal. Будь ласка, спробуйте пізніше або оберіть інший спосіб оплати.",
+            details: orderData,
+          },
+          { status: 500 }
+        );
+      }
+
+      const paypalOrderId = orderData.id as string | undefined;
+      const approveUrl: string | undefined = Array.isArray(orderData.links)
+        ? orderData.links.find((l: { rel?: string }) => l.rel === "approve")
+            ?.href
+        : undefined;
+
+      if (!paypalOrderId || !approveUrl) {
+        console.error("[POST /api/orders] Missing PayPal approve URL or id");
+        return NextResponse.json(
+          {
+            error:
+              "На жаль, наразі ми не можемо створити посилання на оплату PayPal. Будь ласка, спробуйте пізніше або оберіть інший спосіб оплати.",
+          },
+          { status: 500 }
+        );
+      }
+
+      console.log("[POST /api/orders] Saving PayPal order to database...");
+      await sqlPostOrder({
+        customer_name,
+        phone_number,
+        email,
+        delivery_method,
+        city,
+        post_office,
+        comment,
+        payment_type,
+        invoice_id: paypalOrderId,
+        payment_status: "pending",
+        currency: isEuroSelected ? "EUR" : "UAH",
+        locale: typeof locale === "string" ? locale : null,
+        items: normalizedItems.map(
+          ({ product_id, size, quantity, price, color }) => ({
+            product_id,
+            size,
+            quantity,
+            price,
+            color,
+          })
+        ),
+      });
+      console.log("[POST /api/orders] PayPal order saved to database");
+
+      console.log("[POST /api/orders] Returning PayPal approve URL");
+      console.log("=".repeat(50));
+
+      return NextResponse.json({
+        invoiceUrl: approveUrl,
+        invoiceId: paypalOrderId,
+      });
+    }
+
+    // ==========================
+    // Monobank flow (default)
+    // ==========================
 
     const invoicePayload = {
       amount: amountInMinorUnits,

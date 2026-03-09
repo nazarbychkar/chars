@@ -1083,7 +1083,11 @@ export default function FinalCard() {
                 id="paymentType"
                 className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
                 value={paymentType}
-                onChange={(e) => setPaymentType(e.target.value as "full" | "prepay" | "")}
+                onChange={(e) =>
+                  setPaymentType(
+                    e.target.value as "" | "full" | "prepay"
+                  )
+                }
                 required
               >
                 {!isUkraineShipping && (
@@ -1099,6 +1103,9 @@ export default function FinalCard() {
                     {messages.checkout.paymentOptionPrepay}
                   </option>
                 )}
+                <option value="paypal_disabled" disabled>
+                  {messages.checkout.paymentOptionPaypalFull} (скоро)
+                </option>
               </select>
 
               <button

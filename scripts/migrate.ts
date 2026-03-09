@@ -79,6 +79,14 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_product_sizes_product_id ON product_sizes(product_id);
     `,
   },
+  {
+    id: "2026-03-09_add_availability_status_to_products",
+    description: "Add availability_status column to products table",
+    sql: `
+      ALTER TABLE products
+      ADD COLUMN IF NOT EXISTS availability_status TEXT DEFAULT 'available';
+    `,
+  },
 ];
 
 async function ensureMigrationsTable(pool: Pool) {

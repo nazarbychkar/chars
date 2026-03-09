@@ -193,6 +193,8 @@ export default function EditOrderPage() {
                     ? "Повна оплата"
                     : formData.payment_type === "prepay"
                     ? "Передоплата 300 ₴"
+                    : formData.payment_type === "paypal_full"
+                    ? "Повна оплата через PayPal"
                     : "Не вказано"
                 }
                 disabled

@@ -122,6 +122,7 @@ type Messages = {
     paymentMethodPlaceholder: string;
     paymentOptionFull: string;
     paymentOptionPrepay: string;
+    paymentOptionPaypalFull: string;
     submitSending: string;
     submitLabel: string;
     basketEmptyInline: string;
@@ -392,6 +393,7 @@ export const messages: MessagesMap = {
       paymentMethodPlaceholder: "Оберіть спосіб оплати",
       paymentOptionFull: "Повна оплата",
       paymentOptionPrepay: "Передоплата 300 ₴",
+      paymentOptionPaypalFull: "Повна оплата через PayPal",
       submitSending: "Відправка...",
       submitLabel: "Відправити",
       basketEmptyInline: "Ваш кошик порожній",
@@ -703,6 +705,7 @@ export const messages: MessagesMap = {
       paymentMethodPlaceholder: "Zahlungsart wählen",
       paymentOptionFull: "Vollständige Zahlung",
       paymentOptionPrepay: "Anzahlung 300 ₴",
+      paymentOptionPaypalFull: "Vollständige Zahlung über PayPal",
       submitSending: "Wird gesendet...",
       submitLabel: "Senden",
       basketEmptyInline: "Ihr Warenkorb ist leer",
@@ -1011,6 +1014,7 @@ export const messages: MessagesMap = {
       paymentMethodPlaceholder: "Choose payment method",
       paymentOptionFull: "Full payment",
       paymentOptionPrepay: "Prepayment 300 ₴",
+      paymentOptionPaypalFull: "Full payment via PayPal",
       submitSending: "Sending...",
       submitLabel: "Submit",
       basketEmptyInline: "Your cart is empty",

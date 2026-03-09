@@ -67,6 +67,8 @@ export async function POST(req: NextRequest) {
 💰 <b>Оплата:</b> ${
         order.payment_type === "prepay"
           ? "Передплата (300 грн)"
+          : order.payment_type === "paypal_full"
+          ? "Повна оплата через PayPal"
           : "Повна оплата"
       }
 🧾 <b>Сума:</b> ${(amount / 100).toFixed(2)} ${currencySymbol}

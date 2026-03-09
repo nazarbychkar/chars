@@ -69,6 +69,40 @@ function PaymentSuccessContent() {
     fetchOrder();
   }, [invoiceId, router]);
 
+  useEffect(() => {
+    if (!order) return;
+    if (typeof window === "undefined") return;
+
+    const totalValue =
+      order.items?.reduce(
+        (sum: number, item: OrderItem) => sum + item.price * item.quantity,
+        0
+      ) ?? 0;
+
+    if (window.fbq) {
+      window.fbq("track", "Purchase", {
+        value: totalValue,
+        currency: "UAH",
+        contents: order.items.map((item: OrderItem) => ({
+          id: item.product_name,
+          quantity: item.quantity,
+          item_price: item.price,
+        })),
+        content_type: "product",
+        order_id: order.id,
+      });
+    }
+
+    if (window.clarity) {
+      window.clarity("event", "purchase", {
+        orderId: order.id,
+        value: totalValue,
+        currency: "UAH",
+        items: order.items.length,
+      });
+    }
+  }, [order]);
+
   if (loading) {
     return (
       <div
