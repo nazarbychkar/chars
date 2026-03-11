@@ -739,7 +739,7 @@ export default function FinalCard() {
               isDark
                 ? "bg-stone-100 text-stone-900"
                 : "bg-stone-900 text-stone-100"
-            } w-full sm:w-80 h-14 sm:h-16 px-6 py-3 inline-flex items-center justify-center gap-2.5 text-base sm:text-xl text-center `}
+            } w-full sm:w-80 h-16 sm:h-20 px-8 py-4 inline-flex items-center justify-center gap-2.5 text-lg sm:text-2xl text-center `}
             >
             {messages.checkout.continueShopping}
           </Link>

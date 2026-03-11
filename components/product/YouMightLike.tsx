@@ -141,12 +141,12 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
         </div>
 
         {/* More products button container */}
-<div className="w-full max-w-full sm:max-w-[1824px] h-[300px] sm:h-[679px] bg-[url('/images/bg-def.png')] bg-cover bg-center relative overflow-hidden mx-auto">
+        <div className="w-full max-w-full sm:max-w-[1824px] h-[320px] sm:h-[720px] bg-[url('/images/bg-def.png')] bg-cover bg-center relative overflow-hidden mx-auto">
           <Link
             href={withLocalePath("/catalog")}
-            className="absolute bg-white inline-flex justify-center items-center gap-2 px-4 py-2 left-1/2 transform -translate-x-1/2 bottom-30 w-max sm:w-80 h-auto sm:h-16"
+            className="absolute bg-white inline-flex justify-center items-center gap-2 px-6 py-3 left-1/2 transform -translate-x-1/2 bottom-30 w-max sm:w-96 h-auto sm:h-20"
           >
-            <div className="text-center justify-center text-black text-base sm:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
+            <div className="text-center justify-center text-black text-lg sm:text-3xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
               {messages.product.moreProductsLabel}
             </div>
           </Link>

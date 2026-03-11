@@ -56,13 +56,13 @@ export default function Header() {
     );
   }, []);
 
-  // Treat localized home routes as "home" for transparent hero header
+  // Treat localized home routes as "home"
   const isHomePage =
     pathname === "/" ||
     pathname === `/${locale}` ||
     pathname === `/${locale}/`;
 
-  // Track scroll position for solid header after hero
+  // Track scroll position only for adding subtle shadow
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -174,12 +174,10 @@ export default function Header() {
     <>
       <header
         className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 transform -translate-x-1/2 w-full z-50 transition-all duration-300 ${
-          isHomePage && !isScrolled
-            ? "bg-transparent text-white"
-            : isDark
-            ? "bg-[#1e1e1e] text-white shadow-md"
-            : "bg-stone-100 text-black shadow-md"
-        }`}
+          isDark
+            ? "bg-[#1e1e1e] text-white"
+            : "bg-stone-100 text-black"
+        } ${isScrolled ? "shadow-md" : ""}`}
         onMouseLeave={() => {
           if (!pinnedCatalog) {
             hoverTimeout.current = setTimeout(() => {
@@ -190,11 +188,7 @@ export default function Header() {
         }}
       >
         {/* === WRAPPER: everything inside shares same bg and styles === */}
-        <div
-          className={`w-full transition-all duration-300 ${
-            !isScrolled ? "" : "shadow-md"
-          }`}
-        >
+        <div className="w-full transition-all duration-300">
           {/* Top nav */}
           <div className="hidden lg:flex justify-between items-center h-20 px-10">
             <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
@@ -252,9 +246,7 @@ export default function Header() {
                     subcategories.length > 0 && (
                       <div
                         className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
-                          isHomePage && !isScrolled
-                            ? "bg-white/95 backdrop-blur-sm"
-                            : "bg-white"
+                          "bg-white"
                         }`}
                       >
                         {subcategories.map((subcat) => (
@@ -298,9 +290,7 @@ export default function Header() {
                 {hoveredCategoryId === customSeasonCategory.id && (
                   <div
                     className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
-                      isHomePage && !isScrolled
-                        ? "bg-white/95 backdrop-blur-sm"
-                        : "bg-white"
+                      "bg-white"
                     }`}
                   >
                     {customSeasonCategory.subcategories.map((subcat) => (
@@ -335,11 +325,7 @@ export default function Header() {
                 </span>
 
                 <div
-                  className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 transition-opacity duration-200 ${
-                    isHomePage && !isScrolled
-                      ? "bg-white/95 backdrop-blur-sm"
-                      : "bg-white"
-                  } ${
+                  className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 transition-opacity duration-200 bg-white ${
                     infoMenuOpen
                       ? "opacity-100 pointer-events-auto"
                       : "opacity-0 pointer-events-none"
@@ -529,9 +515,11 @@ export default function Header() {
                   }
                 />
               </button>
-              {/* <button
+              <button
                 onClick={() => !isFbTestMode && setIsSearchOpen(true)}
-                className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                  isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"
+                }`}
                 aria-label={messages.header.searchOpenAria}
                 aria-expanded={isSearchOpen}
                 aria-disabled={isFbTestMode}
@@ -547,7 +535,7 @@ export default function Header() {
                       : "/images/light-theme/search.svg"
                   }
                 />
-              </button> */}
+              </button>
               <button
                 className="cursor-pointer relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
@@ -581,11 +569,7 @@ export default function Header() {
         {/* Mobile Header */}
         <div
           className={`lg:hidden w-full h-16 relative overflow-hidden px-4 flex items-center justify-between transition-all duration-300 ${
-            isHomePage && !isScrolled
-              ? "bg-transparent text-white"
-              : isDark
-              ? "bg-[#1e1e1e] text-white"
-              : "bg-stone-100 text-black"
+            isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
           }`}
         >
           <div className="flex gap-1 items-center">
@@ -647,9 +631,11 @@ export default function Header() {
           </Link>
 
           <div className="flex gap-2 items-center">
-            {/* <button
+            <button
               onClick={() => !isFbTestMode && setIsSearchOpen(true)}
-              className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+              className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"
+              }`}
               aria-label={messages.header.searchOpenAria}
               aria-expanded={isSearchOpen}
               aria-disabled={isFbTestMode}
@@ -665,7 +651,7 @@ export default function Header() {
                     : "/images/light-theme/search.svg"
                 }
               />
-            </button> */}
+            </button>
             <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
               className="relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
