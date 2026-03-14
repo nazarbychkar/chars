@@ -13,6 +13,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { buildProductSlug } from "@/lib/slug";
+import { trackFbq } from "@/lib/fbq";
 
 // Add custom styles for smooth transitions
 const swiperStyles = `
@@ -156,7 +157,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
   // Meta Pixel: ViewContent — перегляд сторінки товару
   useEffect(() => {
-    if (typeof window === "undefined" || !window.fbq || !product?.id) return;
+    if (!product?.id) return;
     const discount = product.discount_percentage ?? 0;
     const priceUah = Number(product.price) * (1 - discount / 100);
     const priceEur =
@@ -165,14 +166,15 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         : null;
     const value = isEuro && priceEur != null ? priceEur : priceUah;
     const curr = isEuro ? "EUR" : "UAH";
-    window.fbq("track", "ViewContent", {
+    trackFbq("ViewContent", {
       content_ids: [String(product.id)],
       content_name: displayName,
       content_type: "product",
       value: Math.round(value * 100) / 100,
       currency: curr,
     });
-  }, [product?.id, product?.name, product?.price, product?.price_eur, product?.discount_percentage, displayName, isEuro]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
 
   // Fetch related products with same name
   useEffect(() => {

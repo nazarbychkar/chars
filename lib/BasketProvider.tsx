@@ -7,6 +7,7 @@ import React, {
   useState,
   ReactNode,
 } from "react";
+import { trackFbq } from "@/lib/fbq";
 
 interface BasketItem {
   id: number;
@@ -98,13 +99,12 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   function addItem(newItem: BasketItem, onError?: (message: string) => void): boolean {
     const trackAddToCart = () => {
-      if (typeof window === "undefined" || !window.fbq) return;
       const value =
         currency === "EUR" && newItem.price_eur != null
           ? newItem.price_eur * newItem.quantity
           : newItem.price * newItem.quantity;
       const curr = currency === "EUR" ? "EUR" : "UAH";
-      window.fbq("track", "AddToCart", {
+      trackFbq("AddToCart", {
         content_ids: [String(newItem.id)],
         content_name: newItem.name,
         content_type: "product",

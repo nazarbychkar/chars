@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import Link from "next/link";
+import { trackFbq } from "@/lib/fbq";
 
 interface OrderItem {
   product_name: string;
@@ -79,20 +80,18 @@ function PaymentSuccessContent() {
         0
       ) ?? 0;
 
-    if (window.fbq) {
-      window.fbq("track", "Purchase", {
-        value: totalValue,
-        currency: "UAH",
-        content_ids: order.items.map((item: OrderItem) => item.product_name),
-        contents: order.items.map((item: OrderItem) => ({
-          id: item.product_name,
-          quantity: item.quantity,
-          item_price: item.price,
-        })),
-        content_type: "product",
-        order_id: String(order.id),
-      });
-    }
+    trackFbq("Purchase", {
+      value: totalValue,
+      currency: "UAH",
+      content_ids: order.items.map((item: OrderItem) => item.product_name),
+      contents: order.items.map((item: OrderItem) => ({
+        id: item.product_name,
+        quantity: item.quantity,
+        item_price: item.price,
+      })),
+      content_type: "product",
+      order_id: String(order.id),
+    });
 
     if (window.clarity) {
       window.clarity("event", "purchase", {
