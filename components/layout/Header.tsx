@@ -515,29 +515,22 @@ export default function Header() {
                   }
                 />
               </button>
-              {/* [Тимчасово] Іконка пошуку закоментована — не показувати.
-              <button
-                onClick={() => !isFbTestMode && setIsSearchOpen(true)}
-                className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${
-                  isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"
-                }`}
-                aria-label={messages.header.searchOpenAria}
-                aria-expanded={isSearchOpen}
-                aria-disabled={isFbTestMode}
+              {/* [Тимчасово] Пошук вимкнено — pointer-events-none, щоб не заважати тестуванню подій FB. */}
+              <span
+                className="pointer-events-none opacity-50 inline-flex items-center justify-center p-1 min-w-[44px] min-h-[44px]"
+                aria-hidden="true"
               >
                 <Image
                   height="32"
                   width="32"
                   alt=""
-                  aria-hidden="true"
                   src={
                     isDark
                       ? "/images/dark-theme/search.svg"
                       : "/images/light-theme/search.svg"
                   }
                 />
-              </button>
-              */}
+              </span>
               <button
                 className="cursor-pointer relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
@@ -633,29 +626,22 @@ export default function Header() {
           </Link>
 
           <div className="flex gap-2 items-center">
-            {/* [Тимчасово] Іконка пошуку (мобільний хедер): відкриває SidebarSearch.
-                У FB Test режимі кнопка вимкнена. */}
-            {/* <button
-              onClick={() => !isFbTestMode && setIsSearchOpen(true)}
-              className={`focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center ${
-                isFbTestMode ? "pointer-events-none opacity-50" : "cursor-pointer"
-              }`}
-              aria-label={messages.header.searchOpenAria}
-              aria-expanded={isSearchOpen}
-              aria-disabled={isFbTestMode}
+            {/* [Тимчасово] Пошук вимкнено — не клікається, щоб не заважати тестуванню подій FB. */}
+            <span
+              className="pointer-events-none opacity-50 inline-flex items-center justify-center p-1 min-w-[44px] min-h-[44px]"
+              aria-hidden="true"
             >
               <Image
                 height="32"
                 width="32"
                 alt=""
-                aria-hidden="true"
                 src={
                   isDark
                     ? "/images/dark-theme/search.svg"
                     : "/images/light-theme/search.svg"
                 }
               />
-            </button> */}
+            </span>
             <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
               className="relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
