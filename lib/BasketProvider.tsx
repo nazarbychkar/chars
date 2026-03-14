@@ -98,7 +98,20 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   function addItem(newItem: BasketItem, onError?: (message: string) => void): boolean {
     const trackAddToCart = () => {
-      // Meta Pixel кастомні події вимкнені
+      if (typeof window === "undefined" || !window.fbq) return;
+      const value =
+        currency === "EUR" && newItem.price_eur != null
+          ? newItem.price_eur * newItem.quantity
+          : newItem.price * newItem.quantity;
+      const curr = currency === "EUR" ? "EUR" : "UAH";
+      window.fbq("track", "AddToCart", {
+        content_ids: [String(newItem.id)],
+        content_name: newItem.name,
+        content_type: "product",
+        value: Math.round(value * 100) / 100,
+        currency: curr,
+        num_items: newItem.quantity,
+      });
     };
 
     let shouldAdd = true;

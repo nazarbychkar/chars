@@ -154,6 +154,26 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     }
   }, [product, selectedColor]);
 
+  // Meta Pixel: ViewContent — перегляд сторінки товару
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.fbq || !product?.id) return;
+    const discount = product.discount_percentage ?? 0;
+    const priceUah = Number(product.price) * (1 - discount / 100);
+    const priceEur =
+      product.price_eur != null
+        ? Number(product.price_eur) * (1 - discount / 100)
+        : null;
+    const value = isEuro && priceEur != null ? priceEur : priceUah;
+    const curr = isEuro ? "EUR" : "UAH";
+    window.fbq("track", "ViewContent", {
+      content_ids: [String(product.id)],
+      content_name: displayName,
+      content_type: "product",
+      value: Math.round(value * 100) / 100,
+      currency: curr,
+    });
+  }, [product?.id, product?.name, product?.price, product?.price_eur, product?.discount_percentage, displayName, isEuro]);
+
   // Fetch related products with same name
   useEffect(() => {
     async function fetchRelatedProducts() {

@@ -211,22 +211,6 @@ export default function RootLayout({
             __html: JSON.stringify(generateWebsiteStructuredData(baseUrl)),
           }}
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined') {
-                window.addEventListener("load", function() {
-                  var path = window.location.pathname || "";
-                  if (path === "/payment/success" || path.endsWith("/payment/success")) {
-                    if (typeof fbq === "function") {
-                      fbq("track", "Purchase");
-                    }
-                  }
-                });
-              }
-            `,
-          }}
-        />
         <ErrorBoundary>
           <AppProvider>
             <BasketProvider>

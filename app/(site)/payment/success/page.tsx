@@ -83,13 +83,14 @@ function PaymentSuccessContent() {
       window.fbq("track", "Purchase", {
         value: totalValue,
         currency: "UAH",
+        content_ids: order.items.map((item: OrderItem) => item.product_name),
         contents: order.items.map((item: OrderItem) => ({
           id: item.product_name,
           quantity: item.quantity,
           item_price: item.price,
         })),
         content_type: "product",
-        order_id: order.id,
+        order_id: String(order.id),
       });
     }
 
