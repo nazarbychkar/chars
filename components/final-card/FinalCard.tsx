@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
@@ -13,6 +13,7 @@ import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
 import FormField, { validators } from "@/components/shared/FormField";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { trackFbq } from "@/lib/fbq";
 
 const COUNTRY_OPTIONS = [
   { code: "UA", uk: "Україна", en: "Ukraine", de: "Ukraine" },
@@ -72,7 +73,28 @@ export default function FinalCard() {
     }
   }, [deliveryMethod]);
 
-  // Meta Pixel кастомні події (InitiateCheckout) вимкнені
+  // Meta Pixel: InitiateCheckout — користувач перейшов на сторінку оформлення (один раз за візит)
+  const initiateCheckoutSent = useRef(false);
+  useEffect(() => {
+    if (initiateCheckoutSent.current || !items.length) return;
+    initiateCheckoutSent.current = true;
+    const value = items.reduce(
+      (sum, item) =>
+        sum +
+        (effectiveBasketCurrency === "EUR" && item.price_eur != null
+          ? item.price_eur * item.quantity
+          : item.price * item.quantity),
+      0
+    );
+    const numItems = items.reduce((s, i) => s + i.quantity, 0);
+    trackFbq("InitiateCheckout", {
+      value: Math.round(value * 100) / 100,
+      currency: effectiveBasketCurrency,
+      content_ids: items.map((i) => String(i.id)),
+      content_type: "product",
+      num_items: numItems,
+    });
+  }, [items, effectiveBasketCurrency]);
 
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState<"" | "full" | "prepay">("full");
