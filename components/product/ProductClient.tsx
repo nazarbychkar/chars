@@ -416,6 +416,11 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           )}
           {media && media.length > 0 ? (
             <>
+          <div
+            className={`w-full max-w-[800px] overflow-hidden rounded-sm ${
+              isDark ? "bg-[#1e1e1e]" : "bg-[#f8f6f1]"
+            }`}
+          >
           <Swiper
             modules={[Navigation]}
             onSwiper={setSwiper}
@@ -442,7 +447,9 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             {media.map((item, i) => (
               <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
                 <div 
-                  className="flex justify-center items-center max-h-[85vh] overflow-hidden"
+                  className={`flex min-h-[min(85vh,58rem)] max-h-[85vh] w-full items-center justify-center overflow-hidden ${
+                    isDark ? "bg-[#1e1e1e]" : "bg-[#f8f6f1]"
+                  }`}
                   style={{ 
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
@@ -473,9 +480,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                       priority={i === 0}
                       loading={i <= 1 ? undefined : "lazy"}
                       quality={i === 0 ? 85 : 75}
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-                      className="object-contain w-auto h-auto"
+                      placeholder="empty"
+                      className="relative z-[1] h-auto w-auto object-contain"
                       style={{ 
                         maxHeight: "85vh",
                         WebkitUserSelect: 'none',
@@ -489,6 +495,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               </SwiperSlide>
             ))}
           </Swiper>
+          </div>
 
           {media.length > 1 && (
             <>
@@ -525,7 +532,13 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               )}
             </>
           ) : (
-            <div className="w-full max-w-[800px] aspect-[2/3] flex items-center justify-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div
+              className={`flex aspect-[2/3] w-full max-w-[800px] items-center justify-center rounded-lg border ${
+                isDark
+                  ? "border-stone-700 bg-[#1e1e1e]"
+                  : "border-stone-200 bg-[#f8f6f1]"
+              }`}
+            >
               <div className="text-center p-8">
                 <svg
                   className="w-24 h-24 mx-auto text-gray-400 dark:text-gray-600 mb-4"
