@@ -137,7 +137,7 @@ export function generateOrganizationStructuredData(
     },
     sameAs: [
       // Add your social media links here
-      // "https://www.instagram.com/chars_ua",
+      "https://www.instagram.com/chars.wear/",
       // "https://t.me/chars_ua",
     ],
   };

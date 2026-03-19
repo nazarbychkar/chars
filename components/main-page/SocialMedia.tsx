@@ -69,7 +69,7 @@ export default function SocialMedia() {
 
           <div className="flex justify-start gap-10 lg:justify-between items-center w-full lg:w-115 mt-4 md:mt-0">
             <Link
-              href="https://www.instagram.com/chars_ua_brand/"
+              href="https://www.instagram.com/chars.wear/"
               className={`w-60 h-12 md:w-80 md:h-16 text-center flex items-center ${
                 isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
               } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}

@@ -204,7 +204,7 @@ export default function Header() {
               />
             </Link>
 
-            <div className="flex items-center gap-8 text-xl font-normal font-['Inter']">
+            <div className="flex items-center gap-8 font-['Inter'] text-sm font-medium uppercase tracking-[0.08em]">
               {/* Product Categories shown directly in top nav */}
               {Array.isArray(categories) && categories.map((category) => (
                 <div
@@ -231,7 +231,7 @@ export default function Header() {
                       )}`;
                       window.location.href = target;
                     }}
-                    className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-sm font-normal font-['Inter'] focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded px-2"
+                    className="cursor-pointer whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461] focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
                     aria-label={messages.header.goToCategoryAria(
                       getCategoryLabel(category)
                     )}
@@ -282,7 +282,7 @@ export default function Header() {
                 }}
               >
                 <button
-                  className="cursor-pointer whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter']"
+                  className="cursor-pointer whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461]"
                   disabled
                 >
                   {customSeasonCategory.name}
@@ -320,7 +320,7 @@ export default function Header() {
                   }, 200); // delay in ms
                 }}
               >
-                <span className="cursor-default whitespace-nowrap hover:text-[#8C7461] text-base font-normal font-['Inter']">
+                <span className="cursor-default whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461]">
                   {messages.header.info}
                 </span>
 
@@ -368,8 +368,8 @@ export default function Header() {
                     aria-label="Змінити валюту"
                     aria-expanded={isCurrencyMenuOpen}
                   >
-                    <span className="font-medium whitespace-nowrap">
-                      {effectiveCurrency === "EUR" ? "€ EUR" : "₴ UAH"}
+                    <span className="text-base font-medium tabular-nums">
+                      {effectiveCurrency === "EUR" ? "€" : "₴"}
                     </span>
                     <svg
                       aria-hidden="true"
@@ -401,7 +401,7 @@ export default function Header() {
                         }`}
                         aria-pressed={effectiveCurrency === "UAH"}
                       >
-                        ₴ UAH
+                        UAH
                       </button>
                       <button
                         type="button"
@@ -416,7 +416,7 @@ export default function Header() {
                         }`}
                         aria-pressed={effectiveCurrency === "EUR"}
                       >
-                        € EUR
+                        EUR
                       </button>
                     </div>
                   )}
@@ -492,9 +492,9 @@ export default function Header() {
             </div>
 
             {/* Right Icons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
               <button
-                className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
                 onClick={toggleTheme}
                 aria-label={
                   isDark
@@ -504,8 +504,8 @@ export default function Header() {
                 aria-pressed={isDark}
               >
                 <Image
-                  height="32"
-                  width="32"
+                  height="26"
+                  width="26"
                   alt=""
                   aria-hidden="true"
                   src={
@@ -515,14 +515,19 @@ export default function Header() {
                   }
                 />
               </button>
-              {/* [Тимчасово] Пошук вимкнено — pointer-events-none, щоб не заважати тестуванню подій FB. */}
-              <span
-                className="pointer-events-none opacity-50 inline-flex items-center justify-center p-1 min-w-[44px] min-h-[44px]"
-                aria-hidden="true"
+              <button
+                type="button"
+                className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                onClick={() => {
+                  setIsSearchOpen(!isSearchOpen);
+                  setIsBasketOpen(false);
+                }}
+                aria-label={messages.header.searchOpenAria}
+                aria-expanded={isSearchOpen}
               >
                 <Image
-                  height="32"
-                  width="32"
+                  height="24"
+                  width="24"
                   alt=""
                   src={
                     isDark
@@ -530,16 +535,16 @@ export default function Header() {
                       : "/images/light-theme/search.svg"
                   }
                 />
-              </span>
+              </button>
               <button
-                className="cursor-pointer relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="cursor-pointer relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
                 aria-label={messages.header.basketOpenAria(totalItems)}
                 aria-expanded={isBasketOpen}
               >
                 <Image
-                  height="32"
-                  width="32"
+                  height="24"
+                  width="24"
                   alt=""
                   aria-hidden="true"
                   src={
@@ -567,7 +572,7 @@ export default function Header() {
             isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
           }`}
         >
-          <div className="flex gap-1 items-center">
+          <div className="flex items-center gap-0.5">
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="relative w-12 h-12 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -589,7 +594,7 @@ export default function Header() {
               </svg>
             </button>
             <button
-              className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
               onClick={toggleTheme}
               aria-label={
                 isDark
@@ -599,8 +604,8 @@ export default function Header() {
               aria-pressed={isDark}
             >
               <Image
-                height="32"
-                width="32"
+                height="24"
+                width="24"
                 alt=""
                 aria-hidden="true"
                 src={
@@ -625,15 +630,20 @@ export default function Header() {
             />
           </Link>
 
-          <div className="flex gap-2 items-center">
-            {/* [Тимчасово] Пошук вимкнено — не клікається, щоб не заважати тестуванню подій FB. */}
-            <span
-              className="pointer-events-none opacity-50 inline-flex items-center justify-center p-1 min-w-[44px] min-h-[44px]"
-              aria-hidden="true"
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+              onClick={() => {
+                setIsSearchOpen(!isSearchOpen);
+                setIsBasketOpen(false);
+              }}
+              aria-label={messages.header.searchOpenAria}
+              aria-expanded={isSearchOpen}
             >
               <Image
-                height="32"
-                width="32"
+                height="24"
+                width="24"
                 alt=""
                 src={
                   isDark
@@ -641,16 +651,16 @@ export default function Header() {
                     : "/images/light-theme/search.svg"
                 }
               />
-            </span>
+            </button>
             <button
               onClick={() => setIsBasketOpen(!isBasketOpen)}
-              className="relative focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
               aria-label={messages.header.basketOpenAria(totalItems)}
               aria-expanded={isBasketOpen}
             >
               <Image
-                height="32"
-                width="32"
+                height="24"
+                width="24"
                 alt=""
                 aria-hidden="true"
                 src={

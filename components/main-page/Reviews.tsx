@@ -32,7 +32,7 @@ export default function Reviews() {
             </span>
           ))}
           <Link
-            href="https://www.instagram.com/chars_ua_brand/"
+            href="https://www.instagram.com/chars.wear/"
             className="underline italic hover:text-blue-600 transition-colors"
           >
             Instagram

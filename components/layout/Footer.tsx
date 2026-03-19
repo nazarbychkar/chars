@@ -93,7 +93,7 @@ export default function Footer() {
               />
             </div>
             <Link
-              href="https://www.instagram.com/chars_ua_brand/"
+              href="https://www.instagram.com/chars.wear/"
               target="_blank"
               className="w-28 h-8 md:w-32 md:h-11 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:text-stone-500 dark:hover:text-stone-400"
             >
@@ -328,7 +328,7 @@ export default function Footer() {
                 />
               </div>
               <Link
-                href="https://www.instagram.com/chars_ua_brand/"
+                href="https://www.instagram.com/chars.wear/"
                 target="_blank"
                 className="w-28 h-8 md:w-32 md:h-11 text-sm md:text-xl flex justify-start my-auto hover:underline"
               >

@@ -2,159 +2,51 @@
 
 import SidebarMenu from "@/components/layout/SidebarMenu";
 import { useAppContext } from "@/lib/GeneralProvider";
-import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export default function Hero() {
   const { isDark, isSidebarOpen, setIsSidebarOpen } = useAppContext();
   const { messages } = useI18n();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [showPlayButton, setShowPlayButton] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detect mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Ensure video plays on component mount with mobile optimization
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      // Set all required attributes for mobile autoplay
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('muted', '');
-      video.setAttribute('playsinline', '');
-      video.setAttribute('webkit-playsinline', '');
-      
-      // Try multiple approaches for mobile compatibility
-      const playVideo = async () => {
-        try {
-          // First try: direct play
-          await video.play();
-          setShowPlayButton(false);
-        } catch {
-          
-          // Second try: after a small delay (sometimes helps on mobile)
-          setTimeout(async () => {
-            try {
-              await video.play();
-              setShowPlayButton(false);
-            } catch {
-              
-              // Third try: user interaction simulation (sometimes mobile needs this)
-              // But we'll show play button only if all attempts fail
-              if (isMobile) {
-                // On mobile, wait a bit more and try once more
-                setTimeout(async () => {
-                  try {
-                    await video.play();
-                    setShowPlayButton(false);
-                  } catch {
-                    setShowPlayButton(true);
-                  }
-                }, 500);
-              } else {
-                setShowPlayButton(true);
-              }
-            }
-          }, 100);
-        }
-      };
-      
-      // Wait for video to be ready
-      if (video.readyState >= 2) {
-        // Video is already loaded
-        playVideo();
-      } else {
-        // Wait for video to load
-        video.addEventListener('loadeddata', playVideo, { once: true });
-        video.addEventListener('canplay', playVideo, { once: true });
-        
-        // Also try when video starts loading
-        video.load();
-      }
-    }
-  }, [isMobile]);
 
   return (
     <section>
       <div className="max-w-[1920px] mx-auto w-full h-screen sm:h-[720px] md:h-[900px] lg:h-[1080px] relative overflow-hidden">
-        {/* Show image on mobile, video on desktop */}
-        
-          <>
-            <video
-              ref={videoRef}
-              className="absolute inset-0 w-full h-full object-cover object-center bg-black"
-              src="/images/CHARS02.webm"
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              style={{ zIndex: 1 }}
-              onLoadedData={() => {
-                const video = videoRef.current;
-                if (video) {
-                  void video.play();
-                  video.style.backgroundColor = "transparent";
-                }
-              }}
-              onCanPlay={() => {
-                const video = videoRef.current;
-                if (video) {
-                  void video.play();
-                }
-              }}
-              onLoadStart={() => {
-                // Hide black background once video starts loading
-                if (videoRef.current) {
-                  videoRef.current.style.backgroundColor = "transparent";
-                }
-              }}
-            />
-            
-            {/* Play button for desktop if autoplay fails */}
-            {showPlayButton && (
-              <button
-                onClick={async () => {
-                  try {
-                    await videoRef.current?.play();
-                    setShowPlayButton(false);
-                  } catch {
-                    // If manual play still fails, keep button visible
-                  }
-                }}
-                className="absolute inset-0 flex items-center justify-center bg-black/30 z-10"
-                style={{ zIndex: 10 }}
-              >
-                <div className="bg-white/90 rounded-full p-4 hover:bg-white transition-colors">
-                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M8 5v14l11-7z"
-                      fill="currentColor"
-                      className="text-black"
-                    />
-                  </svg>
-                </div>
-              </button>
-            )}
-          </>
-        
-        <div className="relative z-10 flex flex-col justify-end md:justify-evenly p-10 md:p-35 gap-55 md:gap-70 h-full" style={{ zIndex: 2 }}>
+        <img
+          src="/images/hero-photo.jpg"
+          alt="CHARS hero background"
+          className="absolute inset-0 h-full w-full object-cover object-center md:inset-auto md:bottom-auto md:left-0 md:right-0 md:top-[calc(-100%_*_15_/_85)] md:h-[calc(100%_/_0.55)] md:w-full"
+          style={{ zIndex: 1 }}
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent"
+          style={{ zIndex: 2 }}
+        />
+        <div
+          className="pointer-events-none absolute left-1/2 top-[58%] w-full max-w-6xl -translate-x-1/2 -translate-y-1/2 px-6 text-center text-white md:top-[47%] lg:top-[45%]"
+          style={{ zIndex: 3 }}
+        >
+          <h1 className="mx-auto max-w-5xl text-5xl font-semibold uppercase leading-[0.95] tracking-[0.04em] sm:text-6xl md:text-7xl lg:text-8xl">
+            <span className="block font-sans text-xs font-semibold uppercase tracking-[0.4em] text-white/85 sm:text-sm md:text-base">
+              chars
+            </span>
+            <span className="mt-3 block font-sans [text-wrap:balance] sm:mt-4">
+              Freedom looks better on you
+            </span>
+          </h1>
+          <p className="mt-5 text-base font-medium uppercase tracking-[0.18em] text-white/90 sm:text-lg md:mt-6 md:text-xl">
+            New Collection
+          </p>
+        </div>
+
+        <div
+          className="absolute bottom-14 left-1/2 z-10 -translate-x-1/2 sm:bottom-16 md:bottom-auto md:top-[63%] lg:top-[61%]"
+          style={{ zIndex: 4 }}
+        >
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="cursor-pointer mx-auto w-40 sm:w-52 md:w-60 lg:w-72 h-12 sm:h-14 md:h-16 lg:h-16 p-2 bg-transparent border border-white text-white inline-flex justify-center items-center gap-2 hover:opacity-80 transition-opacity duration-300 font-['Inter'] mb-32 md:mb-0"
+            className="cursor-pointer inline-flex h-12 w-52 items-center justify-center border border-white/90 bg-transparent px-4 text-white transition-colors duration-300 hover:bg-white/10 sm:h-14 sm:w-56 md:h-16 md:w-64"
           >
-            <div className="text-center justify-center text-white text-base sm:text-lg md:text-xl lg:text-2xl font-normal capitalize leading-none tracking-tight">
+            <div className="text-center font-sans text-base font-medium uppercase leading-none tracking-[0.08em] sm:text-lg md:text-xl">
               {messages.home.heroCatalogButton}
             </div>
           </button>
