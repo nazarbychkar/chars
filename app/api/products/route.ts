@@ -111,6 +111,7 @@ export async function POST(req: Request) {
         has_lining = false,
         lining_description = "",
         availability_status = "available",
+        recommended_product_ids = [],
       } = body || {};
 
       if (!name || typeof price !== "number") {
@@ -150,6 +151,11 @@ export async function POST(req: Request) {
         lining_description,
         colors,
         availability_status,
+        recommended_product_ids: Array.isArray(recommended_product_ids)
+          ? recommended_product_ids
+              .map((id) => Number(id))
+              .filter((id) => Number.isInteger(id) && id > 0)
+          : [],
       });
 
       return NextResponse.json(product, { status: 201 });

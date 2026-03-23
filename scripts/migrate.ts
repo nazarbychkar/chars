@@ -87,6 +87,14 @@ const migrations: Migration[] = [
       ADD COLUMN IF NOT EXISTS availability_status TEXT DEFAULT 'available';
     `,
   },
+  {
+    id: "2026-03-23_add_recommended_product_ids_to_products",
+    description: "Add recommended_product_ids array to products table",
+    sql: `
+      ALTER TABLE products
+      ADD COLUMN IF NOT EXISTS recommended_product_ids INT[];
+    `,
+  },
 ];
 
 async function ensureMigrationsTable(pool: Pool) {

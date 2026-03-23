@@ -146,6 +146,7 @@ export async function sqlGetProduct(id: number) {
       p.lining_description,
       p.lining_description_en,
       p.lining_description_de,
+      p.recommended_product_ids,
       c.name AS category_name,
       sc.name AS subcategory_name,
       COALESCE(s.sizes, '[]') AS sizes,
@@ -389,6 +390,46 @@ export async function sqlGetLimitedEditionProducts() {
   `;
 }
 
+export async function sqlGetProductsByIdsOrdered(ids: number[]) {
+  if (!ids.length) return [];
+
+  return await sql`
+    WITH target_ids AS (
+      SELECT id::INT, ord::INT
+      FROM UNNEST(${ids}::int[]) WITH ORDINALITY AS t(id, ord)
+    )
+    SELECT
+      p.id,
+      p.name,
+      p.name_en,
+      p.name_de,
+      p.price,
+      p.price_eur,
+      p.old_price,
+      p.discount_percentage,
+      p.top_sale,
+      p.limited_edition,
+      p.season,
+      p.category_id,
+      p.subcategory_id,
+      c.name AS category_name,
+      sc.name AS subcategory_name,
+      m.first_media
+    FROM target_ids t
+    JOIN products p ON p.id = t.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+    LEFT JOIN LATERAL (
+      SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url) AS first_media
+      FROM product_media m
+      WHERE m.product_id = p.id
+      ORDER BY m.id
+      LIMIT 1
+    ) m ON true
+    ORDER BY t.ord;
+  `;
+}
+
 // Fetch all distinct colors from the database
 export async function sqlGetAllColors() {
   const dbColors = await sql`
@@ -457,6 +498,7 @@ export async function sqlPostProduct(product: {
   fabric_composition_de?: string | null;
   has_lining?: boolean;
   lining_description?: string;
+  recommended_product_ids?: number[];
   sizes?: { size: string; stock: number }[];
   media?: { type: string; url: string }[];
   colors?: { label: string; hex?: string | null }[];
@@ -470,7 +512,8 @@ export async function sqlPostProduct(product: {
       category_id, subcategory_id,
       fabric_composition, fabric_composition_en, fabric_composition_de,
       has_lining, lining_description,
-      availability_status
+      availability_status,
+      recommended_product_ids
     )
     VALUES (
       ${product.name},
@@ -495,7 +538,8 @@ export async function sqlPostProduct(product: {
       ${product.fabric_composition_de || null},
       ${product.has_lining || false},
       ${product.lining_description || null},
-      ${product.availability_status || 'available'}
+      ${product.availability_status || 'available'},
+      ${product.recommended_product_ids?.length ? product.recommended_product_ids : null}
     )
     RETURNING id;
   `;
@@ -559,6 +603,7 @@ export async function sqlPutProduct(
     fabric_composition_de?: string | null;
     has_lining?: boolean;
     lining_description?: string;
+    recommended_product_ids?: number[];
     sizes?: { size: string; stock: number }[];
     media?: { type: string; url: string }[];
     colors?: { label: string; hex?: string | null }[];
@@ -602,7 +647,12 @@ export async function sqlPutProduct(
       fabric_composition_en = ${update.fabric_composition_en || null},
       fabric_composition_de = ${update.fabric_composition_de || null},
       has_lining = ${update.has_lining || false},
-      lining_description = ${update.lining_description || null}
+      lining_description = ${update.lining_description || null},
+      recommended_product_ids = ${
+        update.recommended_product_ids?.length
+          ? update.recommended_product_ids
+          : null
+      }
     WHERE id = ${id};
   `;
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import ComponentCard from "@/components/admin/ComponentCard";
 import Label from "@/components/admin/form/Label";
@@ -24,6 +25,12 @@ const multiOptions = [
 interface Category {
   id: number;
   name: string;
+}
+
+interface ProductOption {
+  id: number;
+  name: string;
+  first_media?: { url: string; type: string } | null;
 }
 
 export default function FormElements() {
@@ -58,6 +65,11 @@ export default function FormElements() {
   const [season, setSeason] = useState<string[]>([]);
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
   const [subcategories, setSubcategories] = useState<Category[]>([]);
+  const [allProducts, setAllProducts] = useState<ProductOption[]>([]);
+  const [recommendSearch, setRecommendSearch] = useState("");
+  const [recommendedProductIds, setRecommendedProductIds] = useState<number[]>(
+    []
+  );
 
   type AvailabilityStatus = "available" | "sold_out" | "coming_soon";
   const [availabilityStatus, setAvailabilityStatus] =
@@ -238,6 +250,21 @@ export default function FormElements() {
   }, []);
 
   useEffect(() => {
+    async function fetchProductsForRecommendations() {
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data: ProductOption[] = await res.json();
+        setAllProducts(data);
+      } catch (err) {
+        console.error("Error fetching products for recommendations:", err);
+      }
+    }
+
+    fetchProductsForRecommendations();
+  }, []);
+
+  useEffect(() => {
     if (!categoryId) {
       setSubcategories([]);
       setSubcategoryId(null);
@@ -381,6 +408,7 @@ export default function FormElements() {
           lining_description: liningDescription,
           lining_description_en: liningDescriptionEn || null,
           lining_description_de: liningDescriptionDe || null,
+          recommended_product_ids: recommendedProductIds,
         }),
       });
 
@@ -420,6 +448,8 @@ export default function FormElements() {
       setLiningDescriptionDe("");
       setSubcategoryId(null);
       setSubcategories([]);
+      setRecommendedProductIds([]);
+      setRecommendSearch("");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Помилка при створенні товару"
@@ -632,6 +662,7 @@ export default function FormElements() {
                     zIndex={51}
                   />
                 </div>
+
                 {/* Per-size stock editor */}
                 {sizes.length > 0 && (
                   <div className="space-y-2">
@@ -972,6 +1003,100 @@ export default function FormElements() {
                       />
                       <span>Очікуємо поставку (можна додати в кошик)</span>
                     </label>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <Label>Рекомендувати</Label>
+                  <Input
+                    type="text"
+                    value={recommendSearch}
+                    onChange={(e) => setRecommendSearch(e.target.value)}
+                    placeholder="Пошук товару для рекомендації..."
+                  />
+
+                  {recommendedProductIds.length > 0 && (
+                    <div className="grid grid-cols-1 gap-2">
+                      {recommendedProductIds.map((id) => {
+                        const found = allProducts.find((p) => p.id === id);
+                        return (
+                          <div
+                            key={id}
+                            className="flex items-center gap-3 rounded border p-2"
+                          >
+                            <div className="relative h-12 w-12 overflow-hidden rounded bg-gray-100">
+                              {found?.first_media?.url ? (
+                                <Image
+                                  src={`/api/images/${found.first_media.url}`}
+                                  alt={found.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">
+                                  no img
+                                </div>
+                              )}
+                            </div>
+                            <span className="flex-1 text-sm">{found ? found.name : `ID ${id}`}</span>
+                            <button
+                              type="button"
+                              className="rounded border px-2 py-1 text-xs text-red-600"
+                              onClick={() =>
+                                setRecommendedProductIds((prev) =>
+                                  prev.filter((item) => item !== id)
+                                )
+                              }
+                              title="Видалити рекомендацію"
+                            >
+                              Видалити
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="max-h-56 overflow-y-auto rounded border">
+                    {allProducts
+                      .filter((product) =>
+                        product.name
+                          .toLowerCase()
+                          .includes(recommendSearch.toLowerCase())
+                      )
+                      .filter(
+                        (product) => !recommendedProductIds.includes(product.id)
+                      )
+                      .slice(0, 20)
+                      .map((product) => (
+                        <button
+                          key={product.id}
+                          type="button"
+                          className="flex w-full items-center gap-3 border-b px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
+                          onClick={() =>
+                            setRecommendedProductIds((prev) => [
+                              ...prev,
+                              product.id,
+                            ])
+                          }
+                        >
+                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                            {product.first_media?.url ? (
+                              <Image
+                                src={`/api/images/${product.first_media.url}`}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">
+                                no img
+                              </div>
+                            )}
+                          </div>
+                          <span>{product.name}</span>
+                        </button>
+                      ))}
                   </div>
                 </div>
               </div>

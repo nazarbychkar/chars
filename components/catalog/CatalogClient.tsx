@@ -27,6 +27,7 @@ interface Product {
   id: number;
   name: string;
   price: number;
+  created_at?: string;
   name_en?: string | null;
   name_de?: string | null;
   price_eur?: number | null;
@@ -62,7 +63,7 @@ export default function CatalogClient({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"newest" | "asc" | "desc">("newest");
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<number | null>(null);
@@ -89,6 +90,11 @@ export default function CatalogClient({
   }, [initialProducts, selectedSizes, minPrice, maxPrice, selectedColors, isEuro]);
 
   const sortedProducts = useMemo(() => {
+    if (sortOrder === "newest") {
+      // Keep API order (already sorted by created_at DESC).
+      return filteredProducts;
+    }
+
     return [...filteredProducts].sort((a, b) =>
       sortOrder === "asc"
         ? (isEuro && a.price_eur != null ? a.price_eur : a.price) -

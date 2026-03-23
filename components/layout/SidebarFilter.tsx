@@ -7,8 +7,10 @@ interface SidebarFilterProps {
   openAccordion: number | null;
   setOpenAccordion: React.Dispatch<React.SetStateAction<number | null>>;
   isDark: boolean;
-  sortOrder: "asc" | "desc";
-  setSortOrder: React.Dispatch<React.SetStateAction<"asc" | "desc">>;
+  sortOrder: "newest" | "asc" | "desc";
+  setSortOrder: React.Dispatch<
+    React.SetStateAction<"newest" | "asc" | "desc">
+  >;
   selectedSizes: string[];
   setSelectedSizes: React.Dispatch<React.SetStateAction<string[]>>;
   minPrice: number | null;
@@ -103,6 +105,14 @@ export default function SidebarFilter({
 
             {openAccordion === 1 && (
               <div className="pl-4 mt-2 space-y-2">
+                <button
+                  className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
+                    sortOrder === "newest" ? "font-semibold text-[#8C7461]" : ""
+                  }`}
+                  onClick={() => setSortOrder("newest")}
+                >
+                  Спочатку новіші
+                </button>
                 <button
                   className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
                     sortOrder === "asc" ? "font-semibold text-[#8C7461]" : ""

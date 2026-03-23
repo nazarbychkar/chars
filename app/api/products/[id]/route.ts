@@ -119,6 +119,11 @@ export async function PUT(
       typeof body.availability_status === "string"
         ? body.availability_status
         : "available";
+    const recommendedProductIds = Array.isArray(body.recommended_product_ids)
+      ? body.recommended_product_ids
+          .map((item: unknown) => Number(item))
+          .filter((item: number) => Number.isInteger(item) && item > 0)
+      : [];
 
     await sqlPutProduct(id, {
       name: body.name.trim(),
@@ -159,6 +164,7 @@ export async function PUT(
         : [],
       has_lining: hasLining,
       lining_description: liningDescription,
+      recommended_product_ids: recommendedProductIds,
     });
 
     return NextResponse.json({ updated: true });

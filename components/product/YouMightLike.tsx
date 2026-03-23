@@ -74,7 +74,7 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
         </div>
 
         {/* Products list - Mobile Optimized */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:flex-wrap justify-center sm:justify-around gap-4 sm:gap-8">
+        <div className="grid grid-cols-2 gap-4 sm:flex sm:flex-row sm:flex-wrap sm:justify-around sm:gap-8">
           {products.map((product) => {
             const isVideo = product.first_media?.type === "video";
             const displayName =
@@ -95,45 +95,49 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                 href={withLocalePath(
                   `/product/${buildProductSlug(product.name, product.id)}`
                 )}
-                className="w-full sm:w-96 relative mx-auto"
+                className="w-full sm:w-96 relative mx-auto flex flex-col"
               >
-                {isVideo && product.first_media ? (
-                  <video
-                    src={`/api/images/${product.first_media.url}`}
-                    className="w-full h-auto sm:h-[613px] object-cover"
-                    loop
-                    muted
-                    playsInline
-                    autoPlay
-                    preload="metadata"
-                  />
-                ) : product.first_media ? (
-                  <Image
-                    src={getProductImageSrc(
-                      product.first_media,
-                      "https://placehold.co/432x613"
-                    )}
-                    alt={product.name}
-                    width={400}
-                    height={600}
-                    className="w-full h-auto sm:h-[613px] object-cover"
-                    sizes="(max-width: 420px) 45vw, (max-width: 640px) 45vw, (max-width: 1024px) 33vw, 400px"
-                    loading="lazy"
-                    quality={75} // Lower quality for recommendations
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                    {messages.product.imagePlaceholder}
-                  </div>
-                )}
-                <div className="mt-2 text-sm sm:text-lg lg:text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
+                <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-200">
+                  {isVideo && product.first_media ? (
+                    <video
+                      src={`/api/images/${product.first_media.url}`}
+                      className="w-full h-full object-cover"
+                      loop
+                      muted
+                      playsInline
+                      autoPlay
+                      preload="metadata"
+                    />
+                  ) : product.first_media ? (
+                    <Image
+                      src={getProductImageSrc(
+                        product.first_media,
+                        "https://placehold.co/432x613"
+                      )}
+                      alt={product.name}
+                      width={400}
+                      height={600}
+                      className="w-full h-full object-cover"
+                      sizes="(max-width: 420px) 45vw, (max-width: 640px) 45vw, (max-width: 1024px) 33vw, 400px"
+                      loading="lazy"
+                      quality={75} // Lower quality for recommendations
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-center p-2">
+                      {messages.product.imagePlaceholder}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 text-sm sm:text-lg lg:text-xl font-normal font-['Inter'] capitalize leading-normal text-center min-h-[44px] sm:min-h-[56px] line-clamp-2">
                   {displayName}
                 </div>
-                <div className="mt-1 w-24 h-4 mx-auto text-lg sm:text-xl font-normal font-['Inter'] leading-none text-center">
-                  {basePrice}
-                  {currencySymbol}
+                <div className="mt-1 min-h-[24px] text-lg sm:text-xl font-normal font-['Inter'] leading-none text-center">
+                  <span className="inline-block min-w-[72px]">
+                    {basePrice}
+                    {currencySymbol}
+                  </span>
                 </div>
               </Link>
             );

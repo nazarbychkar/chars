@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sqlGetProduct, sqlGetAllProducts, sql } from "@/lib/sql";
+import {
+  sqlGetProduct,
+  sqlGetAllProducts,
+  sqlGetProductsByIdsOrdered,
+  sql,
+} from "@/lib/sql";
 
 type RecommendationRule = {
   type: "category" | "subcategory";
@@ -29,6 +34,17 @@ export async function GET(req: NextRequest) {
         { error: "Product not found" },
         { status: 404 }
       );
+    }
+
+    const explicitRecommendations = Array.isArray(product.recommended_product_ids)
+      ? (product.recommended_product_ids as unknown[])
+          .map((id) => Number(id))
+          .filter((id) => Number.isInteger(id) && id > 0 && id !== productId)
+      : [];
+
+    if (explicitRecommendations.length > 0) {
+      const products = await sqlGetProductsByIdsOrdered(explicitRecommendations);
+      return NextResponse.json({ products: products.slice(0, 8) });
     }
 
     const categoryId = product.category_id as number | null;

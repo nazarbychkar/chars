@@ -68,6 +68,7 @@ interface Product {
   id: number;
   name: string;
   price: number;
+  created_at?: string;
   first_media?: { url: string; type: string } | null;
   sizes?: { size: string; stock: string }[];
   color?: string;
@@ -86,7 +87,7 @@ export default function Catalog() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"newest" | "asc" | "desc">("newest");
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<number | null>(null);
@@ -109,6 +110,9 @@ export default function Catalog() {
   }, [products, selectedSizes, minPrice, maxPrice, selectedColors]);
 
   const sortedProducts = useMemo(() => {
+    if (sortOrder === "newest") {
+      return filteredProducts;
+    }
     return [...filteredProducts].sort((a, b) =>
       sortOrder === "asc" ? a.price - b.price : b.price - a.price
     );

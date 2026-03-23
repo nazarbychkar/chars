@@ -48,6 +48,10 @@ export async function POST() {
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS availability_status TEXT DEFAULT 'available'`;
     console.log("✅ Added products.availability_status column");
 
+    // Explicit product-to-product recommendations
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS recommended_product_ids INT[]`;
+    console.log("✅ Added products.recommended_product_ids column");
+
     // Category localizations
     await sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS name_en TEXT`;
     console.log("✅ Added categories.name_en column");
