@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { RecommendProductThumb } from "@/components/admin/RecommendProductThumb";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ComponentCard from "@/components/admin/ComponentCard";
@@ -1199,20 +1200,12 @@ export default function EditProductPage() {
                             key={id}
                             className="flex items-center gap-3 rounded border p-2"
                           >
-                            <div className="relative h-12 w-12 overflow-hidden rounded bg-gray-100">
-                              {found?.first_media?.url ? (
-                                <Image
-                                  src={`/api/images/${found.first_media.url}`}
-                                  alt={found.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">
-                                  no img
-                                </div>
-                              )}
-                            </div>
+                            <RecommendProductThumb
+                              url={found?.first_media?.url}
+                              type={found?.first_media?.type}
+                              alt={found?.name ?? `Product ${id}`}
+                              boxClassName="h-12 w-12"
+                            />
                             <span className="flex-1 text-sm">{found ? found.name : `ID ${id}`}</span>
                             <button
                               type="button"
@@ -1256,20 +1249,12 @@ export default function EditProductPage() {
                             ])
                           }
                         >
-                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-100">
-                            {product.first_media?.url ? (
-                              <Image
-                                src={`/api/images/${product.first_media.url}`}
-                                alt={product.name}
-                                fill
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">
-                                no img
-                              </div>
-                            )}
-                          </div>
+                          <RecommendProductThumb
+                            url={product.first_media?.url}
+                            type={product.first_media?.type}
+                            alt={product.name}
+                            boxClassName="h-10 w-10"
+                          />
                           <span>{product.name}</span>
                         </button>
                       ))}

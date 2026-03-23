@@ -134,29 +134,40 @@ export async function GET() {
         'lining_description_en',
         'lining_description_de',
         'fabric_composition_en',
-        'fabric_composition_de'
+        'fabric_composition_de',
+        'availability_status',
+        'recommended_product_ids'
       )
       ORDER BY column_name;
     `;
 
+    const requiredColumns = [
+      "old_price",
+      "discount_percentage",
+      "priority",
+      "price_eur",
+      "name_en",
+      "name_de",
+      "description_en",
+      "description_de",
+      "lining_description_en",
+      "lining_description_de",
+      "fabric_composition_en",
+      "fabric_composition_de",
+      "availability_status",
+      "recommended_product_ids",
+    ] as const;
+
     return NextResponse.json({
       success: true,
-      migration_status: result.length === 12 ? "completed" : "pending",
+      migration_status:
+        result.length === requiredColumns.length ? "completed" : "pending",
       existing_columns: result,
-      required_columns: [
-        "old_price",
-        "discount_percentage",
-        "priority",
-        "price_eur",
-        "name_en",
-        "name_de",
-        "description_en",
-        "description_de",
-        "lining_description_en",
-        "lining_description_de",
-        "fabric_composition_en",
-        "fabric_composition_de"
-      ]
+      required_columns: [...requiredColumns],
+      hint:
+        result.length < requiredColumns.length
+          ? "Run POST /api/migrate once (or npm run migrate on the server) to add missing columns."
+          : undefined,
     });
   } catch (error) {
     console.error("❌ Failed to check migration status:", error);
