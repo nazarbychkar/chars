@@ -58,6 +58,28 @@ export const sql = Object.assign(
   }
 );
 
+/**
+ * Prod safety: if DB was never migrated, SELECT/INSERT on `recommended_product_ids`
+ * throws and product pages return 404. This idempotent ALTER runs once per process.
+ * Set DISABLE_AUTO_RECOMMENDED_COLUMN=1 to skip (e.g. restricted DB user).
+ */
+let recommendedProductIdsColumnEnsured = false;
+
+export async function ensureRecommendedProductIdsColumn(): Promise<void> {
+  if (recommendedProductIdsColumnEnsured) return;
+  if (process.env.DISABLE_AUTO_RECOMMENDED_COLUMN === "1") return;
+  try {
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS recommended_product_ids INT[]`;
+    recommendedProductIdsColumnEnsured = true;
+  } catch (err) {
+    console.error(
+      "[sql] ensureRecommendedProductIdsColumn failed (run POST /api/migrate or grant ALTER):",
+      err
+    );
+    throw err;
+  }
+}
+
 // =====================
 // 👕 PRODUCTS
 // =====================
@@ -119,7 +141,7 @@ export const sqlGetAllProducts = unstable_cache(
 
 // Get one product by ID with sizes & media
 export async function sqlGetProduct(id: number) {
-  return await sql`
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -146,7 +168,6 @@ export async function sqlGetProduct(id: number) {
       p.lining_description,
       p.lining_description_en,
       p.lining_description_de,
-      p.recommended_product_ids,
       c.name AS category_name,
       sc.name AS subcategory_name,
       COALESCE(s.sizes, '[]') AS sizes,
@@ -178,6 +199,33 @@ export async function sqlGetProduct(id: number) {
     ) pc ON true
     WHERE p.id = ${id};
   `;
+
+  const row = rows[0] as Record<string, unknown> | undefined;
+  if (!row) return rows;
+
+  try {
+    const recRows = await sql`
+      SELECT recommended_product_ids FROM products WHERE id = ${id};
+    `;
+    const rec = recRows[0] as
+      | { recommended_product_ids?: number[] | null }
+      | undefined;
+    return [
+      {
+        ...row,
+        recommended_product_ids: rec?.recommended_product_ids ?? null,
+      },
+    ];
+  } catch (err: unknown) {
+    const code =
+      err && typeof err === "object" && "code" in err
+        ? String((err as { code: string }).code)
+        : "";
+    if (code === "42703") {
+      return [{ ...row, recommended_product_ids: null }];
+    }
+    throw err;
+  }
 }
 
 // =========================
@@ -503,6 +551,7 @@ export async function sqlPostProduct(product: {
   media?: { type: string; url: string }[];
   colors?: { label: string; hex?: string | null }[];
 }) {
+  await ensureRecommendedProductIdsColumn();
   const inserted = await sql`
     INSERT INTO products (
       name, name_en, name_de,
@@ -609,6 +658,7 @@ export async function sqlPutProduct(
     colors?: { label: string; hex?: string | null }[];
   }
 ) {
+  await ensureRecommendedProductIdsColumn();
   // Step 1: Update main product fields
   // Convert season to array format for PostgreSQL array type
   // PostgreSQL expects array type, so we pass array directly (postgres.js handles conversion)

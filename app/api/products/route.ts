@@ -47,7 +47,6 @@ export async function GET(request: Request) {
 
     // Use uncached variant so admin/API always see latest data
     let products = await sqlGetAllProductsUncached();
-    console.log("api", products[0])
 
     // Mobile pagination for better performance
     if (limit) {
