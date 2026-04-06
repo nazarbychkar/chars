@@ -127,8 +127,12 @@ export async function GET(request: Request) {
       <g:id>${xmlEscape(id)}</g:id>
       <g:title>${xmlEscape(title)}</g:title>
       <g:description>${xmlEscape(description)}</g:description>
-      <g:link>${xmlEscape(link)}</g:link>
-      <g:image_link>${xmlEscape(imageLink)}</g:image_link>${
+      <g:link>${xmlEscape(link)}</g:link>${
+        imageLink
+          ? `
+      <g:image_link>${xmlEscape(imageLink)}</g:image_link>`
+          : ""
+      }${
         videoLink
           ? `
       <g:video_link>${xmlEscape(videoLink)}</g:video_link>`

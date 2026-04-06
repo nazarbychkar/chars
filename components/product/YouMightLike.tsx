@@ -26,6 +26,7 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
     name_de?: string | null;
     price: number | string;
     price_eur?: number | string | null;
+    discount_percentage?: number | string | null;
     first_media?: { url: string; type: string } | null;
   }
 
@@ -88,7 +89,13 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                 ? Number(product.price_eur)
                 : Number(product.price);
             const currencySymbol = isEuro ? " €" : " ₴";
-            
+            const discountPct = Number(product.discount_percentage);
+            const hasDiscount =
+              Number.isFinite(discountPct) && discountPct > 0;
+            const salePrice = hasDiscount
+              ? basePrice * (1 - discountPct / 100)
+              : basePrice;
+
             return (
               <Link
                 key={product.id}
@@ -134,10 +141,26 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                   {displayName}
                 </div>
                 <div className="mt-1 min-h-[24px] text-lg sm:text-xl font-normal font-['Inter'] leading-none text-center">
-                  <span className="inline-block min-w-[72px]">
-                    {basePrice}
-                    {currencySymbol}
-                  </span>
+                  {hasDiscount ? (
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                      <span className="font-medium text-red-600">
+                        {salePrice.toFixed(2)}
+                        {currencySymbol}
+                      </span>
+                      <span className="text-gray-500 line-through text-base sm:text-lg">
+                        {basePrice}
+                        {currencySymbol}
+                      </span>
+                      <span className="text-green-600 text-sm sm:text-base">
+                        -{discountPct}%
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="inline-block min-w-[72px]">
+                      {basePrice}
+                      {currencySymbol}
+                    </span>
+                  )}
                 </div>
               </Link>
             );
