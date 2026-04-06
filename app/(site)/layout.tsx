@@ -140,6 +140,8 @@ export default function RootLayout({
         {/* DNS prefetch and preconnect */}
         <link rel="dns-prefetch" href="//placehold.co" />
         <link rel="preconnect" href="https://placehold.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.clarity.ms" />
+        <link rel="preconnect" href="https://www.clarity.ms" crossOrigin="anonymous" />
         
         {/* Resource hints for better performance */}
         <link rel="modulepreload" href="/_next/static/chunks/webpack.js" />
@@ -184,15 +186,29 @@ export default function RootLayout({
         </noscript>
         {/* End Meta Pixel Code */}
 
-        {/* Microsoft Clarity */}
+        {/* Microsoft Clarity — deferred after load + idle to limit main-thread impact */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-              })(window, document, "clarity", "script", "vshujbofvi");
+              (function(){
+                var id="w6vivmh1ub";
+                function boot(){
+                  (function(c,l,a,r,i,t,y){
+                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+                  })(window,document,"clarity","script",id);
+                }
+                function schedule(){
+                  if(typeof requestIdleCallback==="function"){
+                    requestIdleCallback(boot,{timeout:4000});
+                  }else{
+                    setTimeout(boot,0);
+                  }
+                }
+                if(document.readyState==="complete")schedule();
+                else window.addEventListener("load",schedule,{once:true});
+              })();
             `,
           }}
         />

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sqlGetAllProductsUncached } from "@/lib/sql";
+import { sqlGetAllProductsForFacebookFeedUncached } from "@/lib/sql";
 import { buildProductSlug } from "@/lib/slug";
 
 const baseUrl = process.env.PUBLIC_URL || "https://charsua.com";
@@ -17,7 +17,8 @@ type ProductRow = {
   availability_status?: string | null;
   price: number | string;
   price_eur?: number | string | null;
-  first_media?: { url: string; type: string } | null;
+  first_photo_media?: { url: string; type: string } | null;
+  first_video_media?: { url: string; type: string } | null;
 };
 
 function xmlEscape(value: string | number | null | undefined): string {
@@ -46,7 +47,8 @@ function getLocaleFromRequest(request: Request): FeedLocale {
 export async function GET(request: Request) {
   try {
     const locale = getLocaleFromRequest(request);
-    const products = (await sqlGetAllProductsUncached()) as ProductRow[];
+    const products =
+      (await sqlGetAllProductsForFacebookFeedUncached()) as ProductRow[];
 
     let itemsXml = "";
 
@@ -101,8 +103,13 @@ export async function GET(request: Request) {
       const link = `${baseUrl}/product/${slug}`;
 
       let imageLink = "";
-      if (p.first_media && p.first_media.url) {
-        imageLink = `${baseUrl}/api/images/${p.first_media.url}`;
+      let videoLink = "";
+      const photo = p.first_photo_media;
+      const video = p.first_video_media;
+      if (photo?.url) {
+        imageLink = `${baseUrl}/api/images/${photo.url}`;
+      } else if (video?.url) {
+        videoLink = `${baseUrl}/api/images/${video.url}`;
       }
 
       const brand = "CHARS";
@@ -121,7 +128,12 @@ export async function GET(request: Request) {
       <g:title>${xmlEscape(title)}</g:title>
       <g:description>${xmlEscape(description)}</g:description>
       <g:link>${xmlEscape(link)}</g:link>
-      <g:image_link>${xmlEscape(imageLink)}</g:image_link>
+      <g:image_link>${xmlEscape(imageLink)}</g:image_link>${
+        videoLink
+          ? `
+      <g:video_link>${xmlEscape(videoLink)}</g:video_link>`
+          : ""
+      }
       <g:availability>${xmlEscape(availability)}</g:availability>
       <g:condition>${xmlEscape(condition)}</g:condition>
       <g:price>${xmlEscape(price)}</g:price>

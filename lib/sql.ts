@@ -130,6 +130,56 @@ export async function sqlGetAllProductsUncached() {
   return _sqlGetAllProducts();
 }
 
+/** Facebook/Google XML & CSV feeds: first photo by gallery order; separate first video for video-only items */
+export async function sqlGetAllProductsForFacebookFeedUncached() {
+  return await sql`
+    SELECT
+      p.id,
+      p.name,
+      p.name_en,
+      p.name_de,
+      p.description,
+      p.description_en,
+      p.description_de,
+      p.price,
+      p.price_eur,
+      p.old_price,
+      p.discount_percentage,
+      p.top_sale,
+      p.limited_edition,
+      p.season,
+      p.category_id,
+      p.subcategory_id,
+      p.created_at,
+      p.availability_status,
+      c.name AS category_name,
+      sc.name AS subcategory_name,
+      feed_media.first_photo_media,
+      feed_media.first_video_media
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+    LEFT JOIN LATERAL (
+      SELECT
+        (
+          SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
+          FROM product_media m
+          WHERE m.product_id = p.id AND m.type = 'photo'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS first_photo_media,
+        (
+          SELECT JSONB_BUILD_OBJECT('type', m.type, 'url', m.url)
+          FROM product_media m
+          WHERE m.product_id = p.id AND m.type = 'video'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS first_video_media
+    ) feed_media ON true
+    ORDER BY p.created_at DESC;
+  `;
+}
+
 export const sqlGetAllProducts = unstable_cache(
   _sqlGetAllProducts,
   ['all-products'],
