@@ -77,7 +77,7 @@ export default function EditProductPage() {
     liningDescriptionDe: "",
   });
 
-  const [images, setImages] = useState<File[]>([]);
+  /** Лише нові файли для завантаження (порядок = порядок у формі / при сабміті) */
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -249,12 +249,7 @@ export default function EditProductPage() {
 
         const productData = await productRes.json();
         const categoryData = await categoriesRes.json();
-        setMediaFiles(
-          productData.media.map((item: { url: string; type: string }) => ({
-            type: item.type,
-            url: item.url,
-          }))
-        );
+        setMediaFiles([]);
 
         setFormData({
           name: productData.name,
@@ -377,12 +372,6 @@ export default function EditProductPage() {
   // }, [formData]);
 
   const handleDrop = (files: File[]) => {
-    console.log('[EditProduct] handleDrop called with files:', files);
-    
-    // Add to images state (for new uploads)
-    setImages((prev) => [...prev, ...files]);
-    
-    // Also add to mediaFiles for preview with metadata
     const newMedia = files.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
@@ -404,22 +393,21 @@ export default function EditProductPage() {
     });
   };
 
-  // Reorder for new images
   const moveNewImage = (fromIndex: number, toIndex: number) => {
-    console.log('[EditProduct] Moving new image from', fromIndex, 'to', toIndex);
-    
-    // Get only new files (with file property)
-    const newMediaFiles = mediaFiles.filter((m) => m.file);
-    const existingMedia = mediaFiles.filter((m) => !m.file);
-    
-    const updated = [...newMediaFiles];
-    const [moved] = updated.splice(fromIndex, 1);
-    updated.splice(toIndex, 0, moved);
-    
-    setMediaFiles([...existingMedia, ...updated]);
-    
-    // Also update images state
-    setImages(updated.map((m) => m.file!));
+    setMediaFiles((prev) => {
+      if (
+        fromIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex < 0 ||
+        toIndex >= prev.length
+      ) {
+        return prev;
+      }
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
   };
 
   const handleChange = (field: string, value: unknown) => {
@@ -434,28 +422,12 @@ export default function EditProductPage() {
   };
 
   const handleDeleteNewImage = (indexToRemove: number) => {
-    console.log('[EditProduct] Deleting new image at index:', indexToRemove);
-    
-    // Get all new media files (those with file property)
-    const newMediaFiles = mediaFiles.filter((m) => m.file);
-    const itemToDelete = newMediaFiles[indexToRemove];
-    
-    // Revoke object URL to prevent memory leak
-    if (itemToDelete?.preview) {
-      URL.revokeObjectURL(itemToDelete.preview);
-    }
-    
-    // Remove from images state
-    const newMediaFilesArray = mediaFiles.filter((m) => m.file).map((m) => m.file).filter((f): f is File => !!f);
-    const newImages = newMediaFilesArray.filter((_, i) => i !== indexToRemove);
-    setImages(newImages);
-    
-    // Remove from mediaFiles state
     setMediaFiles((prev) => {
-      const newFiles = prev.filter((m) => m.file);
-      const rest = prev.filter((m) => !m.file);
-      const updatedNewFiles = newFiles.filter((_, i) => i !== indexToRemove);
-      return [...rest, ...updatedNewFiles];
+      const item = prev[indexToRemove];
+      if (item?.preview) {
+        URL.revokeObjectURL(item.preview);
+      }
+      return prev.filter((_, i) => i !== indexToRemove);
     });
   };
 
@@ -466,19 +438,18 @@ export default function EditProductPage() {
     setError(null);
 
     try {
-      console.log('[EditProduct] Submitting form. Images to upload:', images.length);
-      
+      const filesToUpload = mediaFiles
+        .map((m) => m.file)
+        .filter((f): f is File => f instanceof File);
+
       let uploadedMedia: { type: "photo" | "video"; url: string }[] = [];
 
-      if (images.length > 0) {
-        console.log('[EditProduct] Uploading new images:', images.map(f => f.name));
-        
-        const totalSize = images.reduce((sum, img) => sum + img.size, 0);
+      if (filesToUpload.length > 0) {
+        const totalSize = filesToUpload.reduce((sum, img) => sum + img.size, 0);
         const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
         const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per file
 
-        // Check individual file sizes
-        for (const img of images) {
+        for (const img of filesToUpload) {
           if (img.size > MAX_FILE_SIZE) {
             throw new Error(
               `Файл "${img.name}" занадто великий. Максимальний розмір одного файлу: 15MB.`
@@ -486,15 +457,14 @@ export default function EditProductPage() {
           }
         }
 
-        // Check total size
         if (totalSize > MAX_TOTAL_SIZE) {
           throw new Error(
             `Загальний розмір всіх файлів (${(totalSize / 1024 / 1024).toFixed(2)}MB) перевищує ліміт 100MB. Будь ласка, завантажте менше файлів або зменшіть їх розмір.`
           );
         }
-        
+
         const uploadForm = new FormData();
-        images.forEach((img) => uploadForm.append("images", img));
+        filesToUpload.forEach((img) => uploadForm.append("images", img));
 
         const uploadRes = await fetch("/api/images", {
           method: "POST",
@@ -1318,14 +1288,21 @@ export default function EditProductPage() {
                   </div>
                 ))}
 
-                {mediaFiles
-                  .filter((m) => m.file) // Only show new files (with file property)
-                  .map((media, i) => {
-                    console.log('[EditProduct] Rendering new media preview:', media);
-                    const previewUrl = media.preview || URL.createObjectURL(media.file!);
+                {mediaFiles.map((media, i) => {
+                    const previewUrl =
+                      media.preview ??
+                      (media.file ? URL.createObjectURL(media.file) : "");
                     const isVideo = media.type === "video";
                     return (
-                      <div key={`new-${i}`} className="relative inline-block">
+                      <div
+                        key={
+                          media.preview ||
+                          (media.file
+                            ? `${media.file.name}-${media.file.lastModified}`
+                            : `new-${i}`)
+                        }
+                        className="relative inline-block"
+                      >
                         {isVideo ? (
                           <video
                             src={previewUrl}
@@ -1353,7 +1330,7 @@ export default function EditProductPage() {
                             ←
                           </button>
                         )}
-                        {i < images.length - 1 && (
+                        {i < mediaFiles.length - 1 && (
                           <button
                             type="button"
                             onClick={() => moveNewImage(i, i + 1)}

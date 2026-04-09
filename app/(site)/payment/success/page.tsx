@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import Link from "next/link";
-import { trackFbq } from "@/lib/fbq";
+import { trackFbqPurchase } from "@/lib/fbq";
 
 interface OrderItem {
   product_name: string;
@@ -26,6 +26,7 @@ interface Order {
   comment?: string | null;
   payment_type: string;
   payment_status: string;
+  currency?: string | null;
   items: OrderItem[];
 }
 
@@ -76,28 +77,22 @@ function PaymentSuccessContent() {
 
     const totalValue =
       order.items?.reduce(
-        (sum: number, item: OrderItem) => sum + item.price * item.quantity,
+        (sum: number, item: OrderItem) =>
+          sum + Number(item.price) * item.quantity,
         0
       ) ?? 0;
+    const currency =
+      order.currency === "EUR" || order.currency === "UAH"
+        ? order.currency
+        : "UAH";
 
-    trackFbq("Purchase", {
-      value: totalValue,
-      currency: "UAH",
-      content_ids: order.items.map((item: OrderItem) => item.product_name),
-      contents: order.items.map((item: OrderItem) => ({
-        id: item.product_name,
-        quantity: item.quantity,
-        item_price: item.price,
-      })),
-      content_type: "product",
-      order_id: String(order.id),
-    });
+    trackFbqPurchase(order);
 
     if (window.clarity) {
       window.clarity("event", "purchase", {
         orderId: order.id,
         value: totalValue,
-        currency: "UAH",
+        currency,
         items: order.items.length,
       });
     }

@@ -95,6 +95,14 @@ const migrations: Migration[] = [
       ADD COLUMN IF NOT EXISTS recommended_product_ids INT[];
     `,
   },
+  {
+    id: "2026-04-09_add_priority_to_subcategories",
+    description: "Add priority column to subcategories for catalog sort order",
+    sql: `
+      ALTER TABLE subcategories
+      ADD COLUMN IF NOT EXISTS priority INT DEFAULT 0;
+    `,
+  },
 ];
 
 async function ensureMigrationsTable(pool: Pool) {

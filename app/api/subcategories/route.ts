@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, parent_category_id, name_en, name_de } = body;
+    const { name, parent_category_id, name_en, name_de, priority } = body;
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -46,11 +46,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const priorityNum =
+      typeof priority === "number" && !Number.isNaN(priority)
+        ? Math.max(0, Math.floor(priority))
+        : 0;
+
     const newSubcategory = await sqlPostSubcategory(
       name,
       categoryId,
       name_en ?? null,
-      name_de ?? null
+      name_de ?? null,
+      priorityNum
     );
     return NextResponse.json(newSubcategory, { status: 201 });
   } catch (error) {

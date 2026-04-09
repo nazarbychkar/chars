@@ -1230,7 +1230,7 @@ export async function sqlDeleteCategory(id: number) {
 export async function sqlGetAllSubcategories() {
   return await sql`
     SELECT * FROM subcategories
-    ORDER BY id;
+    ORDER BY category_id ASC, priority DESC, id ASC;
   `;
 }
 
@@ -1239,7 +1239,7 @@ export async function sqlGetSubcategoriesByCategory(categoryId: number) {
   return await sql`
     SELECT * FROM subcategories
     WHERE category_id = ${categoryId}
-    ORDER BY id;
+    ORDER BY priority DESC, id ASC;
   `;
 }
 
@@ -1256,11 +1256,12 @@ export async function sqlPostSubcategory(
   name: string,
   categoryId: number,
   name_en?: string | null,
-  name_de?: string | null
+  name_de?: string | null,
+  priority: number = 0
 ) {
   const result = await sql`
-    INSERT INTO subcategories (name, category_id, name_en, name_de)
-    VALUES (${name}, ${categoryId}, ${name_en ?? null}, ${name_de ?? null})
+    INSERT INTO subcategories (name, category_id, name_en, name_de, priority)
+    VALUES (${name}, ${categoryId}, ${name_en ?? null}, ${name_de ?? null}, ${priority})
     RETURNING *;
   `;
   return result[0];
@@ -1272,12 +1273,14 @@ export async function sqlPutSubcategory(
   name: string,
   categoryId: number,
   name_en?: string | null,
-  name_de?: string | null
+  name_de?: string | null,
+  priority: number = 0
 ) {
   const result = await sql`
     UPDATE subcategories
     SET name = ${name}, category_id = ${categoryId},
-        name_en = ${name_en ?? null}, name_de = ${name_de ?? null}
+        name_en = ${name_en ?? null}, name_de = ${name_de ?? null},
+        priority = ${priority}
     WHERE id = ${id}
     RETURNING *;
   `;

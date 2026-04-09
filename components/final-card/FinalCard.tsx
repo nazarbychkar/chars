@@ -13,7 +13,7 @@ import { Mousewheel } from "swiper/modules";
 import "swiper/css/scrollbar";
 import FormField, { validators } from "@/components/shared/FormField";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { trackFbq } from "@/lib/fbq";
+import { trackFbq, trackFbqPurchase } from "@/lib/fbq";
 
 const COUNTRY_OPTIONS = [
   { code: "UA", uk: "Україна", en: "Ukraine", de: "Ukraine" },
@@ -95,6 +95,50 @@ export default function FinalCard() {
       num_items: numItems,
     });
   }, [items, effectiveBasketCurrency]);
+
+  // Purchase після оплати: Monobank веде на /final?payment=success&invoiceId=… (не на /payment/success)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (searchParams.get("payment") !== "success") return;
+    const invoiceId = searchParams.get("invoiceId");
+    if (!invoiceId) return;
+
+    const g = globalThis as typeof globalThis & {
+      __charsFbqPurchaseDone?: Set<string>;
+    };
+    const done = (g.__charsFbqPurchaseDone ??= new Set<string>());
+    if (done.has(invoiceId)) return;
+
+    const ac = new AbortController();
+    fetch(`/api/orders/invoice/${encodeURIComponent(invoiceId)}`, {
+      signal: ac.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("order fetch failed");
+        return res.json();
+      })
+      .then(
+        (order: {
+          id: number;
+          currency?: string | null;
+          items: Array<{
+            product_name: string;
+            quantity: number;
+            price: number | string;
+          }>;
+        }) => {
+          if (done.has(invoiceId)) return;
+          trackFbqPurchase(order);
+          done.add(invoiceId);
+        }
+      )
+      .catch((err: unknown) => {
+        if ((err as Error).name === "AbortError") return;
+        console.error("[FinalCard] Purchase tracking:", err);
+      });
+
+    return () => ac.abort();
+  }, [searchParams]);
 
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState<"" | "full" | "prepay">("full");

@@ -13,6 +13,8 @@ type Subcategory = {
   name_en?: string | null;
   name_de?: string | null;
   category_id?: number | null;
+  /** Більше значення — вище в меню каталогу та списках (як у категорій) */
+  priority?: number;
 };
 
 type RecommendationRule = {
@@ -245,7 +247,12 @@ export default function EditCategoryPage() {
         setFormData({
           name: category.name,
           priority: category.priority ?? 0,
-          subcategories: subcategories || [],
+          subcategories: (subcategories || []).map(
+            (s: Subcategory & { priority?: number }) => ({
+              ...s,
+              priority: s.priority ?? 0,
+            })
+          ),
           recommendations,
         });
         setAllCategories(
@@ -295,10 +302,15 @@ export default function EditCategoryPage() {
   ) => {
     setFormData((prev) => {
       const newSubs = [...prev.subcategories];
-      newSubs[index] = {
-        ...newSubs[index],
-        [field]: value === "" || value === null ? undefined : value,
-      };
+      if (field === "priority") {
+        const n = Math.max(0, Math.floor(Number(value) || 0));
+        newSubs[index] = { ...newSubs[index], priority: n };
+      } else {
+        newSubs[index] = {
+          ...newSubs[index],
+          [field]: value === "" || value === null ? undefined : value,
+        };
+      }
       return { ...prev, subcategories: newSubs };
     });
   };
@@ -323,10 +335,34 @@ export default function EditCategoryPage() {
   };
 
   const handleAddSubcategory = () => {
-    setFormData((prev) => ({
-      ...prev,
-      subcategories: [...prev.subcategories, { name: "" }],
-    }));
+    setFormData((prev) => {
+      const maxP = prev.subcategories.reduce(
+        (m, s) => Math.max(m, s.priority ?? 0),
+        0
+      );
+      return {
+        ...prev,
+        subcategories: [
+          ...prev.subcategories,
+          { name: "", priority: maxP + 1 },
+        ],
+      };
+    });
+  };
+
+  const moveSubcategory = (index: number, delta: -1 | 1) => {
+    setFormData((prev) => {
+      const j = index + delta;
+      if (j < 0 || j >= prev.subcategories.length) return prev;
+      const subs = [...prev.subcategories];
+      const a = subs[index];
+      const b = subs[j];
+      const pa = a.priority ?? 0;
+      const pb = b.priority ?? 0;
+      subs[index] = { ...b, priority: pa };
+      subs[j] = { ...a, priority: pb };
+      return { ...prev, subcategories: subs };
+    });
   };
 
   const handleAutoTranslateAllSubcategories = async () => {
@@ -542,6 +578,7 @@ export default function EditCategoryPage() {
               parent_category_id: categoryId,
               name_en: sub.name_en?.trim() || null,
               name_de: sub.name_de?.trim() || null,
+              priority: Math.max(0, Math.floor(sub.priority ?? 0)),
             }),
           });
         } else {
@@ -553,6 +590,7 @@ export default function EditCategoryPage() {
               parent_category_id: categoryId,
               name_en: sub.name_en?.trim() || null,
               name_de: sub.name_de?.trim() || null,
+              priority: Math.max(0, Math.floor(sub.priority ?? 0)),
             }),
           });
         }
@@ -593,6 +631,10 @@ export default function EditCategoryPage() {
               />
 
               <Label className="mt-6">Підкатегорії</Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
+                Порядок у каталозі та меню: більший пріоритет — вище. Можна міняти
+                число або стрілками поміняти місцями.
+              </p>
               <button
                 type="button"
                 className="mt-1 mb-2 text-xs text-purple-600 hover:underline"
@@ -608,7 +650,47 @@ export default function EditCategoryPage() {
                   key={sub.id ?? `new-${index}`}
                   className="border border-gray-200 dark:border-gray-700 rounded p-3 mb-3 space-y-2"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <span className="text-[10px] uppercase text-gray-500">
+                        Порядок
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={sub.priority ?? 0}
+                          onChange={(e) =>
+                            handleSubcategoryChange(
+                              index,
+                              "priority",
+                              e.target.value
+                            )
+                          }
+                          className="w-16 !py-1 !px-2 text-sm"
+                        />
+                        <button
+                          type="button"
+                          className="px-1.5 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-40"
+                          disabled={index === 0}
+                          onClick={() => moveSubcategory(index, -1)}
+                          title="Вгору у списку"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="px-1.5 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-40"
+                          disabled={
+                            index === formData.subcategories.length - 1
+                          }
+                          onClick={() => moveSubcategory(index, 1)}
+                          title="Вниз у списку"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    </div>
                     <Input
                       type="text"
                       value={sub.name}
@@ -616,7 +698,7 @@ export default function EditCategoryPage() {
                         handleSubcategoryNameChange(index, e.target.value)
                       }
                       placeholder="Назва підкатегорії (UA)"
-                      className="flex-1"
+                      className="flex-1 min-w-[12rem]"
                     />
                     <button
                       type="button"
