@@ -1,12 +1,13 @@
-#!/usr/bin/env ts-node
-
+#!/usr/bin/env node
+/**
+ * Запуск: npm run migrate
+ * Працює лише з Node (без tsx/ts-node) — зручно для продакшен-серверів.
+ */
 import { Pool } from "pg";
 import fs from "node:fs";
 import path from "node:path";
 
-type Migration = { id: string; description: string; sql: string };
-
-function loadEnvUrl(): string {
+function loadEnvUrl() {
   const envPath = path.join(process.cwd(), ".env");
   if (!process.env.DATABASE_URL && fs.existsSync(envPath)) {
     const content = fs.readFileSync(envPath, "utf8");
@@ -20,8 +21,7 @@ function loadEnvUrl(): string {
   return process.env.DATABASE_URL;
 }
 
-// Define this single migration
-const migrations: Migration[] = [
+const migrations = [
   {
     id: "2025-10-22_add_priority_to_categories",
     description: "Add 'priority' column to categories table",
@@ -34,7 +34,6 @@ const migrations: Migration[] = [
     id: "2025-10-29_add_product_sizes_stock",
     description: "Ensure product_sizes table with stock tracking and constraints",
     sql: `
-      -- 1) Create table if it doesn't exist
       CREATE TABLE IF NOT EXISTS product_sizes (
         id SERIAL PRIMARY KEY,
         product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
@@ -43,11 +42,9 @@ const migrations: Migration[] = [
         UNIQUE (product_id, size)
       );
 
-      -- 2) Add stock column if it's missing (for older schemas)
       ALTER TABLE product_sizes
       ADD COLUMN IF NOT EXISTS stock INT NOT NULL DEFAULT 0;
 
-      -- 3) Ensure unique constraint (product_id, size) exists
       DO $$
       BEGIN
         IF NOT EXISTS (
@@ -61,7 +58,6 @@ const migrations: Migration[] = [
       END
       $$;
 
-      -- 4) Ensure non-negative stock constraint exists
       DO $$
       BEGIN
         IF NOT EXISTS (
@@ -75,7 +71,6 @@ const migrations: Migration[] = [
       END
       $$;
 
-      -- 5) Helpful index for lookups by product
       CREATE INDEX IF NOT EXISTS idx_product_sizes_product_id ON product_sizes(product_id);
     `,
   },
@@ -105,7 +100,7 @@ const migrations: Migration[] = [
   },
 ];
 
-async function ensureMigrationsTable(pool: Pool) {
+async function ensureMigrationsTable(pool) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id TEXT PRIMARY KEY,
@@ -115,12 +110,12 @@ async function ensureMigrationsTable(pool: Pool) {
   `);
 }
 
-async function hasRun(pool: Pool, id: string): Promise<boolean> {
+async function hasRun(pool, id) {
   const res = await pool.query("SELECT 1 FROM _migrations WHERE id = $1", [id]);
   return (res.rowCount ?? 0) > 0;
 }
 
-async function recordRun(pool: Pool, id: string, description: string) {
+async function recordRun(pool, id, description) {
   await pool.query(
     "INSERT INTO _migrations (id, description) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING",
     [id, description]
@@ -131,7 +126,9 @@ async function main() {
   const dbUrl = loadEnvUrl();
   const pool = new Pool({
     connectionString: dbUrl,
-    ssl: dbUrl.includes("sslmode=require") ? { rejectUnauthorized: false } : false,
+    ssl: dbUrl.includes("sslmode=require")
+      ? { rejectUnauthorized: false }
+      : false,
   });
 
   await ensureMigrationsTable(pool);
