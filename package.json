@@ -13,7 +13,7 @@
     "start:prod": "NODE_ENV=production next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "migrate": "ts-node scripts/migrate.ts",
+    "migrate": "tsx scripts/migrate.ts",
     "check-vitals": "echo 'Run lighthouse audit after deployment'"
   },
   "dependencies": {
@@ -48,6 +48,7 @@
     "file-loader": "^6.2.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typescript": "^5",
     "url-loader": "^4.1.1",
     "webpack": "^5.101.3"
