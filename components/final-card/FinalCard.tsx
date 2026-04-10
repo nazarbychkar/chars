@@ -96,50 +96,6 @@ export default function FinalCard() {
     });
   }, [items, effectiveBasketCurrency]);
 
-  // Purchase після оплати: Monobank веде на /final?payment=success&invoiceId=… (не на /payment/success)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (searchParams.get("payment") !== "success") return;
-    const invoiceId = searchParams.get("invoiceId");
-    if (!invoiceId) return;
-
-    const g = globalThis as typeof globalThis & {
-      __charsFbqPurchaseDone?: Set<string>;
-    };
-    const done = (g.__charsFbqPurchaseDone ??= new Set<string>());
-    if (done.has(invoiceId)) return;
-
-    const ac = new AbortController();
-    fetch(`/api/orders/invoice/${encodeURIComponent(invoiceId)}`, {
-      signal: ac.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("order fetch failed");
-        return res.json();
-      })
-      .then(
-        (order: {
-          id: number;
-          currency?: string | null;
-          items: Array<{
-            product_name: string;
-            quantity: number;
-            price: number | string;
-          }>;
-        }) => {
-          if (done.has(invoiceId)) return;
-          trackFbqPurchase(order);
-          done.add(invoiceId);
-        }
-      )
-      .catch((err: unknown) => {
-        if ((err as Error).name === "AbortError") return;
-        console.error("[FinalCard] Purchase tracking:", err);
-      });
-
-    return () => ac.abort();
-  }, [searchParams]);
-
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState<"" | "full" | "prepay">("full");
   const [countryCode, setCountryCode] = useState<string>("UA");
@@ -363,40 +319,76 @@ export default function FinalCard() {
     const storedOrder = localStorage.getItem("submittedOrder");
     if (storedOrder) {
       setSubmittedOrder(JSON.parse(storedOrder));
-      // localStorage.removeItem("submittedOrder");
     }
-    
-    // Clear submittedOrder from localStorage if basket is empty and payment wasn't successful
-    // This prevents showing order details when user manually clears the basket
+
     const paymentSuccessFromQuery = searchParams.get("payment") === "success";
-    const paymentSuccessFromStorage = typeof window !== "undefined" && localStorage.getItem("paymentSuccess") === "true";
+    const paymentSuccessFromStorage =
+      typeof window !== "undefined" &&
+      localStorage.getItem("paymentSuccess") === "true";
     const paymentSuccess = paymentSuccessFromQuery || paymentSuccessFromStorage;
-    
+
     if (items.length === 0 && storedOrder && !paymentSuccess) {
       localStorage.removeItem("submittedOrder");
       setSubmittedOrder(null);
     }
+  }, [items.length, searchParams]);
 
-    // Check if payment was successful via query parameter
-    const paymentStatus = searchParams.get("payment");
-    if (paymentStatus === "success") {
-      // Show success message
-      setSuccess(messages.checkout.paymentSuccess);
-      // Clear basket only after successful payment
-      clearBasket();
-      // Mark payment as successful in localStorage so order details page can be shown
-      localStorage.setItem("paymentSuccess", "true");
-      // Clear invoiceId from localStorage
-      localStorage.removeItem("currentInvoiceId");
-      // Remove query parameters from URL without reload
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("payment");
-        url.searchParams.delete("invoiceId");
-        window.history.replaceState({}, "", url.pathname + url.search);
+  // Purchase + UI після оплати: спочатку fbq Purchase, потім replaceState (інакше зміна searchParams
+  // обриває fetch через cleanup попереднього ефекту — подія не відправлялась).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (searchParams.get("payment") !== "success") return;
+    const invoiceId = searchParams.get("invoiceId");
+    if (!invoiceId) return;
+
+    const g = globalThis as typeof globalThis & {
+      __charsFbqPurchaseDone?: Set<string>;
+    };
+    const done = (g.__charsFbqPurchaseDone ??= new Set<string>());
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        if (!done.has(invoiceId)) {
+          const res = await fetch(
+            `/api/orders/invoice/${encodeURIComponent(invoiceId)}`
+          );
+          if (res.ok) {
+            const order: {
+              id: number;
+              currency?: string | null;
+              items: Array<{
+                product_name: string;
+                quantity: number;
+                price: number | string;
+              }>;
+            } = await res.json();
+            if (cancelled) return;
+            trackFbqPurchase(order);
+            done.add(invoiceId);
+          }
+        }
+      } catch (err: unknown) {
+        console.error("[FinalCard] Purchase tracking:", err);
       }
-    }
-  }, [clearBasket, items.length, messages.checkout.paymentSuccess, searchParams]);
+
+      if (cancelled) return;
+
+      setSuccess(messages.checkout.paymentSuccess);
+      clearBasket();
+      localStorage.setItem("paymentSuccess", "true");
+      localStorage.removeItem("currentInvoiceId");
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("payment");
+      url.searchParams.delete("invoiceId");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, clearBasket, messages.checkout.paymentSuccess]);
 
   // POST OFFICE
   const [cities, setCities] = useState<string[]>([]); // Available cities
