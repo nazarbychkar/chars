@@ -356,6 +356,7 @@ export default function FinalCard() {
           if (res.ok) {
             const order: {
               id: number;
+              payment_status?: string;
               currency?: string | null;
               items: Array<{
                 product_name: string;
@@ -364,8 +365,14 @@ export default function FinalCard() {
               }>;
             } = await res.json();
             if (cancelled) return;
-            trackFbqPurchase(order);
-            done.add(invoiceId);
+            if (order.payment_status === "paid") {
+              trackFbqPurchase(order);
+              done.add(invoiceId);
+              setSuccess(messages.checkout.paymentSuccess);
+              clearBasket();
+              localStorage.setItem("paymentSuccess", "true");
+              localStorage.removeItem("currentInvoiceId");
+            }
           }
         }
       } catch (err: unknown) {
@@ -373,11 +380,6 @@ export default function FinalCard() {
       }
 
       if (cancelled) return;
-
-      setSuccess(messages.checkout.paymentSuccess);
-      clearBasket();
-      localStorage.setItem("paymentSuccess", "true");
-      localStorage.removeItem("currentInvoiceId");
 
       const url = new URL(window.location.href);
       url.searchParams.delete("payment");

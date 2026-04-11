@@ -1,3 +1,9 @@
+/** Сторінка подяки після оформлення — без стандартного PageView у пікселі (залишаються InitiateCheckout / Purchase). */
+export function isCheckoutThankYouPath(pathname: string): boolean {
+  const p = (pathname || "/").replace(/\/$/, "") || "/";
+  return p === "/final" || p.endsWith("/final");
+}
+
 export type FbqTrackOptions = {
   /** Дедуплікація з Conversions API: той самий рядок, що й `event_id` на сервері */
   eventID?: string;

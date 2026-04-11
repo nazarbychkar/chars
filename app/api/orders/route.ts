@@ -416,8 +416,8 @@ export async function POST(req: NextRequest) {
         comment: comment || "Оплата замовлення",
         basketOrder,
       },
-      // GET після оплати: сторінка успіху з ref (invoiceId з’являється лише після create — ref уже в merchantPaymInfo)
-      redirectUrl: `${PUBLIC_URL}${localePath}/payment/success?ref=${encodeURIComponent(reference)}`,
+      // Після оплати Monobank GET-редиректить сюди (успіх або помилка оплати)
+      redirectUrl: `${PUBLIC_URL}${localePath}/payment/success`,
       webHookUrl: `${PUBLIC_URL}/api/mono-webhook`,
       validity: 3600,
       paymentType: "debit",
@@ -474,7 +474,6 @@ export async function POST(req: NextRequest) {
       // У БД зберігаємо саме вибрану валюту на сайті
       currency: isEuroSelected ? "EUR" : "UAH",
       locale: typeof locale === "string" ? locale : null,
-      payment_reference: reference,
       items: normalizedItems.map(
         ({ product_id, size, quantity, price, color }) => ({
           product_id,

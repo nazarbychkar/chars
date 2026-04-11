@@ -170,7 +170,12 @@ export default function RootLayout({
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
               fbq('init', '1705117413789207');
-              fbq('track', 'PageView');
+              (function(){
+                var raw=location.pathname||'/';
+                var path=raw.length>1&&raw.slice(-1)==='/'?raw.slice(0,-1):raw;
+                var isThankYou=path==='/final'||path.slice(-6)==='/final';
+                if(!isThankYou) fbq('track', 'PageView');
+              })();
             `,
           }}
         />
