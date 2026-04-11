@@ -34,42 +34,92 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isDark } = useAppContext();
-  const { messages } = useI18n();
+  const { messages, withLocalePath } = useI18n();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const invoiceId = searchParams.get("invoiceId");
+  const invoiceIdParam = searchParams.get("invoiceId");
+  const refParam = searchParams.get("ref");
 
   useEffect(() => {
-    if (!invoiceId) {
-      router.push("/final");
-      return;
-    }
-
-    // Clear invoiceId from localStorage on success page
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentInvoiceId");
     }
 
-    const fetchOrder = async () => {
+    let cancelled = false;
+    const finalFallback = () => router.push(withLocalePath("/final"));
+
+    const pollUntilPaid = async (invoiceId: string): Promise<boolean> => {
+      const maxAttempts = 20;
+      const delayMs = 1500;
+      for (let i = 0; i < maxAttempts; i++) {
+        if (cancelled) return false;
+        try {
+          const statusRes = await fetch(`/api/orders/status/${encodeURIComponent(invoiceId)}`);
+          if (!statusRes.ok) continue;
+          const statusData = await statusRes.json();
+          if (statusData.payment_status === "paid") return true;
+        } catch {
+          /* retry */
+        }
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+      return false;
+    };
+
+    const loadPaidOrder = async (invoiceId: string) => {
+      const response = await fetch(`/api/orders/invoice/${encodeURIComponent(invoiceId)}`);
+      if (!response.ok) {
+        console.error("[PaymentSuccess] Error fetching order:", await response.json());
+        return null;
+      }
+      return response.json() as Promise<Order>;
+    };
+
+    (async () => {
       try {
-        const response = await fetch(`/api/orders/invoice/${invoiceId}`);
-        if (!response.ok) {
-          console.error("[PaymentSuccess] Error fetching order:", await response.json());
-          router.push("/final");
+        let invoiceId = invoiceIdParam;
+
+        if (!invoiceId && refParam) {
+          const refRes = await fetch(`/api/orders/ref/${encodeURIComponent(refParam)}`);
+          if (!refRes.ok) {
+            finalFallback();
+            return;
+          }
+          const refData = await refRes.json();
+          invoiceId = refData.invoiceId as string;
+        }
+
+        if (!invoiceId) {
+          finalFallback();
           return;
         }
-        const data = await response.json();
+
+        const paid = await pollUntilPaid(invoiceId);
+        if (cancelled) return;
+        if (!paid) {
+          finalFallback();
+          return;
+        }
+
+        const data = await loadPaidOrder(invoiceId);
+        if (cancelled) return;
+        if (!data) {
+          finalFallback();
+          return;
+        }
         setOrder(data);
       } catch (error) {
         console.error("[PaymentSuccess] Error:", error);
-        router.push("/final");
+        finalFallback();
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
+    })();
 
-    fetchOrder();
-  }, [invoiceId, router]);
+    return () => {
+      cancelled = true;
+    };
+  }, [invoiceIdParam, refParam, router, withLocalePath]);
 
   useEffect(() => {
     if (!order) return;

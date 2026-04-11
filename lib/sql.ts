@@ -885,6 +885,8 @@ type OrderInput = {
   payment_status: "pending" | "paid" | "canceled";
   currency: "UAH" | "EUR";
   locale?: string | null;
+  /** Monobank merchantPaymInfo.reference — для redirectUrl /payment/success?ref= */
+  payment_reference?: string | null;
   items: {
     product_id: number;
     size: string;
@@ -914,19 +916,20 @@ export async function sqlPostOrder(order: OrderInput) {
     // Ensure new columns exist (idempotent for Postgres 9.6+)
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency TEXT;`;
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;`;
 
     const inserted = await query`
       INSERT INTO orders (
         customer_name, phone_number, email,
         delivery_method, city, post_office,
         comment, payment_type, invoice_id, payment_status,
-        currency, locale
+        currency, locale, payment_reference
       )
       VALUES (
         ${order.customer_name}, ${order.phone_number}, ${order.email || null},
         ${order.delivery_method}, ${order.city}, ${order.post_office},
         ${order.comment || null}, ${order.payment_type}, ${order.invoice_id}, ${order.payment_status},
-        ${order.currency}, ${order.locale || null}
+        ${order.currency}, ${order.locale || null}, ${order.payment_reference ?? null}
       )
       RETURNING id;
     `;
@@ -1150,6 +1153,23 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
     GROUP BY o.id;
   `;
   return result[0];
+}
+
+/** Легкий lookup для redirect після Monobank (GET /payment/success?ref=) */
+export async function sqlGetOrderRefLookup(ref: string) {
+  const result = await sql`
+    SELECT invoice_id, payment_status, locale
+    FROM orders
+    WHERE payment_reference = ${ref}
+    LIMIT 1;
+  `;
+  return result[0] as
+    | {
+        invoice_id: string;
+        payment_status: string;
+        locale: string | null;
+      }
+    | undefined;
 }
 
 // =====================
