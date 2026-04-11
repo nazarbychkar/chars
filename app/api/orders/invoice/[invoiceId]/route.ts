@@ -24,7 +24,13 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Повертаємо замовлення з будь-яким payment_status — клієнт показує успіх/помилку/очікування
+    if (order.payment_status !== "paid") {
+      return NextResponse.json(
+        { error: "Payment not completed", payment_status: order.payment_status },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(order);
   } catch (error) {
     console.error("[GET /orders/invoice] Error:", error);

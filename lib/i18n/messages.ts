@@ -150,11 +150,6 @@ type Messages = {
     errorCitiesNetwork: string;
     errorWarehousesGeneric: string;
     paymentSuccess: string;
-    paymentFailedTitle: string;
-    paymentFailedDescription: string;
-    paymentStatusTimeoutTitle: string;
-    paymentStatusTimeoutDescription: string;
-    backToCheckout: string;
   };
   basket: {
     title: string;
@@ -439,13 +434,6 @@ export const messages: MessagesMap = {
         "Замовлення успішно створено! Переходимо до оплати...",
       paymentStatusTitle: "Перевірка статусу оплати...",
       paymentStatusDescription: "Будь ласка, зачекайте",
-      paymentFailedTitle: "Оплату не завершено",
-      paymentFailedDescription:
-        "Транзакцію скасовано або відхилено банком. Замовлення збережено — ви можете спробувати оплатити ще раз.",
-      paymentStatusTimeoutTitle: "Не вдалося підтвердити оплату",
-      paymentStatusTimeoutDescription:
-        "Статус ще не надійшов. Якщо кошти списали — зачекайте кілька хвилин або напишіть нам: ми перевіримо замовлення.",
-      backToCheckout: "До оформлення замовлення",
     },
     basket: {
       title: "Кошик",
@@ -758,13 +746,6 @@ export const messages: MessagesMap = {
         "Die Bestellung wurde erfolgreich erstellt! Wir leiten Sie nun zur Bezahlung weiter...",
       paymentStatusTitle: "Zahlungsstatus wird geprüft...",
       paymentStatusDescription: "Bitte warten",
-      paymentFailedTitle: "Zahlung nicht abgeschlossen",
-      paymentFailedDescription:
-        "Die Transaktion wurde storniert oder von der Bank abgelehnt. Ihre Bestellung ist gespeichert — Sie können die Zahlung erneut versuchen.",
-      paymentStatusTimeoutTitle: "Zahlung konnte nicht bestätigt werden",
-      paymentStatusTimeoutDescription:
-        "Der Status ist noch nicht eingetroffen. Wenn Geld abgebucht wurde, warten Sie einige Minuten oder schreiben Sie uns — wir prüfen die Bestellung.",
-      backToCheckout: "Zur Kasse",
     },
     basket: {
       title: "Warenkorb",
@@ -1074,13 +1055,6 @@ export const messages: MessagesMap = {
         "Order successfully created! Redirecting you to payment...",
       paymentStatusTitle: "Checking payment status...",
       paymentStatusDescription: "Please wait",
-      paymentFailedTitle: "Payment not completed",
-      paymentFailedDescription:
-        "The transaction was cancelled or declined by the bank. Your order is saved — you can try paying again.",
-      paymentStatusTimeoutTitle: "Could not confirm payment",
-      paymentStatusTimeoutDescription:
-        "The status has not arrived yet. If you were charged, wait a few minutes or contact us and we will check your order.",
-      backToCheckout: "Back to checkout",
     },
     basket: {
       title: "Cart",

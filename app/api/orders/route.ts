@@ -416,8 +416,8 @@ export async function POST(req: NextRequest) {
         comment: comment || "Оплата замовлення",
         basketOrder,
       },
-      // Після оплати Monobank GET-редиректить сюди (успіх або помилка оплати)
-      redirectUrl: `${PUBLIC_URL}${localePath}/payment/success`,
+      // Redirect back to locale-specific payment status page
+      redirectUrl: `${PUBLIC_URL}${localePath}/payment/status`, // Payment status page will check localStorage for invoiceId
       webHookUrl: `${PUBLIC_URL}/api/mono-webhook`,
       validity: 3600,
       paymentType: "debit",

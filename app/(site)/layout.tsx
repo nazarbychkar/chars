@@ -171,10 +171,15 @@ export default function RootLayout({
               'https://connect.facebook.net/en_US/fbevents.js');
               fbq('init', '1705117413789207');
               (function(){
-                var raw=location.pathname||'/';
-                var path=raw.length>1&&raw.slice(-1)==='/'?raw.slice(0,-1):raw;
-                var isThankYou=path==='/final'||path.slice(-6)==='/final';
-                if(!isThankYou) fbq('track', 'PageView');
+                var path = (window.location.pathname || '').replace(/\\/$/, '');
+                var isFinal = path === '/final' || path.endsWith('/final');
+                var thankYou = /[?&]payment=success(?:&|$)/.test(window.location.search || '');
+                if (!thankYou && isFinal) {
+                  try { thankYou = window.localStorage.getItem('paymentSuccess') === 'true'; } catch (e) {}
+                }
+                if (!isFinal || !thankYou) {
+                  fbq('track', 'PageView');
+                }
               })();
             `,
           }}
