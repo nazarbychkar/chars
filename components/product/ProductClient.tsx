@@ -404,7 +404,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
   return (
     <section className="max-w-[1920px] w-full mx-auto">
-      <div className="flex flex-col lg:flex-row justify-around p-4 md:p-10 gap-10">
+      <div className="flex flex-col lg:flex-row justify-around px-4 pb-4 pt-1 md:px-10 md:pb-8 md:pt-2 gap-10">
         <div 
           className={`relative w-full lg:w-1/2 flex justify-center transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}
           style={{ touchAction: 'pan-y pinch-zoom' }}

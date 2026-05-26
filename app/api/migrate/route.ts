@@ -70,7 +70,10 @@ export async function POST() {
     await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS name_de TEXT`;
     console.log("✅ Added subcategories.name_de column");
 
-    // Orders: allow new international delivery method
+    await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
+    console.log("✅ Added subcategories.priority column");
+
+    // Orders: allow international shipping and gift certificates
     await sql`ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_delivery_method_check`;
     await sql`
       ALTER TABLE orders
@@ -81,11 +84,12 @@ export async function POST() {
           'nova_poshta_locker',
           'nova_poshta_courier',
           'showroom_pickup',
-          'international_shipping'
+          'international_shipping',
+          'certificate'
         )
       )
     `;
-    console.log("✅ Updated orders_delivery_method_check to include international_shipping");
+    console.log("✅ Updated orders_delivery_method_check to include international_shipping and certificate");
 
     console.log("🎉 Migration completed successfully!");
 

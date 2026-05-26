@@ -98,6 +98,11 @@ export default function FinalCard() {
 
   const [comment, setComment] = useState("");
   const [paymentType, setPaymentType] = useState<"" | "full" | "prepay">("full");
+  const [giftCertificateInput, setGiftCertificateInput] = useState("");
+  const [appliedCertificateCode, setAppliedCertificateCode] = useState<string | null>(null);
+  const [certificateDiscount, setCertificateDiscount] = useState(0);
+  const [certificateMessage, setCertificateMessage] = useState<string | null>(null);
+  const [isApplyingCertificate, setIsApplyingCertificate] = useState(false);
   const [countryCode, setCountryCode] = useState<string>("UA");
   const [countryName, setCountryName] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -132,6 +137,72 @@ export default function FinalCard() {
       }
     }
   }, [isUkraineShipping, deliveryMethod]);
+
+  const getCartTotal = () =>
+    items.reduce((total, item) => {
+      const rawItemPrice =
+        effectiveBasketCurrency === "EUR" && item.price_eur != null
+          ? item.price_eur
+          : item.price;
+      const itemPrice =
+        typeof rawItemPrice === "string"
+          ? parseFloat(rawItemPrice)
+          : rawItemPrice;
+      const discount = item.discount_percentage
+        ? typeof item.discount_percentage === "string"
+          ? parseFloat(item.discount_percentage)
+          : item.discount_percentage
+        : 0;
+      const price =
+        discount > 0 ? itemPrice * (1 - discount / 100) : itemPrice;
+      return total + price * item.quantity;
+    }, 0);
+
+  const handleApplyCertificate = async () => {
+    if (!giftCertificateInput.trim()) return;
+    setIsApplyingCertificate(true);
+    setCertificateMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/gift-certificates/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: giftCertificateInput.trim(),
+          order_total: getCartTotal(),
+          currency: effectiveBasketCurrency,
+          locale,
+        }),
+      });
+      const data = await response.json();
+
+      if (!data.valid) {
+        setAppliedCertificateCode(null);
+        setCertificateDiscount(0);
+        setCertificateMessage(data.error || messages.checkout.errorGeneric);
+        return;
+      }
+
+      setAppliedCertificateCode(data.code);
+      setCertificateDiscount(Number(data.discount || 0));
+      setCertificateMessage(null);
+      if (paymentType === "prepay") {
+        setPaymentType("full");
+      }
+    } catch {
+      setCertificateMessage(messages.checkout.errorNetwork);
+    } finally {
+      setIsApplyingCertificate(false);
+    }
+  };
+
+  const handleRemoveCertificate = () => {
+    setAppliedCertificateCode(null);
+    setCertificateDiscount(0);
+    setGiftCertificateInput("");
+    setCertificateMessage(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,21 +273,7 @@ export default function FinalCard() {
       };
     });
 
-    const fullAmount = items.reduce((total, item) => {
-      const rawItemPrice = getItemPrice(item);
-      const itemPrice =
-        typeof rawItemPrice === "string"
-          ? parseFloat(rawItemPrice)
-          : rawItemPrice;
-      const discount = item.discount_percentage
-        ? typeof item.discount_percentage === "string"
-          ? parseFloat(item.discount_percentage)
-          : item.discount_percentage
-        : 0;
-      const price =
-        discount > 0 ? itemPrice * (1 - discount / 100) : itemPrice;
-      return total + price * item.quantity;
-    }, 0);
+    const fullAmount = getCartTotal();
 
     try {
       const resolveCountryLabel = (code: string): string => {
@@ -248,8 +305,9 @@ export default function FinalCard() {
         payment_type: paymentType,
         total_amount: fullAmount.toFixed(2),
         currency: isEuro ? "EUR" : "UAH",
-        locale, // запам'ятовуємо мовну версію сайту
+        locale,
         items: apiItems,
+        gift_certificate_code: appliedCertificateCode,
       };
 
       // Надсилаємо дані замовлення
@@ -265,6 +323,15 @@ export default function FinalCard() {
         setError(data.error || messages.checkout.errorGeneric);
       } else {
         const data = await response.json();
+
+        if (data.paidByCertificate) {
+          localStorage.setItem("currentInvoiceId", data.invoiceId);
+          window.location.href = withLocalePath(
+            `/final?payment=success&invoiceId=${data.invoiceId}`
+          );
+          return;
+        }
+
         const { invoiceUrl, invoiceId } = data;
 
         if (!invoiceUrl) {
@@ -1131,6 +1198,133 @@ export default function FinalCard() {
                 onChange={(e) => setComment(e.target.value)}
               />
 
+              <div
+                className={`flex flex-col gap-3 pt-1 ${
+                  isDark ? "text-white" : "text-black"
+                }`}
+              >
+                {!appliedCertificateCode ? (
+                  <>
+                    <label
+                      htmlFor="giftCertificate"
+                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                    >
+                      {messages.checkout.giftCertificateLabel}
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                      <input
+                        type="text"
+                        id="giftCertificate"
+                        value={giftCertificateInput}
+                        onChange={(e) =>
+                          setGiftCertificateInput(e.target.value.toUpperCase())
+                        }
+                        placeholder={
+                          messages.checkout.giftCertificatePlaceholder
+                        }
+                        className={`flex-1 border px-4 py-3 sm:py-3.5 text-base sm:text-lg font-mono tracking-[0.12em] rounded font-normal uppercase transition-colors ${
+                          isDark
+                            ? "border-stone-600 bg-stone-900/50 placeholder:text-stone-500"
+                            : "border-stone-300 bg-white placeholder:text-stone-400"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCertificate}
+                        disabled={
+                          isApplyingCertificate || !giftCertificateInput.trim()
+                        }
+                        className={`shrink-0 px-6 py-3 sm:py-3.5 text-sm sm:text-base font-['Inter'] tracking-wide transition-opacity disabled:opacity-40 ${
+                          isDark
+                            ? "bg-white text-black hover:bg-stone-200"
+                            : "bg-black text-white hover:bg-stone-800"
+                        }`}
+                      >
+                        {isApplyingCertificate
+                          ? messages.checkout.submitSending
+                          : messages.checkout.giftCertificateApply}
+                      </button>
+                    </div>
+                    {certificateMessage && (
+                      <p
+                        className={`text-sm font-['Inter'] ${
+                          isDark ? "text-amber-200/90" : "text-amber-800"
+                        }`}
+                        role="alert"
+                      >
+                        {certificateMessage}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div
+                    className={`relative overflow-hidden rounded border px-4 py-4 sm:px-5 sm:py-5 ${
+                      isDark
+                        ? "border-stone-600 bg-stone-900/50"
+                        : "border-[#8C7461]/25 bg-[#f8f6f1]"
+                    }`}
+                  >
+                    <div
+                      className={`absolute left-0 top-0 h-full w-0.5 ${
+                        isDark ? "bg-[#8C7461]" : "bg-[#8C7461]"
+                      }`}
+                      aria-hidden
+                    />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pl-2">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <span
+                          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                            isDark
+                              ? "bg-[#8C7461]/20 text-[#c4b5a5]"
+                              : "bg-[#8C7461]/12 text-[#8C7461]"
+                          }`}
+                          aria-hidden
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] sm:text-xs font-['Inter'] uppercase tracking-[0.2em] text-[#8C7461]">
+                            {messages.checkout.giftCertificateAppliedStatus}
+                          </p>
+                          <p className="mt-1 font-mono text-base sm:text-lg tracking-[0.14em] truncate">
+                            {appliedCertificateCode}
+                          </p>
+                          {certificateDiscount > 0 && (
+                            <p className="mt-1.5 text-sm font-['Inter'] text-[#8C7461]">
+                              {messages.checkout.giftCertificateAppliedAmount(
+                                certificateDiscount.toFixed(2),
+                                effectiveBasketCurrency === "EUR" ? "€" : "₴"
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCertificate}
+                        className={`self-start sm:self-center text-sm font-['Inter'] underline-offset-4 transition-opacity hover:opacity-70 ${
+                          isDark ? "text-stone-400" : "text-stone-600"
+                        }`}
+                      >
+                        {messages.checkout.giftCertificateRemove}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <label
                 htmlFor="paymentType"
                 className="text-xl sm:text-2xl font-normal font-['Arial']"
@@ -1369,22 +1563,29 @@ export default function FinalCard() {
               )}
 
               {/* Total price container — у вибраній валюті з хедера */}
-              <div className="p-5 border-t flex justify-between text-base sm:text-2xl font-normal font-['Arial'] mt-4">
-                <div>{messages.checkout.totalLabel}</div>
-                <div className="font-['Helvetica'] leading-relaxed tracking-wide">
-                  {items
-                    .reduce((total, item) => {
-                      const unitPrice =
-                        effectiveBasketCurrency === "EUR" && item.price_eur != null
-                          ? item.price_eur
-                          : item.price;
-                      const price = item.discount_percentage
-                        ? unitPrice * (1 - item.discount_percentage / 100)
-                        : unitPrice;
-                      return total + price * item.quantity;
-                    }, 0)
-                    .toFixed(2)}{" "}
-                  {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+              <div className="p-5 border-t mt-4 space-y-2">
+                <div className="flex justify-between text-base sm:text-xl font-normal font-['Arial']">
+                  <div>{messages.checkout.subtotalLabel}</div>
+                  <div className="font-['Helvetica']">
+                    {getCartTotal().toFixed(2)}{" "}
+                    {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+                  </div>
+                </div>
+                {certificateDiscount > 0 && (
+                  <div className="flex justify-between text-base sm:text-xl font-normal font-['Arial'] text-[#8C7461]">
+                    <div>{messages.checkout.giftCertificateDiscountLabel}</div>
+                    <div className="font-['Helvetica']">
+                      −{certificateDiscount.toFixed(2)}{" "}
+                      {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-between text-base sm:text-2xl font-normal font-['Arial'] pt-2 border-t">
+                  <div>{messages.checkout.totalLabel}</div>
+                  <div className="font-['Helvetica'] leading-relaxed tracking-wide">
+                    {Math.max(0, getCartTotal() - certificateDiscount).toFixed(2)}{" "}
+                    {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+                  </div>
                 </div>
               </div>
             </div>

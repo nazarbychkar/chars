@@ -42,8 +42,12 @@ const navItems: NavItem[] = [
   {
     name: "Замовлення",
     icon: <TableIcon />,
-    // subItems: [{ name: "Orders Tables", path: "/admin/orders", pro: false }],
     path: "/admin/orders",
+  },
+  {
+    name: "Сертифікати",
+    icon: <TableIcon />,
+    path: "/admin/certificates",
   },
 ];
 

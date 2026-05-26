@@ -13,9 +13,10 @@ interface BreadcrumbItem {
 interface BreadcrumbsProps {
   items?: BreadcrumbItem[];
   productName?: string;
+  className?: string;
 }
 
-export default function Breadcrumbs({ items, productName }: BreadcrumbsProps) {
+export default function Breadcrumbs({ items, productName, className }: BreadcrumbsProps) {
   const pathname = usePathname();
   const { locale, messages } = useI18n();
 
@@ -91,7 +92,7 @@ export default function Breadcrumbs({ items, productName }: BreadcrumbsProps) {
   });
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-6">
+    <nav aria-label="Breadcrumb" className={className ?? "mb-6"}>
       <ol className="flex flex-wrap items-center gap-2 text-sm">
         {breadcrumbItems.map((item, index) => {
           const isLast = index === breadcrumbItems.length - 1;

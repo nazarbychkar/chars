@@ -200,8 +200,8 @@ export default async function Page({ params }: PageProps) {
   
   return (
     <main>
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
-        <Breadcrumbs items={breadcrumbItems} productName={productName} />
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+        <Breadcrumbs items={breadcrumbItems} productName={productName} className="mb-3" />
         <BreadcrumbsSchema items={breadcrumbItems} baseUrl={baseUrl} />
       </div>
       <Suspense fallback={<ProductPageSkeleton />}>

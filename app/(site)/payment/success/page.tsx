@@ -6,6 +6,7 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import Link from "next/link";
 import { trackFbqPurchase } from "@/lib/fbq";
+import { formatCertificateAmount } from "@/lib/certificates";
 
 interface OrderItem {
   product_name: string;
@@ -34,18 +35,17 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isDark } = useAppContext();
-  const { messages } = useI18n();
+  const { messages, withLocalePath } = useI18n();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const invoiceId = searchParams.get("invoiceId");
 
   useEffect(() => {
     if (!invoiceId) {
-      router.push("/final");
+      router.push(withLocalePath("/catalog"));
       return;
     }
 
-    // Clear invoiceId from localStorage on success page
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentInvoiceId");
     }
@@ -54,41 +54,44 @@ function PaymentSuccessContent() {
       try {
         const response = await fetch(`/api/orders/invoice/${invoiceId}`);
         if (!response.ok) {
-          console.error("[PaymentSuccess] Error fetching order:", await response.json());
-          router.push("/final");
+          console.error(
+            "[PaymentSuccess] Error fetching order:",
+            await response.json()
+          );
+          router.push(withLocalePath("/catalog"));
           return;
         }
         const data = await response.json();
         setOrder(data);
       } catch (error) {
         console.error("[PaymentSuccess] Error:", error);
-        router.push("/final");
+        router.push(withLocalePath("/catalog"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [invoiceId, router]);
+  }, [invoiceId, router, withLocalePath]);
 
   useEffect(() => {
     if (!order) return;
     if (typeof window === "undefined") return;
 
-    const totalValue =
-      order.items?.reduce(
-        (sum: number, item: OrderItem) =>
-          sum + Number(item.price) * item.quantity,
-        0
-      ) ?? 0;
-    const currency =
-      order.currency === "EUR" || order.currency === "UAH"
-        ? order.currency
-        : "UAH";
-
     trackFbqPurchase(order);
 
     if (window.clarity) {
+      const totalValue =
+        order.items?.reduce(
+          (sum: number, item: OrderItem) =>
+            sum + Number(item.price) * item.quantity,
+          0
+        ) ?? 0;
+      const currency =
+        order.currency === "EUR" || order.currency === "UAH"
+          ? order.currency
+          : "UAH";
+
       window.clarity("event", "purchase", {
         orderId: order.id,
         value: totalValue,
@@ -107,7 +110,7 @@ function PaymentSuccessContent() {
       >
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
-          <p className="font-['Inter']">Завантаження...</p>
+          <p className="font-['Inter']">{messages.checkout.paymentStatusDescription}</p>
         </div>
       </div>
     );
@@ -117,6 +120,13 @@ function PaymentSuccessContent() {
     return null;
   }
 
+  const isCertificate = order.delivery_method === "certificate";
+  const orderCurrency = order.currency === "EUR" ? "EUR" : "UAH";
+  const certificateItem = order.items?.[0];
+  const certificateAmount = certificateItem
+    ? Number(certificateItem.price)
+    : null;
+
   return (
     <div
       className={`min-h-screen py-12 px-4 ${
@@ -124,7 +134,6 @@ function PaymentSuccessContent() {
       }`}
     >
       <div className="max-w-2xl mx-auto">
-        {/* Success Icon */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500 text-white mb-6">
             <svg
@@ -142,14 +151,17 @@ function PaymentSuccessContent() {
             </svg>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold font-['Inter'] mb-4">
-            Оплата успішна! ✅
+            {isCertificate
+              ? messages.certificate.paymentSuccessTitle
+              : "Оплата успішна! ✅"}
           </h1>
           <p className="text-lg md:text-xl opacity-70 font-['Inter']">
-            Ваше замовлення прийнято до обробки
+            {isCertificate
+              ? messages.certificate.paymentSuccessDescription
+              : "Ваше замовлення прийнято до обробки"}
           </p>
         </div>
 
-        {/* Order Details */}
         <div
           className={`border rounded-lg p-6 mb-8 ${
             isDark
@@ -158,43 +170,61 @@ function PaymentSuccessContent() {
           }`}
         >
           <h2 className="text-xl font-semibold font-['Inter'] mb-4">
-            Деталі замовлення
+            {isCertificate
+              ? messages.certificate.title
+              : "Деталі замовлення"}
           </h2>
           <div className="space-y-3 font-['Inter']">
             <div>
-              <span className="opacity-70">Номер замовлення:</span>{" "}
+              <span className="opacity-70">
+                {isCertificate
+                  ? messages.certificate.paymentSuccessOrderLabel
+                  : "Номер замовлення"}
+                :
+              </span>{" "}
               <span className="font-semibold">#{order.id}</span>
             </div>
             <div>
-              <span className="opacity-70">Ім&apos;я:</span>{" "}
+              <span className="opacity-70">{messages.certificate.nameLabel}:</span>{" "}
               <span className="font-semibold">{order.customer_name}</span>
             </div>
             <div>
-              <span className="opacity-70">Телефон:</span>{" "}
+              <span className="opacity-70">{messages.certificate.phoneLabel}:</span>{" "}
               <span className="font-semibold">{order.phone_number}</span>
             </div>
             {order.email && (
               <div>
-                <span className="opacity-70">Email:</span>{" "}
+                <span className="opacity-70">{messages.certificate.emailLabel}:</span>{" "}
                 <span className="font-semibold">{order.email}</span>
               </div>
             )}
-            <div>
-              <span className="opacity-70">Доставка:</span>{" "}
-              <span className="font-semibold">{order.delivery_method}</span>
-            </div>
-            <div>
-              <span className="opacity-70">Місто:</span>{" "}
-              <span className="font-semibold">{order.city}</span>
-            </div>
-            <div>
-              <span className="opacity-70">Відділення:</span>{" "}
-              <span className="font-semibold">{order.post_office}</span>
-            </div>
+            {isCertificate && certificateAmount != null && (
+              <div>
+                <span className="opacity-70">{messages.certificate.chooseAmountLabel}:</span>{" "}
+                <span className="font-semibold">
+                  {formatCertificateAmount(certificateAmount, orderCurrency)}
+                </span>
+              </div>
+            )}
+            {!isCertificate && (
+              <>
+                <div>
+                  <span className="opacity-70">Доставка:</span>{" "}
+                  <span className="font-semibold">{order.delivery_method}</span>
+                </div>
+                <div>
+                  <span className="opacity-70">Місто:</span>{" "}
+                  <span className="font-semibold">{order.city}</span>
+                </div>
+                <div>
+                  <span className="opacity-70">Відділення:</span>{" "}
+                  <span className="font-semibold">{order.post_office}</span>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Order Items */}
-          {order.items && order.items.length > 0 && (
+          {!isCertificate && order.items && order.items.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-300 dark:border-gray-700">
               <h3 className="text-lg font-semibold font-['Inter'] mb-3">
                 Товари:
@@ -205,8 +235,8 @@ function PaymentSuccessContent() {
                     {item.product_name}
                     {item.color &&
                       ` (${messages.catalog.colorNames[item.color] || item.color})`}{" "}
-                    — Розмір: {item.size} ×
-                    {item.quantity} — {item.price}₴
+                    — Розмір: {item.size} × {item.quantity} — {item.price}
+                    {orderCurrency === "EUR" ? "€" : "₴"}
                   </li>
                 ))}
               </ul>
@@ -214,32 +244,36 @@ function PaymentSuccessContent() {
           )}
         </div>
 
-        {/* Actions */}
         <div className="text-center space-y-4">
           <p className="text-base md:text-lg opacity-70 font-['Inter'] mb-6">
-            Ми надішлемо вам SMS з номером відправлення після комплектування
-            замовлення.
+            {isCertificate && order.email
+              ? messages.certificate.paymentSuccessEmailHint(order.email)
+              : "Ми надішлемо вам SMS з номером відправлення після комплектування замовлення."}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/catalog"
+              href={withLocalePath("/catalog")}
               className={`px-6 py-3 rounded border font-['Inter'] transition-all duration-200 ${
                 isDark
                   ? "border-gray-600 hover:border-white hover:bg-gray-900"
                   : "border-gray-300 hover:border-black hover:bg-gray-100"
               }`}
             >
-              Продовжити покупки
+              {isCertificate
+                ? messages.certificate.continueShopping
+                : "Продовжити покупки"}
             </Link>
             <Link
-              href="/"
+              href={withLocalePath("/")}
               className={`px-6 py-3 rounded font-['Inter'] transition-all duration-200 ${
                 isDark
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              На головну
+              {isCertificate
+                ? messages.certificate.backToHome
+                : "На головну"}
             </Link>
           </div>
         </div>
@@ -250,14 +284,16 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
-          <p className="font-['Inter']">Завантаження...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
+            <p className="font-['Inter']">Завантаження...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentSuccessContent />
     </Suspense>
   );

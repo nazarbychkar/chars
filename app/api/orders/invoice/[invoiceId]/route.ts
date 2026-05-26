@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sqlGetOrderByInvoiceId } from "@/lib/sql";
+import { processPaidOrderNotifications } from "@/lib/postPayment";
 
 type RouteParams = {
   params: Promise<{
@@ -31,7 +32,19 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    return NextResponse.json(order);
+    if (!order.email_sent_at) {
+      try {
+        await processPaidOrderNotifications(invoiceId);
+      } catch (notifyError) {
+        console.error(
+          "[GET /api/orders/invoice] Post-payment notifications failed:",
+          notifyError
+        );
+      }
+    }
+
+    const refreshed = await sqlGetOrderByInvoiceId(invoiceId);
+    return NextResponse.json(refreshed ?? order);
   } catch (error) {
     console.error("[GET /orders/invoice] Error:", error);
     return NextResponse.json(
@@ -40,4 +53,3 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     );
   }
 }
-

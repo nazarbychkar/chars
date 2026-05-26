@@ -1,52 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sqlGetOrderByInvoiceId } from "@/lib/sql";
+import { sqlGetOrderByPaymentReference } from "@/lib/sql";
 import { processPaidOrderNotifications } from "@/lib/postPayment";
 
-type RouteParams = {
-  params: Promise<{
-    invoiceId: string;
-  }>;
-};
-
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(req: NextRequest) {
   try {
-    const { invoiceId } = await params;
-
-    if (!invoiceId) {
+    const ref = req.nextUrl.searchParams.get("ref")?.trim();
+    if (!ref) {
       return NextResponse.json(
-        { error: "Invoice ID is required" },
+        { error: "Payment reference is required" },
         { status: 400 }
       );
     }
 
-    const order = await sqlGetOrderByInvoiceId(invoiceId);
-
+    const order = await sqlGetOrderByPaymentReference(ref);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (order.payment_status === "paid" && !order.email_sent_at) {
+    if (order.payment_status === "paid") {
       try {
-        await processPaidOrderNotifications(invoiceId);
+        await processPaidOrderNotifications(order.invoice_id);
       } catch (notifyError) {
         console.error(
-          "[GET /api/orders/status] Post-payment notifications failed:",
+          "[GET /api/orders/by-payment-ref] Post-payment notifications failed:",
           notifyError
         );
       }
     }
 
     return NextResponse.json({
-      invoiceId,
+      invoiceId: order.invoice_id,
       payment_status: order.payment_status,
       order_id: order.id,
       locale: order.locale ?? null,
       delivery_method: order.delivery_method,
     });
   } catch (error) {
-    console.error("[GET /api/orders/status] Error:", error);
+    console.error("[GET /api/orders/by-payment-ref] Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch payment status" },
+      { error: "Failed to resolve payment reference" },
       { status: 500 }
     );
   }

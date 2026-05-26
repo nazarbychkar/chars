@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sqlGetAllOrders, sqlPostOrder, sql } from "@/lib/sql";
+import { sqlGetAllOrders, sqlPostOrder, sql, sqlCalculateGiftCertificateDiscount, sqlGetOrderByInvoiceId, sqlUpdatePaymentStatus } from "@/lib/sql";
 import crypto from "crypto";
+import { normalizeGiftCertificateCode } from "@/lib/giftCertificateCode";
+import { getGiftCertificateErrorMessage } from "@/lib/giftCertificateErrors";
+import { processPaidOrderNotifications } from "@/lib/postPayment";
+import { sendOrderTelegramNotification } from "@/lib/orderTelegram";
 
 type IncomingOrderItem = {
   product_id?: number | string;
@@ -95,6 +99,7 @@ export async function POST(req: NextRequest) {
       items,
       currency,
       locale,
+      gift_certificate_code,
     } = body;
 
     requestLocale = typeof locale === "string" ? locale : null;
@@ -181,19 +186,112 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    // Вибрана валюта на сайті
-    const isEuroSelected = currency === "EUR";
-    // В дев-режимі Monobank працює тільки в гривні
-    const IS_DEV =
-      process.env.DEV === "True" ||
-      process.env.DEV === "true" ||
-      process.env.DEV === "1";
-    const isEuroForMono = !IS_DEV && isEuroSelected;
-    const amountToPay = payment_type === "prepay" ? 300 : fullAmount;
-    const amountInMinorUnits = Math.round(amountToPay * 100);
-    
+  const isEuroSelected = currency === "EUR";
+  const orderCurrency: "UAH" | "EUR" = isEuroSelected ? "EUR" : "UAH";
+
+  let certificateDiscount = 0;
+  let appliedCertificateCode: string | null = null;
+
+  if (gift_certificate_code && String(gift_certificate_code).trim()) {
+    if (payment_type === "prepay") {
+      return NextResponse.json(
+        {
+          error: getGiftCertificateErrorMessage(
+            "CERT_WITH_PREPAY",
+            requestLocale
+          ),
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const normalizedCode = normalizeGiftCertificateCode(
+        String(gift_certificate_code)
+      );
+      const { discount, certificate } = await sqlCalculateGiftCertificateDiscount(
+        normalizedCode,
+        fullAmount,
+        orderCurrency
+      );
+      certificateDiscount = discount;
+      appliedCertificateCode = certificate.code;
+    } catch (error) {
+      const errCode =
+        error instanceof Error ? error.message : "CERT_NOT_FOUND";
+      return NextResponse.json(
+        { error: getGiftCertificateErrorMessage(errCode, requestLocale) },
+        { status: 400 }
+      );
+    }
+  }
+
+  const payableBeforePrepay = Math.max(0, fullAmount - certificateDiscount);
+  const amountToPay =
+    payment_type === "prepay" ? 300 : payableBeforePrepay;
+
+  const IS_DEV =
+    process.env.DEV === "True" ||
+    process.env.DEV === "true" ||
+    process.env.DEV === "1";
+  const isEuroForMono = !IS_DEV && isEuroSelected;
+  const amountInMinorUnits = Math.round(amountToPay * 100);
+
+  const orderLocale = typeof locale === "string" ? locale : null;
+  const localePath =
+    orderLocale === "uk" || orderLocale === "de" || orderLocale === "en"
+      ? `/${orderLocale}`
+      : "";
+
+  const orderItemsPayload = normalizedItems.map(
+    ({ product_id, size, quantity, price, color }) => ({
+      product_id,
+      size,
+      quantity,
+      price,
+      color,
+    })
+  );
+
+  const resolvedPaymentType =
+    amountToPay <= 0 && appliedCertificateCode ? "certificate" : payment_type;
+
+  if (amountToPay <= 0 && appliedCertificateCode) {
+    const invoiceId = crypto.randomUUID();
+    await sqlPostOrder({
+      customer_name,
+      phone_number,
+      email,
+      delivery_method,
+      city,
+      post_office,
+      comment,
+      payment_type: resolvedPaymentType,
+      invoice_id: invoiceId,
+      payment_status: "pending",
+      currency: orderCurrency,
+      locale: orderLocale,
+      gift_certificate_code: appliedCertificateCode,
+      certificate_discount: certificateDiscount,
+      items: orderItemsPayload,
+    });
+
+    await sqlUpdatePaymentStatus(invoiceId, "paid");
+    await processPaidOrderNotifications(invoiceId);
+    const paidOrder = await sqlGetOrderByInvoiceId(invoiceId);
+    if (paidOrder) {
+      await sendOrderTelegramNotification(paidOrder, invoiceId, 0);
+    }
+
+    return NextResponse.json({
+      paidByCertificate: true,
+      invoiceId,
+    });
+  }
+
     console.log("[POST /api/orders] Amount calculation:", {
       fullAmount,
+      certificateDiscount,
       amountToPay,
       amountInMinorUnits,
       payment_type,
@@ -236,13 +334,6 @@ export async function POST(req: NextRequest) {
     
     console.log("[POST /api/orders] PUBLIC_URL:", PUBLIC_URL);
     console.log("[POST /api/orders] MONO_TOKEN exists:", !!process.env.NEXT_PUBLIC_MONO_TOKEN);
-
-    // Determine locale-specific path prefix for redirect
-    const orderLocale = typeof locale === "string" ? locale : null;
-    const localePath =
-      orderLocale === "uk" || orderLocale === "de" || orderLocale === "en"
-        ? `/${orderLocale}`
-        : "";
 
     // ==========================
     // PayPal full payment flow
@@ -416,8 +507,9 @@ export async function POST(req: NextRequest) {
         comment: comment || "Оплата замовлення",
         basketOrder,
       },
-      // Redirect back to locale-specific payment status page
-      redirectUrl: `${PUBLIC_URL}${localePath}/payment/status`, // Payment status page will check localStorage for invoiceId
+      redirectUrl: `${PUBLIC_URL.replace(/\/$/, "")}${localePath}/payment/status?ref=${encodeURIComponent(reference)}`,
+      successUrl: `${PUBLIC_URL.replace(/\/$/, "")}${localePath}/payment/status?ref=${encodeURIComponent(reference)}&payment=success`,
+      failUrl: `${PUBLIC_URL.replace(/\/$/, "")}${localePath}/payment/status?ref=${encodeURIComponent(reference)}&payment=failed`,
       webHookUrl: `${PUBLIC_URL}/api/mono-webhook`,
       validity: 3600,
       paymentType: "debit",
@@ -470,19 +562,13 @@ export async function POST(req: NextRequest) {
       comment,
       payment_type,
       invoice_id: invoiceId,
+      payment_reference: reference,
       payment_status: "pending", // замовлення створено, але ще не оплачено
-      // У БД зберігаємо саме вибрану валюту на сайті
-      currency: isEuroSelected ? "EUR" : "UAH",
-      locale: typeof locale === "string" ? locale : null,
-      items: normalizedItems.map(
-        ({ product_id, size, quantity, price, color }) => ({
-          product_id,
-          size,
-          quantity,
-          price,
-          color,
-        })
-      ),
+      currency: orderCurrency,
+      locale: orderLocale,
+      gift_certificate_code: appliedCertificateCode,
+      certificate_discount: certificateDiscount,
+      items: orderItemsPayload,
     });
     console.log("[POST /api/orders] Order saved to database successfully");
 
@@ -497,7 +583,11 @@ export async function POST(req: NextRequest) {
     console.log("[POST /api/orders] Successfully completed order creation");
     console.log("=".repeat(50));
     
-    return NextResponse.json({ invoiceUrl: pageUrl, invoiceId: invoiceId });
+    return NextResponse.json({
+      invoiceUrl: pageUrl,
+      invoiceId,
+      paymentRef: reference,
+    });
   } catch (error) {
     console.error("[POST /api/orders] ERROR occurred:", error);
     console.error("[POST /api/orders] Error details:", {

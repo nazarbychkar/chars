@@ -27,6 +27,7 @@ type Messages = {
     currencyLabel: string;
     languageLabel: string;
     langSwitcherAria: string;
+    certificates: string;
   };
   footer: {
     showroomAddressLabel: string;
@@ -150,6 +151,15 @@ type Messages = {
     errorCitiesNetwork: string;
     errorWarehousesGeneric: string;
     paymentSuccess: string;
+    giftCertificateLabel: string;
+    giftCertificatePlaceholder: string;
+    giftCertificateApply: string;
+    giftCertificateApplied: (code: string) => string;
+    giftCertificateAppliedStatus: string;
+    giftCertificateAppliedAmount: (amount: string, currency: string) => string;
+    giftCertificateDiscountLabel: string;
+    giftCertificateRemove: string;
+    subtotalLabel: string;
   };
   basket: {
     title: string;
@@ -207,6 +217,42 @@ type Messages = {
     moreProductsLabel: string;
     comingSoonLabel: string;
   };
+  certificate: {
+    title: string;
+    subtitle: string;
+    availabilityLabel: string;
+    chooseAmountLabel: string;
+    buyButton: string;
+    descriptionTitle: string;
+    description: string;
+    features: string[];
+    alsoInUah: string;
+    alsoInEur: string;
+    previewBadge: string;
+    previewCodeLabel: string;
+    amountPrefix: string;
+    previewTagline: string;
+    previewValid: string;
+    formTitle: string;
+    formSubtitle: (amount: string) => string;
+    nameLabel: string;
+    namePlaceholder: string;
+    phoneLabel: string;
+    phonePlaceholder: string;
+    emailLabel: string;
+    emailPlaceholder: string;
+    submitButton: string;
+    submitting: string;
+    fillAllFields: string;
+    redirecting: string;
+    errorGeneric: string;
+    paymentSuccessTitle: string;
+    paymentSuccessDescription: string;
+    paymentSuccessEmailHint: (email: string) => string;
+    paymentSuccessOrderLabel: string;
+    continueShopping: string;
+    backToHome: string;
+  };
   admin?: {
     ordersFetchError: string;
     ordersGenericError: string;
@@ -227,7 +273,7 @@ export const messages: MessagesMap = {
       noResults: "Нічого не знайдено",
     },
     header: {
-      info: "Інформація",
+      info: "ІНФО",
       about: "Про нас",
       paymentAndDelivery: "Оплата і доставка",
       reviews: "Відгуки",
@@ -247,6 +293,7 @@ export const messages: MessagesMap = {
       currencyLabel: "Валюта",
       languageLabel: "Мова",
       langSwitcherAria: "Змінити мову сайту",
+      certificates: "Сертифікати",
     },
     footer: {
       showroomAddressLabel: "Адреса шоуруму:",
@@ -434,6 +481,16 @@ export const messages: MessagesMap = {
         "Замовлення успішно створено! Переходимо до оплати...",
       paymentStatusTitle: "Перевірка статусу оплати...",
       paymentStatusDescription: "Будь ласка, зачекайте",
+      giftCertificateLabel: "Подарунковий сертифікат",
+      giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
+      giftCertificateApply: "Застосувати",
+      giftCertificateApplied: (code) => `Сертифікат ${code} застосовано`,
+      giftCertificateAppliedStatus: "Сертифікат застосовано",
+      giftCertificateAppliedAmount: (amount, currency) =>
+        `Знижка −${amount} ${currency}`,
+      giftCertificateDiscountLabel: "Знижка сертифікатом",
+      giftCertificateRemove: "Змінити код",
+      subtotalLabel: "Проміжний підсумок",
     },
     basket: {
       title: "Кошик",
@@ -519,6 +576,54 @@ export const messages: MessagesMap = {
       moreProductsLabel: "Більше товарів",
       comingSoonLabel: "Очікуємо поставку",
     },
+    certificate: {
+      title: "Подарунковий сертифікат",
+      subtitle:
+        "Подаруйте стиль — без зайвих турбот. Сертифікат CHARS — це свобода обрати те, що справді резонує: від базових речей до сезонних колекцій у шоурумі в Києві.",
+      availabilityLabel: "Завжди в наявності",
+      chooseAmountLabel: "Оберіть номінал",
+      buyButton: "Купити сертифікат",
+      descriptionTitle: "Про сертифікат",
+      description:
+        "Електронний подарунковий сертифікат CHARS — елегантний спосіб порадувати близьких або колег. Після оплати ми надішлемо сертифікат на вказаний email. Його можна використати для покупок онлайн або в шоурумі CHARS KYIV.",
+      features: [
+        "Дійсний 12 місяців з моменту покупки",
+        "Використання онлайн та в шоурумі",
+        "Можна поєднувати з акційними пропозиціями",
+        "Елегантне оформлення — готовий подарунок",
+        "Номінали від 2 000 до 20 000 грн",
+      ],
+      alsoInUah: "також у гривнях",
+      alsoInEur: "також у євро",
+      previewBadge: "Gift",
+      previewCodeLabel: "Код сертифікату",
+      amountPrefix: "На суму",
+      previewTagline: "Стиль — це найкращий подарунок",
+      previewValid: "Дійсний 12 місяців",
+      formTitle: "Оформлення сертифіката",
+      formSubtitle: (amount) =>
+        `Ви обрали сертифікат на ${amount}. Заповніть дані для отримання та оплати.`,
+      nameLabel: "Ім'я",
+      namePlaceholder: "Ваше ім'я",
+      phoneLabel: "Телефон",
+      phonePlaceholder: "+380 XX XXX XX XX",
+      emailLabel: "Email",
+      emailPlaceholder: "email@example.com",
+      submitButton: "Перейти до оплати",
+      submitting: "Створюємо рахунок...",
+      fillAllFields: "Будь ласка, заповніть усі поля",
+      redirecting: "Перенаправляємо на сторінку оплати Monobank...",
+      errorGeneric:
+        "На жаль, не вдалося створити рахунок. Спробуйте ще раз або зв'яжіться з нами.",
+      paymentSuccessTitle: "Оплата успішна!",
+      paymentSuccessDescription:
+        "Ваш подарунковий сертифікат CHARS активовано. Ми надіслали його на вказаний email.",
+      paymentSuccessEmailHint: (email) =>
+        `Перевірте пошту ${email} — лист може потрапити в «Спам».`,
+      paymentSuccessOrderLabel: "Номер замовлення",
+      continueShopping: "Продовжити покупки",
+      backToHome: "На головну",
+    },
     admin: {
       ordersFetchError: "Не вдалося завантажити замовлення",
       ordersGenericError: "Щось пішло не так під час завантаження замовлень",
@@ -531,7 +636,7 @@ export const messages: MessagesMap = {
       noResults: "Keine Ergebnisse gefunden",
     },
     header: {
-      info: "Informationen",
+      info: "INFO",
       about: "Über uns",
       paymentAndDelivery: "Zahlung und Lieferung",
       reviews: "Bewertungen",
@@ -552,6 +657,7 @@ export const messages: MessagesMap = {
       currencyLabel: "Währung",
       languageLabel: "Sprache",
       langSwitcherAria: "Sprache der Website ändern",
+      certificates: "Gutscheine",
     },
     footer: {
       showroomAddressLabel: "Adresse des Showrooms:",
@@ -746,6 +852,16 @@ export const messages: MessagesMap = {
         "Die Bestellung wurde erfolgreich erstellt! Wir leiten Sie nun zur Bezahlung weiter...",
       paymentStatusTitle: "Zahlungsstatus wird geprüft...",
       paymentStatusDescription: "Bitte warten",
+      giftCertificateLabel: "Geschenkgutschein",
+      giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
+      giftCertificateApply: "Anwenden",
+      giftCertificateApplied: (code) => `Gutschein ${code} angewendet`,
+      giftCertificateAppliedStatus: "Gutschein angewendet",
+      giftCertificateAppliedAmount: (amount, currency) =>
+        `Rabatt −${amount} ${currency}`,
+      giftCertificateDiscountLabel: "Gutscheinrabatt",
+      giftCertificateRemove: "Code ändern",
+      subtotalLabel: "Zwischensumme",
     },
     basket: {
       title: "Warenkorb",
@@ -831,6 +947,54 @@ export const messages: MessagesMap = {
       moreProductsLabel: "Mehr Produkte",
       comingSoonLabel: "Bald verfügbar",
     },
+    certificate: {
+      title: "Geschenkgutschein",
+      subtitle:
+        "Schenken Sie Stil — ganz unkompliziert. Der CHARS-Gutschein gibt die Freiheit, genau das zu wählen, was passt: von Basics bis zu Saisonkollektionen im Showroom in Kiew.",
+      availabilityLabel: "Jederzeit verfügbar",
+      chooseAmountLabel: "Betrag wählen",
+      buyButton: "Gutschein kaufen",
+      descriptionTitle: "Über den Gutschein",
+      description:
+        "Der digitale CHARS-Geschenkgutschein ist eine elegante Art, Freunde, Familie oder Kollegen zu beschenken. Nach der Zahlung senden wir den Gutschein an die angegebene E-Mail. Er kann online oder im CHARS KYIV Showroom eingelöst werden.",
+      features: [
+        "12 Monate ab Kaufdatum gültig",
+        "Online und im Showroom einlösbar",
+        "Kombinierbar mit Aktionen",
+        "Elegantes Design — sofort verschenkbar",
+        "Nennwerte von 2.000 bis 20.000 UAH",
+      ],
+      alsoInUah: "auch in UAH",
+      alsoInEur: "auch in EUR",
+      previewBadge: "Gift",
+      previewCodeLabel: "Gutscheincode",
+      amountPrefix: "Für den Betrag",
+      previewTagline: "Stil ist das schönste Geschenk",
+      previewValid: "12 Monate gültig",
+      formTitle: "Gutschein bestellen",
+      formSubtitle: (amount) =>
+        `Sie haben einen Gutschein über ${amount} gewählt. Bitte füllen Sie Ihre Daten aus.`,
+      nameLabel: "Name",
+      namePlaceholder: "Ihr Name",
+      phoneLabel: "Telefon",
+      phonePlaceholder: "+49 XXX XXXXXXX",
+      emailLabel: "E-Mail",
+      emailPlaceholder: "email@beispiel.de",
+      submitButton: "Zur Zahlung",
+      submitting: "Rechnung wird erstellt...",
+      fillAllFields: "Bitte füllen Sie alle Felder aus",
+      redirecting: "Weiterleitung zur Monobank-Zahlungsseite...",
+      errorGeneric:
+        "Leider konnte keine Rechnung erstellt werden. Bitte versuchen Sie es erneut.",
+      paymentSuccessTitle: "Zahlung erfolgreich!",
+      paymentSuccessDescription:
+        "Ihr CHARS-Geschenkgutschein ist aktiv. Wir haben ihn an die angegebene E-Mail gesendet.",
+      paymentSuccessEmailHint: (email) =>
+        `Bitte prüfen Sie ${email} — die E-Mail kann im Spam-Ordner landen.`,
+      paymentSuccessOrderLabel: "Bestellnummer",
+      continueShopping: "Weiter einkaufen",
+      backToHome: "Zur Startseite",
+    },
     admin: {
       ordersFetchError: "Bestellungen konnten nicht geladen werden",
       ordersGenericError: "Beim Laden der Bestellungen ist ein Fehler aufgetreten",
@@ -843,7 +1007,7 @@ export const messages: MessagesMap = {
       noResults: "No results found",
     },
     header: {
-      info: "Information",
+      info: "INFO",
       about: "About us",
       paymentAndDelivery: "Payment and delivery",
       reviews: "Reviews",
@@ -863,6 +1027,7 @@ export const messages: MessagesMap = {
       currencyLabel: "Currency",
       languageLabel: "Language",
       langSwitcherAria: "Change website language",
+      certificates: "Certificates",
     },
     footer: {
       showroomAddressLabel: "Showroom address:",
@@ -1055,6 +1220,16 @@ export const messages: MessagesMap = {
         "Order successfully created! Redirecting you to payment...",
       paymentStatusTitle: "Checking payment status...",
       paymentStatusDescription: "Please wait",
+      giftCertificateLabel: "Gift certificate",
+      giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
+      giftCertificateApply: "Apply",
+      giftCertificateApplied: (code) => `Certificate ${code} applied`,
+      giftCertificateAppliedStatus: "Certificate applied",
+      giftCertificateAppliedAmount: (amount, currency) =>
+        `Discount −${amount} ${currency}`,
+      giftCertificateDiscountLabel: "Certificate discount",
+      giftCertificateRemove: "Change code",
+      subtotalLabel: "Subtotal",
     },
     basket: {
       title: "Cart",
@@ -1139,6 +1314,54 @@ export const messages: MessagesMap = {
       recommendationsTitle: "Complete your LOOK",
       moreProductsLabel: "More products",
       comingSoonLabel: "Coming soon",
+    },
+    certificate: {
+      title: "Gift Certificate",
+      subtitle:
+        "Give the gift of style — effortlessly. A CHARS certificate lets them choose what truly resonates: from wardrobe essentials to seasonal collections at our Kyiv showroom.",
+      availabilityLabel: "Always available",
+      chooseAmountLabel: "Choose amount",
+      buyButton: "Buy certificate",
+      descriptionTitle: "About the certificate",
+      description:
+        "The CHARS digital gift certificate is an elegant way to treat someone special. After payment, we will send the certificate to the email provided. It can be used for online purchases or at the CHARS KYIV showroom.",
+      features: [
+        "Valid for 12 months from purchase",
+        "Redeemable online and in-store",
+        "Can be combined with promotions",
+        "Elegant design — ready to gift",
+        "Denominations from 2,000 to 20,000 UAH",
+      ],
+      alsoInUah: "also in UAH",
+      alsoInEur: "also in EUR",
+      previewBadge: "Gift",
+      previewCodeLabel: "Certificate code",
+      amountPrefix: "For the amount",
+      previewTagline: "Style is the finest gift",
+      previewValid: "Valid for 12 months",
+      formTitle: "Purchase certificate",
+      formSubtitle: (amount) =>
+        `You selected a ${amount} certificate. Please fill in your details to continue.`,
+      nameLabel: "Name",
+      namePlaceholder: "Your name",
+      phoneLabel: "Phone",
+      phonePlaceholder: "+1 XXX XXX XXXX",
+      emailLabel: "Email",
+      emailPlaceholder: "email@example.com",
+      submitButton: "Proceed to payment",
+      submitting: "Creating invoice...",
+      fillAllFields: "Please fill in all fields",
+      redirecting: "Redirecting to Monobank payment page...",
+      errorGeneric:
+        "Sorry, we could not create the invoice. Please try again or contact us.",
+      paymentSuccessTitle: "Payment successful!",
+      paymentSuccessDescription:
+        "Your CHARS gift certificate is active. We have sent it to the email you provided.",
+      paymentSuccessEmailHint: (email) =>
+        `Please check ${email} — the email may land in your spam folder.`,
+      paymentSuccessOrderLabel: "Order number",
+      continueShopping: "Continue shopping",
+      backToHome: "Back to home",
     },
     admin: {
       ordersFetchError: "Failed to fetch orders",

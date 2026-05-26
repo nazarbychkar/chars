@@ -64,6 +64,7 @@ export const sql = Object.assign(
  * Set DISABLE_AUTO_RECOMMENDED_COLUMN=1 to skip (e.g. restricted DB user).
  */
 let recommendedProductIdsColumnEnsured = false;
+let availabilityStatusColumnEnsured = false;
 
 export async function ensureRecommendedProductIdsColumn(): Promise<void> {
   if (recommendedProductIdsColumnEnsured) return;
@@ -80,6 +81,25 @@ export async function ensureRecommendedProductIdsColumn(): Promise<void> {
   }
 }
 
+/**
+ * Prod safety: older DBs may miss `products.availability_status`.
+ * Run idempotent ALTER once per process before product queries/mutations.
+ */
+export async function ensureAvailabilityStatusColumn(): Promise<void> {
+  if (availabilityStatusColumnEnsured) return;
+  if (process.env.DISABLE_AUTO_AVAILABILITY_COLUMN === "1") return;
+  try {
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS availability_status TEXT DEFAULT 'available'`;
+    availabilityStatusColumnEnsured = true;
+  } catch (err) {
+    console.error(
+      "[sql] ensureAvailabilityStatusColumn failed (run POST /api/migrate or grant ALTER):",
+      err
+    );
+    throw err;
+  }
+}
+
 // =====================
 // 👕 PRODUCTS
 // =====================
@@ -88,6 +108,7 @@ export async function ensureRecommendedProductIdsColumn(): Promise<void> {
 // OPTIMIZED: Using LATERAL JOIN instead of correlated subquery (2-3x faster)
 // OPTIMIZED: Added Next.js cache wrapper for server-side caching (revalidate every 5 minutes)
 async function _sqlGetAllProducts() {
+  await ensureAvailabilityStatusColumn();
   return await sql`
     SELECT
       p.id,
@@ -132,6 +153,7 @@ export async function sqlGetAllProductsUncached() {
 
 /** Facebook/Google XML & CSV feeds: first photo by gallery order; separate first video for video-only items */
 export async function sqlGetAllProductsForFacebookFeedUncached() {
+  await ensureAvailabilityStatusColumn();
   return await sql`
     SELECT
       p.id,
@@ -191,6 +213,7 @@ export const sqlGetAllProducts = unstable_cache(
 
 // Get one product by ID with sizes & media
 export async function sqlGetProduct(id: number) {
+  await ensureAvailabilityStatusColumn();
   const rows = await sql`
     SELECT
       p.id,
@@ -602,6 +625,7 @@ export async function sqlPostProduct(product: {
   colors?: { label: string; hex?: string | null }[];
 }) {
   await ensureRecommendedProductIdsColumn();
+  await ensureAvailabilityStatusColumn();
   const inserted = await sql`
     INSERT INTO products (
       name, name_en, name_de,
@@ -709,6 +733,7 @@ export async function sqlPutProduct(
   }
 ) {
   await ensureRecommendedProductIdsColumn();
+  await ensureAvailabilityStatusColumn();
   // Step 1: Update main product fields
   // Convert season to array format for PostgreSQL array type
   // PostgreSQL expects array type, so we pass array directly (postgres.js handles conversion)
@@ -880,11 +905,14 @@ type OrderInput = {
   city: string;
   post_office: string;
   comment?: string;
-  payment_type: "prepay" | "full";
+  payment_type: "prepay" | "full" | "certificate";
   invoice_id: string;
+  payment_reference?: string | null;
   payment_status: "pending" | "paid" | "canceled";
   currency: "UAH" | "EUR";
   locale?: string | null;
+  gift_certificate_code?: string | null;
+  certificate_discount?: number;
   items: {
     product_id: number;
     size: string;
@@ -893,6 +921,103 @@ type OrderInput = {
     color?: string | null;
   }[];
 };
+
+type CertificateOrderInput = {
+  customer_name: string;
+  phone_number: string;
+  email?: string;
+  payment_type: "prepay" | "full" | "certificate";
+  invoice_id: string;
+  payment_reference: string;
+  payment_status: "pending" | "paid" | "canceled";
+  currency: "UAH" | "EUR";
+  locale?: string | null;
+  tier_uah: number;
+  items: {
+    product_id: number;
+    size: string;
+    quantity: number;
+    price: number;
+    color?: string | null;
+  }[];
+};
+
+export async function sqlPostCertificateOrder(order: CertificateOrderInput) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const query = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      let queryText = strings[0];
+      for (let i = 0; i < values.length; i++) {
+        queryText += `$${i + 1}` + strings[i + 1];
+      }
+      const result = await client.query(queryText, values);
+      return result.rows;
+    };
+
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS gift_certificate_code TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS certificate_discount NUMERIC(10,2) DEFAULT 0;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMPTZ;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;`;
+    await query`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
+    await query`ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_delivery_method_check`;
+    await query`
+      ALTER TABLE orders
+      ADD CONSTRAINT orders_delivery_method_check
+      CHECK (
+        delivery_method IN (
+          'nova_poshta_branch',
+          'nova_poshta_locker',
+          'nova_poshta_courier',
+          'showroom_pickup',
+          'international_shipping',
+          'certificate'
+        )
+      )
+    `;
+
+    const certificateComment = `Подарунковий сертифікат CHARS — ${order.tier_uah} ₴`;
+
+    const inserted = await query`
+      INSERT INTO orders (
+        customer_name, phone_number, email,
+        delivery_method, city, post_office,
+        comment, payment_type, invoice_id, payment_status,
+        currency, locale, payment_reference
+      )
+      VALUES (
+        ${order.customer_name}, ${order.phone_number}, ${order.email || null},
+        ${"certificate"}, ${"—"}, ${"Email"},
+        ${certificateComment}, ${order.payment_type}, ${order.invoice_id}, ${order.payment_status},
+        ${order.currency}, ${order.locale || null}, ${order.payment_reference}
+      )
+      RETURNING id;
+    `;
+
+    const orderId = inserted[0].id;
+
+    for (const item of order.items) {
+      await query`
+        INSERT INTO order_items (
+          order_id, product_id, size, quantity, price, color
+        ) VALUES (
+          ${orderId}, ${item.product_id}, ${item.size}, ${item.quantity}, ${item.price}, ${item.color || null}
+        );
+      `;
+    }
+
+    await client.query("COMMIT");
+    return { orderId };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
 
 export async function sqlPostOrder(order: OrderInput) {
   // Transaction: create order, insert items, check stock availability (but don't decrement - only after payment)
@@ -914,19 +1039,27 @@ export async function sqlPostOrder(order: OrderInput) {
     // Ensure new columns exist (idempotent for Postgres 9.6+)
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency TEXT;`;
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS gift_certificate_code TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS certificate_discount NUMERIC(10,2) DEFAULT 0;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMPTZ;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;`;
 
     const inserted = await query`
       INSERT INTO orders (
         customer_name, phone_number, email,
         delivery_method, city, post_office,
         comment, payment_type, invoice_id, payment_status,
-        currency, locale
+        currency, locale, gift_certificate_code, certificate_discount,
+        payment_reference
       )
       VALUES (
         ${order.customer_name}, ${order.phone_number}, ${order.email || null},
         ${order.delivery_method}, ${order.city}, ${order.post_office},
         ${order.comment || null}, ${order.payment_type}, ${order.invoice_id}, ${order.payment_status},
-        ${order.currency}, ${order.locale || null}
+        ${order.currency}, ${order.locale || null},
+        ${order.gift_certificate_code || null},
+        ${order.certificate_discount ?? 0},
+        ${order.payment_reference || null}
       )
       RETURNING id;
     `;
@@ -1079,8 +1212,10 @@ export async function sqlUpdatePaymentStatus(
         )
       `;
 
-      // Decrement stock for each item
+      // Decrement stock for each item (skip virtual certificate items)
       for (const item of orderItems) {
+        if (item.product_id === 0) continue;
+
         const updated = await query`
           UPDATE product_sizes
           SET stock = stock - ${item.quantity}
@@ -1110,10 +1245,42 @@ export async function sqlUpdatePaymentStatus(
 }
 
 // Get order by invoice ID for webhook processing
-export async function sqlGetOrderByInvoiceId(invoiceId: string) {
+export type OrderRowForNotification = {
+  id: number;
+  invoice_id: string;
+  customer_name: string;
+  phone_number: string;
+  email: string | null;
+  delivery_method: string;
+  city: string;
+  post_office: string;
+  comment: string | null;
+  payment_type: string;
+  payment_status: string;
+  currency: string | null;
+  locale: string | null;
+  created_at: string | Date;
+  gift_certificate_code: string | null;
+  certificate_discount: string | number | null;
+  email_sent_at: string | Date | null;
+  items: Array<{
+    product_id?: number | null;
+    product_name?: string | null;
+    size?: string;
+    quantity?: number;
+    price?: number | string;
+    color?: string | null;
+  }>;
+};
+
+export async function sqlGetOrderByInvoiceId(
+  invoiceId: string
+): Promise<OrderRowForNotification | undefined> {
+  await ensureOrderExtendedColumns();
   const result = await sql`
     SELECT 
       o.id,
+      o.invoice_id,
       o.customer_name,
       o.phone_number,
       o.email,
@@ -1126,11 +1293,16 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
       o.currency,
       o.locale,
       o.created_at,
+      o.gift_certificate_code,
+      o.certificate_discount,
+      o.email_sent_at,
       COALESCE(
         JSON_AGG(
           JSONB_BUILD_OBJECT(
+            'product_id', oi.product_id,
             'product_name',
               CASE
+                WHEN oi.product_id = 0 THEN 'Подарунковий сертифікат CHARS (' || oi.size || ' ₴)'
                 WHEN o.locale = 'en' THEN COALESCE(p.name_en, p.name)
                 WHEN o.locale = 'de' THEN COALESCE(p.name_de, p.name)
                 ELSE p.name
@@ -1149,7 +1321,7 @@ export async function sqlGetOrderByInvoiceId(invoiceId: string) {
     WHERE o.invoice_id = ${invoiceId}
     GROUP BY o.id;
   `;
-  return result[0];
+  return result[0] as OrderRowForNotification | undefined;
 }
 
 // =====================
@@ -1228,6 +1400,7 @@ export async function sqlDeleteCategory(id: number) {
 
 // Get all subcategories
 export async function sqlGetAllSubcategories() {
+  await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
   return await sql`
     SELECT * FROM subcategories
     ORDER BY category_id ASC, priority DESC, id ASC;
@@ -1236,6 +1409,7 @@ export async function sqlGetAllSubcategories() {
 
 // Get all subcategories for a specific category
 export async function sqlGetSubcategoriesByCategory(categoryId: number) {
+  await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
   return await sql`
     SELECT * FROM subcategories
     WHERE category_id = ${categoryId}
@@ -1294,4 +1468,261 @@ export async function sqlDeleteSubcategory(id: number) {
     WHERE id = ${id};
   `;
   return { deleted: true };
+}
+
+// =====================
+// 🎁 GIFT CERTIFICATES
+// =====================
+
+export type GiftCertificateRow = {
+  id: number;
+  code: string;
+  purchase_order_id: number;
+  tier_uah: number;
+  tier_eur: number;
+  initial_balance: string | number;
+  remaining_balance: string | number;
+  currency: "UAH" | "EUR";
+  status: string;
+  recipient_email: string | null;
+  recipient_name: string | null;
+  locale: string | null;
+  expires_at: string | Date;
+  created_at: string | Date;
+};
+
+async function ensureOrderExtendedColumns() {
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency TEXT;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS gift_certificate_code TEXT;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS certificate_discount NUMERIC(10,2) DEFAULT 0;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMPTZ;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;`;
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS orders_payment_reference_uidx
+    ON orders (payment_reference)
+    WHERE payment_reference IS NOT NULL
+  `;
+}
+
+export async function sqlGetOrderByPaymentReference(reference: string) {
+  await ensureOrderExtendedColumns();
+  const rows = await sql`
+    SELECT
+      o.id,
+      o.invoice_id,
+      o.payment_status,
+      o.delivery_method,
+      o.locale
+    FROM orders o
+    WHERE o.payment_reference = ${reference}
+    LIMIT 1
+  `;
+  return (rows[0] as
+    | {
+        id: number;
+        invoice_id: string;
+        payment_status: string;
+        delivery_method: string;
+        locale: string | null;
+      }
+    | undefined) ?? null;
+}
+
+async function ensureGiftCertificateSchema() {
+  await ensureOrderExtendedColumns();
+  await sql`
+    CREATE TABLE IF NOT EXISTS gift_certificates (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      purchase_order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      tier_uah INTEGER NOT NULL,
+      tier_eur INTEGER NOT NULL,
+      initial_balance NUMERIC(10,2) NOT NULL,
+      remaining_balance NUMERIC(10,2) NOT NULL,
+      currency TEXT NOT NULL CHECK (currency IN ('UAH', 'EUR')),
+      status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'depleted')),
+      recipient_email TEXT,
+      recipient_name TEXT,
+      locale TEXT,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+}
+
+export type GiftCertificateWithOrderRow = GiftCertificateRow & {
+  customer_name: string | null;
+  phone_number: string | null;
+  order_email: string | null;
+};
+
+export async function sqlGetAllGiftCertificates(): Promise<
+  GiftCertificateWithOrderRow[]
+> {
+  await ensureGiftCertificateSchema();
+  const rows = await sql`
+    SELECT
+      gc.*,
+      o.customer_name,
+      o.phone_number,
+      o.email AS order_email
+    FROM gift_certificates gc
+    LEFT JOIN orders o ON o.id = gc.purchase_order_id
+    ORDER BY gc.created_at DESC;
+  `;
+  return rows as GiftCertificateWithOrderRow[];
+}
+
+export async function sqlGetGiftCertificateByCode(
+  code: string
+): Promise<GiftCertificateRow | undefined> {
+  await ensureGiftCertificateSchema();
+  const rows = await sql`
+    SELECT * FROM gift_certificates
+    WHERE UPPER(code) = UPPER(${code})
+    LIMIT 1;
+  `;
+  return rows[0] as GiftCertificateRow | undefined;
+}
+
+export async function sqlGetGiftCertificateByPurchaseOrderId(
+  purchaseOrderId: number
+): Promise<GiftCertificateRow | undefined> {
+  await ensureGiftCertificateSchema();
+  const rows = await sql`
+    SELECT * FROM gift_certificates
+    WHERE purchase_order_id = ${purchaseOrderId}
+    LIMIT 1;
+  `;
+  return rows[0] as GiftCertificateRow | undefined;
+}
+
+export async function sqlCalculateGiftCertificateDiscount(
+  code: string,
+  orderTotal: number,
+  currency: "UAH" | "EUR"
+): Promise<{ discount: number; certificate: GiftCertificateRow }> {
+  const certificate = await sqlGetGiftCertificateByCode(code);
+  if (!certificate) {
+    throw new Error("CERT_NOT_FOUND");
+  }
+  if (certificate.status !== "active") {
+    throw new Error("CERT_USED");
+  }
+  if (new Date(certificate.expires_at) < new Date()) {
+    throw new Error("CERT_EXPIRED");
+  }
+  if (certificate.currency !== currency) {
+    throw new Error("CERT_CURRENCY_MISMATCH");
+  }
+
+  const remaining = Number(certificate.remaining_balance);
+  if (remaining <= 0) {
+    throw new Error("CERT_USED");
+  }
+
+  const discount = Math.min(remaining, orderTotal);
+  if (discount <= 0) {
+    throw new Error("CERT_INVALID_AMOUNT");
+  }
+
+  return { discount, certificate };
+}
+
+export async function sqlCreateGiftCertificateForOrder(input: {
+  purchaseOrderId: number;
+  tierUah: number;
+  tierEur: number;
+  currency: "UAH" | "EUR";
+  initialBalance: number;
+  recipientName: string;
+  recipientEmail: string;
+  locale?: string | null;
+}): Promise<GiftCertificateRow> {
+  await ensureGiftCertificateSchema();
+  const { generateGiftCertificateCode } = await import("@/lib/giftCertificateCode");
+
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const code = generateGiftCertificateCode();
+    try {
+      const rows = await sql`
+        INSERT INTO gift_certificates (
+          code, purchase_order_id, tier_uah, tier_eur,
+          initial_balance, remaining_balance, currency,
+          status, recipient_email, recipient_name, locale, expires_at
+        ) VALUES (
+          ${code}, ${input.purchaseOrderId}, ${input.tierUah}, ${input.tierEur},
+          ${input.initialBalance}, ${input.initialBalance}, ${input.currency},
+          ${"active"}, ${input.recipientEmail || null}, ${input.recipientName}, ${input.locale || null}, ${expiresAt.toISOString()}
+        )
+        RETURNING *;
+      `;
+      return rows[0] as GiftCertificateRow;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (!message.includes("duplicate key") && !message.includes("unique")) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Failed to generate unique gift certificate code");
+}
+
+export async function sqlRedeemGiftCertificateForOrder(input: {
+  code: string;
+  orderId: number;
+  amount: number;
+}) {
+  await ensureGiftCertificateSchema();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const query = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      let queryText = strings[0];
+      for (let i = 0; i < values.length; i++) {
+        queryText += `$${i + 1}` + strings[i + 1];
+      }
+      const result = await client.query(queryText, values);
+      return result.rows;
+    };
+
+    const updated = await query`
+      UPDATE gift_certificates
+      SET
+        remaining_balance = remaining_balance - ${input.amount},
+        status = CASE
+          WHEN remaining_balance - ${input.amount} <= 0 THEN 'depleted'
+          ELSE 'active'
+        END
+      WHERE UPPER(code) = UPPER(${input.code})
+        AND status = 'active'
+        AND remaining_balance >= ${input.amount}
+      RETURNING *;
+    `;
+
+    if (!updated.length) {
+      throw new Error("CERT_REDEEM_FAILED");
+    }
+
+    await client.query("COMMIT");
+    return updated[0] as GiftCertificateRow;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function sqlMarkOrderEmailSent(orderId: number) {
+  await sql`
+    UPDATE orders
+    SET email_sent_at = NOW()
+    WHERE id = ${orderId};
+  `;
 }

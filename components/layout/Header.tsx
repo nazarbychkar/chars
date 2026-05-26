@@ -159,16 +159,12 @@ export default function Header() {
     }
   }, [hoveredCategoryId]);
 
-  const customSeasonCategory = {
-    id: -1, // Use a negative ID or something unique to avoid conflicts
-    name: messages.header.seasonCategory,
-    subcategories: [
-      { id: -101, name: messages.header.seasonSpring },
-      { id: -102, name: messages.header.seasonSummer },
-      { id: -103, name: messages.header.seasonAutumn },
-      { id: -104, name: messages.header.seasonWinter },
-    ],
-  };
+  const seasonLinks = [
+    { value: "Весна", label: messages.header.seasonSpring },
+    { value: "Літо", label: messages.header.seasonSummer },
+    { value: "Осінь", label: messages.header.seasonAutumn },
+    { value: "Зима", label: messages.header.seasonWinter },
+  ];
 
   return (
     <>
@@ -265,48 +261,12 @@ export default function Header() {
                 </div>
               ))}
 
-              {/* Also include the "Сезон" category */}
-              <div
-                className="relative group"
-                onMouseEnter={() => {
-                  if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-                  setHoveredCategoryId(customSeasonCategory.id);
-                  setCatalogOpen(true);
-                }}
-                onMouseLeave={() => {
-                  if (!pinnedCatalog) {
-                    hoverTimeout.current = setTimeout(() => {
-                      setHoveredCategoryId(null);
-                    }, 200);
-                  }
-                }}
+              <Link
+                href={`/${locale}/certificate`}
+                className="cursor-pointer whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461]"
               >
-                <button
-                  className="cursor-pointer whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461]"
-                  disabled
-                >
-                  {customSeasonCategory.name}
-                </button>
-                {hoveredCategoryId === customSeasonCategory.id && (
-                  <div
-                    className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
-                      "bg-white"
-                    }`}
-                  >
-                    {customSeasonCategory.subcategories.map((subcat) => (
-                      <Link
-                        key={subcat.id}
-                        href={`/catalog?season=${encodeURIComponent(
-                          subcat.name
-                        )}`}
-                        className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
-                      >
-                        {subcat.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+                {messages.header.certificates}
+              </Link>
               {/* Information dropdown */}
               <div
                 className="relative"
@@ -355,6 +315,19 @@ export default function Header() {
                   >
                     {messages.header.contacts}
                   </Link>
+                  <div className="border-t border-stone-200 my-1" />
+                  <span className="text-xs uppercase tracking-wider text-stone-400 py-1 font-['Inter']">
+                    {messages.header.seasonCategory}
+                  </span>
+                  {seasonLinks.map((season) => (
+                    <Link
+                      key={season.value}
+                      href={`/${locale}/catalog?season=${encodeURIComponent(season.value)}`}
+                      className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
+                    >
+                      {season.label}
+                    </Link>
+                  ))}
                 </div>
               </div>
               {/* Currency + Language switchers (desktop) */}

@@ -41,8 +41,8 @@ export default function SidebarMenu({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // "menu" = main menu with categories, "season" = season sidebar
-  const [view, setView] = useState<"menu" | "season">("menu");
+  // "menu" = main menu with categories, "info" = information sidebar
+  const [view, setView] = useState<"menu" | "info">("menu");
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null);
 
   const getCategoryLabel = (cat: Category) => {
@@ -266,19 +266,28 @@ export default function SidebarMenu({
                 </div>
               </div>
             </div>
+            <Link
+              href={withLocalePath("/certificate")}
+              className="hover:text-[#8C7461]"
+              onClick={() => setIsOpen(false)}
+            >
+              {messages.header.certificates}
+            </Link>
             <button
               className="text-start cursor-pointer hover:text-[#8C7461]"
-              onClick={() => setView("season")}
+              onClick={() => setView("info")}
             >
-              {messages.header.seasonCategory} -{">"}
+              {messages.header.info} -{">"}
             </button>
           </nav>
         )}
 
-        {view === "season" && (
-          <div>
-            <div className="flex justify-between items-center p-4 text-xl sm:text-2xl md:text-3xl">
-              <h2 className="font-bold">{messages.header.seasonCategory}</h2>
+        {view === "info" && (
+          <nav className="flex flex-col px-4 py-6 space-y-3 text-lg sm:text-xl">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-bold text-xl sm:text-2xl md:text-3xl">
+                {messages.header.info}
+              </h2>
               <button
                 className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
                 onClick={() => setView("menu")}
@@ -287,7 +296,40 @@ export default function SidebarMenu({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 px-4 pb-6 gap-3">
+            <Link
+              href={withLocalePath("/#about")}
+              className="hover:text-[#8C7461]"
+              onClick={() => setIsOpen(false)}
+            >
+              {messages.header.about}
+            </Link>
+            <Link
+              href={withLocalePath("/#payment-and-delivery")}
+              className="hover:text-[#8C7461]"
+              onClick={() => setIsOpen(false)}
+            >
+              {messages.header.paymentAndDelivery}
+            </Link>
+            <Link
+              href={withLocalePath("/#reviews")}
+              className="hover:text-[#8C7461]"
+              onClick={() => setIsOpen(false)}
+            >
+              {messages.header.reviews}
+            </Link>
+            <Link
+              href={withLocalePath("/#contacts")}
+              className="hover:text-[#8C7461]"
+              onClick={() => setIsOpen(false)}
+            >
+              {messages.header.contacts}
+            </Link>
+
+            <div className="border-t border-stone-300 dark:border-stone-700 my-2" />
+            <h3 className="text-sm uppercase tracking-wider opacity-60 font-['Inter']">
+              {messages.header.seasonCategory}
+            </h3>
+            <div className="grid grid-cols-2 gap-3 pb-6">
               {season_data.map((item, i) => (
                 <Link
                   key={i}
@@ -295,20 +337,19 @@ export default function SidebarMenu({
                     `/catalog?season=${encodeURIComponent(item.value)}`
                   )}
                   onClick={() => setIsOpen(false)}
-                  className="h-[120px] rounded overflow-hidden relative text-white text-xl sm:text-2xl font-bold text-center flex items-center justify-center"
+                  className="h-[100px] rounded overflow-hidden relative text-white text-base sm:text-lg font-bold text-center flex items-center justify-center"
                   style={{
                     backgroundImage: `url(${item.image})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
                 >
-                  {/* Dark overlay on image */}
                   <div className="absolute inset-0 bg-black/30" />
-                  <span className="relative z-10">{item.label}</span>{" "}
+                  <span className="relative z-10">{item.label}</span>
                 </Link>
               ))}
             </div>
-          </div>
+          </nav>
         )}
       </div>
     </div>

@@ -1,41 +1,150 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+
+type PaymentStatusPayload = {
+  payment_status: string;
+  delivery_method?: string;
+  locale?: string | null;
+};
+
+function localePrefixFromData(
+  locale: string | null | undefined,
+  typeCertificate: boolean
+): string {
+  if (locale === "uk") return "/uk";
+  if (locale === "de") return "/de";
+  if (locale === "en") return "/en";
+  if (typeCertificate) return "/uk";
+  return "";
+}
 
 function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isDark } = useAppContext();
   const { messages, withLocalePath } = useI18n();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [status, setStatus] = useState<"loading" | "checking" | "error">("loading");
-  
-  // Get invoiceId from query params or localStorage
-  const invoiceIdFromQuery = searchParams.get("invoiceId");
-  const [invoiceId, setInvoiceId] = useState<string | null>(
-    invoiceIdFromQuery || (typeof window !== "undefined" ? localStorage.getItem("currentInvoiceId") : null)
+  const [status, setStatus] = useState<"loading" | "checking" | "error">(
+    "loading"
+  );
+
+  const invoiceIdFromQuery =
+    searchParams.get("invoiceId") || searchParams.get("invoice_id");
+  const paymentRefFromQuery = searchParams.get("ref");
+  const isCertificateReturn = searchParams.get("type") === "certificate";
+
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
+  const [resolveDone, setResolveDone] = useState(false);
+
+  const redirectForOrder = useCallback(
+    (data: PaymentStatusPayload, activeInvoiceId: string) => {
+      const prefix = localePrefixFromData(
+        data.locale,
+        isCertificateReturn || data.delivery_method === "certificate"
+      );
+      const isCertificate =
+        data.delivery_method === "certificate" || isCertificateReturn;
+
+      if (data.payment_status === "paid") {
+        localStorage.removeItem("currentInvoiceId");
+        localStorage.removeItem("currentPaymentRef");
+
+        if (isCertificate) {
+          router.replace(
+            `${prefix}/payment/success?invoiceId=${encodeURIComponent(activeInvoiceId)}`
+          );
+          return;
+        }
+
+        router.replace(
+          `${prefix}/final?payment=success&invoiceId=${encodeURIComponent(activeInvoiceId)}`
+        );
+        return;
+      }
+
+      if (data.payment_status === "pending") {
+        return;
+      }
+
+      if (isCertificate) {
+        router.replace(withLocalePath("/certificate"));
+        return;
+      }
+
+      router.replace(`${prefix}/final`);
+    },
+    [router, isCertificateReturn, withLocalePath]
   );
 
   useEffect(() => {
-    // If invoiceId from query params, update localStorage
-    if (invoiceIdFromQuery) {
-      localStorage.setItem("currentInvoiceId", invoiceIdFromQuery);
-      setInvoiceId(invoiceIdFromQuery);
-    }
+    let cancelled = false;
 
-    if (!invoiceId) {
-      setStatus("error");
-      setTimeout(() => {
-        router.push(withLocalePath("/final"));
-      }, 3000);
-      return;
-    }
+    const resolveInvoiceId = async (): Promise<string | null> => {
+      if (invoiceIdFromQuery) {
+        return invoiceIdFromQuery;
+      }
 
-    // Add a small delay to ensure we're only checking status AFTER user has attempted payment
-    // This prevents premature redirects if user somehow lands on this page before payment attempt
+      if (paymentRefFromQuery) {
+        try {
+          const response = await fetch(
+            `/api/orders/by-payment-ref?ref=${encodeURIComponent(paymentRefFromQuery)}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            if (typeof data.invoiceId === "string") {
+              localStorage.setItem("currentInvoiceId", data.invoiceId);
+              return data.invoiceId;
+            }
+          }
+        } catch (error) {
+          console.error("[PaymentStatus] Failed to resolve payment ref:", error);
+        }
+      }
+
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("currentInvoiceId");
+        if (stored) return stored;
+      }
+
+      return null;
+    };
+
+    (async () => {
+      const resolved = await resolveInvoiceId();
+      if (cancelled) return;
+
+      setInvoiceId(resolved);
+      setResolveDone(true);
+
+      if (!resolved) {
+        setStatus("error");
+        setTimeout(() => {
+          router.replace(
+            isCertificateReturn
+              ? withLocalePath("/certificate")
+              : withLocalePath("/final")
+          );
+        }, 2500);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    invoiceIdFromQuery,
+    paymentRefFromQuery,
+    router,
+    isCertificateReturn,
+    withLocalePath,
+  ]);
+
+  useEffect(() => {
+    if (!resolveDone || !invoiceId) return;
+
     const checkPaymentStatus = async () => {
       try {
         setStatus("checking");
@@ -44,82 +153,56 @@ function PaymentStatusContent() {
 
         if (!response.ok) {
           console.error("[PaymentStatus] Error checking status:", data);
-          // If order not found or error, redirect to final page
+          setStatus("error");
           setTimeout(() => {
-            router.push(withLocalePath("/final"));
+            router.replace(
+              isCertificateReturn
+                ? withLocalePath("/certificate")
+                : withLocalePath("/final")
+            );
           }, 2000);
           return;
         }
 
-        // Only redirect to final page with success parameter if payment is actually paid
-        // This page should only be reached AFTER payment attempt (via redirectUrl from Monobank)
-        if (data.payment_status === "paid") {
-          // Clear invoiceId from localStorage on success
-          localStorage.removeItem("currentInvoiceId");
-
-          // Determine locale-specific prefix for redirect
-          const orderLocale =
-            typeof data.locale === "string" ? data.locale : null;
-          const localePrefix =
-            orderLocale === "uk"
-              ? "/uk"
-              : orderLocale === "de"
-              ? "/de"
-              : orderLocale === "en"
-              ? "/en"
-              : "";
-
-          // Redirect to localized final page with payment success parameter
-          router.push(
-            `${localePrefix}/final?payment=success&invoiceId=${invoiceId}`
-          );
-          return;
-        }
-
-        // If payment status is "pending", stay on status page and continue polling
-        // This is the expected state when user returns from Monobank payment page
-        if (data.payment_status === "pending") {
-          // Continue polling - don't redirect yet
-          return;
-        }
-
-        // If payment not yet completed or other status, redirect back to final page
-        const orderLocale =
-          typeof data.locale === "string" ? data.locale : null;
-        const localePrefix =
-          orderLocale === "uk"
-            ? "/uk"
-            : orderLocale === "de"
-            ? "/de"
-            : orderLocale === "en"
-            ? "/en"
-            : "";
-
-        setTimeout(() => {
-          router.push(`${localePrefix}/final`);
-        }, 2000);
+        redirectForOrder(data, invoiceId);
       } catch (error) {
         console.error("[PaymentStatus] Error:", error);
         setStatus("error");
         setTimeout(() => {
-          router.push(withLocalePath("/final"));
+          router.replace(
+            isCertificateReturn
+              ? withLocalePath("/certificate")
+              : withLocalePath("/final")
+          );
         }, 2000);
       }
     };
 
-    // Small delay before first check to ensure this page is only reached after payment attempt
     const initialDelay = setTimeout(() => {
       checkPaymentStatus();
-    }, 500);
+    }, 400);
 
-    // Set up polling to check status every 2 seconds (max 30 seconds)
     let pollCount = 0;
-    const maxPolls = 15;
-    const pollInterval = setInterval(() => {
+    const maxPolls = 30;
+    const pollInterval = setInterval(async () => {
       pollCount++;
       if (pollCount >= maxPolls) {
         clearInterval(pollInterval);
-        router.push(withLocalePath("/final"));
+        try {
+          const response = await fetch(`/api/orders/status/${invoiceId}`);
+          const data = await response.json();
+          if (response.ok && data.payment_status === "paid") {
+            redirectForOrder(data, invoiceId);
+            return;
+          }
+        } catch {
+          /* fall through */
+        }
+        router.replace(
+          isCertificateReturn
+            ? withLocalePath("/certificate")
+            : withLocalePath("/final")
+        );
         return;
       }
       checkPaymentStatus();
@@ -129,7 +212,14 @@ function PaymentStatusContent() {
       clearTimeout(initialDelay);
       clearInterval(pollInterval);
     };
-  }, [invoiceId, invoiceIdFromQuery, router, withLocalePath]);
+  }, [
+    resolveDone,
+    invoiceId,
+    router,
+    redirectForOrder,
+    isCertificateReturn,
+    withLocalePath,
+  ]);
 
   return (
     <div
@@ -154,14 +244,16 @@ function PaymentStatusContent() {
 
 export default function PaymentStatusPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
-          <p className="text-base md:text-lg opacity-70">Завантаження...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
+            <p className="text-base md:text-lg opacity-70">Завантаження...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentStatusContent />
     </Suspense>
   );
