@@ -13,11 +13,17 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.EMAIL_FROM || "onboarding@resend.dev";
 
+export type EmailAttachment = {
+  filename: string;
+  content: Buffer | string;
+};
+
 export interface SendEmailOptions {
   to: string | string[];
   subject: string;
   text?: string;
   html?: string;
+  attachments?: EmailAttachment[];
 }
 
 export async function sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string }> {
@@ -34,12 +40,21 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
   }
 
   try {
+    const attachments = options.attachments?.map((file) => ({
+      filename: file.filename,
+      content:
+        typeof file.content === "string"
+          ? file.content
+          : file.content.toString("base64"),
+    }));
+
     const { error } = await resend.emails.send({
       from: fromEmail,
       to: toValid,
       subject: options.subject,
       text: options.text ?? "",
       html: options.html ?? undefined,
+      attachments: attachments?.length ? attachments : undefined,
     });
 
     if (error) {
