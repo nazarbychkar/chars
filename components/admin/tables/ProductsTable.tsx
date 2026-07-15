@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -10,6 +10,7 @@ import {
 } from "../ui/table";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Pagination from "./Pagination";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 
@@ -42,15 +43,34 @@ interface Product {
 }
 
 export default function ProductsTable() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Local search inside admin products table
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  const searchQuery = searchParams.get("q") || "";
+  const pageFromUrl = Math.max(1, Number(searchParams.get("page") || 1) || 1);
   const productsPerPage = 10;
+
+  const updateListParams = useCallback(
+    (next: { page?: number; q?: string }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const page = next.page ?? pageFromUrl;
+      const q = next.q !== undefined ? next.q : searchQuery;
+
+      if (page > 1) params.set("page", String(page));
+      else params.delete("page");
+
+      if (q.trim()) params.set("q", q.trim());
+      else params.delete("q");
+
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams, pageFromUrl, searchQuery]
+  );
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -65,9 +85,17 @@ export default function ProductsTable() {
   }, [products, searchQuery]);
 
   const totalPages = useMemo(
-    () => Math.ceil(filteredProducts.length / productsPerPage),
+    () => Math.max(1, Math.ceil(filteredProducts.length / productsPerPage)),
     [filteredProducts.length]
   );
+
+  const currentPage = Math.min(pageFromUrl, totalPages);
+
+  useEffect(() => {
+    if (!loading && pageFromUrl !== currentPage) {
+      updateListParams({ page: currentPage });
+    }
+  }, [loading, pageFromUrl, currentPage, updateListParams]);
 
   const paginatedProducts = useMemo(
     () =>
@@ -78,12 +106,15 @@ export default function ProductsTable() {
     [filteredProducts, currentPage, productsPerPage]
   );
 
-  // Reset to first page if products list or search results change
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [filteredProducts.length, currentPage, totalPages]);
+  const editHref = (productId: number) => {
+    const params = new URLSearchParams();
+    if (currentPage > 1) params.set("returnPage", String(currentPage));
+    if (searchQuery.trim()) params.set("returnQ", searchQuery.trim());
+    const qs = params.toString();
+    return qs
+      ? `/admin/products/${productId}/edit?${qs}`
+      : `/admin/products/${productId}/edit`;
+  };
 
   // Функція для очищення кешу
   const clearCache = () => {
@@ -170,8 +201,7 @@ export default function ProductsTable() {
             type="text"
             value={searchQuery}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
+              updateListParams({ q: e.target.value, page: 1 });
             }}
             placeholder="Пошук за назвою, ID або категорією"
             className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/40 sm:w-72"
@@ -366,7 +396,7 @@ export default function ProductsTable() {
                     </TableCell>
                     <TableCell className="px-5 py-4 space-x-2">
                       <Link
-                        href={`/admin/products/${product.id}/edit`}
+                        href={editHref(product.id)}
                         className="inline-block rounded-md bg-blue-400 px-3 py-1 text-white text-sm hover:bg-blue-600 transition"
                       >
                         Редагувати
@@ -390,7 +420,7 @@ export default function ProductsTable() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={(page) => setCurrentPage(page)}
+                onPageChange={(page) => updateListParams({ page })}
               />
             </div>
           )}
@@ -485,7 +515,7 @@ export default function ProductsTable() {
                   </div>
                   <div className="flex gap-2">
                     <Link
-                      href={`/admin/products/${product.id}/edit`}
+                      href={editHref(product.id)}
                       className="rounded-md bg-blue-500 px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-600"
                     >
                       Редагувати
@@ -508,7 +538,7 @@ export default function ProductsTable() {
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
+              onPageChange={(page) => updateListParams({ page })}
             />
           </div>
         )}

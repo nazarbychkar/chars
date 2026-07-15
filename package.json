@@ -14,6 +14,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "migrate": "node scripts/migrate.mjs",
+    "migrate:nav": "node scripts/migrate-nav-structure.mjs",
     "check-vitals": "echo 'Run lighthouse audit after deployment'"
   },
   "dependencies": {

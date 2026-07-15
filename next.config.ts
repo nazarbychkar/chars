@@ -187,6 +187,10 @@ const nextConfig = {
         source: "/:locale(uk|de|en)/certificate",
         destination: "/certificate",
       },
+      {
+        source: "/:locale(uk|de|en)/collections",
+        destination: "/collections",
+      },
     ];
   },
 } satisfies NextConfig;

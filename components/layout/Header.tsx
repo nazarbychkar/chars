@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -19,6 +18,7 @@ interface Category {
   priority: number;
   name_en?: string | null;
   name_de?: string | null;
+  subcategories?: Subcategory[];
 }
 
 interface Subcategory {
@@ -46,46 +46,19 @@ export default function Header() {
   const effectiveCurrency =
     currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
   const toggleTheme = () => setIsDark((prev) => !prev);
-  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isFbTestMode, setIsFbTestMode] = useState(false);
 
   useEffect(() => {
-    setIsFbTestMode(
-      new URLSearchParams(window.location.search).has("test_event_code")
-    );
-  }, []);
-
-  // Treat localized home routes as "home"
-  const isHomePage =
-    pathname === "/" ||
-    pathname === `/${locale}` ||
-    pathname === `/${locale}/`;
-
-  // Track scroll position only for adding subtle shadow
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsScrolled(scrollY > 20);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [hoveredCategoryId, setHoveredCategoryId] = useState<number | null>(
-    null
-  );
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [infoMenuOpen, setInfoMenuOpen] = useState(false);
-  const infoTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const [pinnedCatalog, setPinnedCatalog] = useState(false);
-  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const catalogTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const catalogRef = useRef<HTMLDivElement | null>(null);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
 
@@ -94,378 +67,334 @@ export default function Header() {
     if (locale === "de") return category.name_de || category.name;
     return category.name;
   };
+
   const getSubcategoryLabel = (sub: Subcategory) => {
-    const name_en: string | null | undefined = sub.name_en;
-    const name_de: string | null | undefined = sub.name_de;
-    if (locale === "en") return name_en || sub.name;
-    if (locale === "de") return name_de || sub.name;
+    if (locale === "en") return sub.name_en || sub.name;
+    if (locale === "de") return sub.name_de || sub.name;
     return sub.name;
   };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        pinnedCatalog &&
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node)
-      ) {
-        setPinnedCatalog(false);
-        setCatalogOpen(false);
-        setHoveredCategoryId(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [pinnedCatalog]);
-
-  useEffect(() => {
-    return () => {
-      if (infoTimeout.current) clearTimeout(infoTimeout.current);
-    };
-  }, []);
 
   useEffect(() => {
     async function fetchCategories() {
       try {
         const res = await fetch("/api/categories");
-        const data = await res.json();
-        // Ensure data is always an array
-        setCategories(Array.isArray(data) ? data : []);
+        const data: Category[] = await res.json();
+        if (!Array.isArray(data)) {
+          setCategories([]);
+          return;
+        }
+        const withSubs = await Promise.all(
+          data.map(async (cat) => {
+            try {
+              const subRes = await fetch(
+                `/api/subcategories?parent_category_id=${cat.id}`
+              );
+              const subs: Subcategory[] = await subRes.json();
+              return {
+                ...cat,
+                subcategories: Array.isArray(subs) ? subs : [],
+              };
+            } catch {
+              return { ...cat, subcategories: [] };
+            }
+          })
+        );
+        setCategories(withSubs);
       } catch (err) {
         console.error("Failed to load categories", err);
-        setCategories([]); // Set empty array on error
+        setCategories([]);
       }
     }
     fetchCategories();
   }, []);
 
   useEffect(() => {
-    async function fetchSubcategories(categoryId: number) {
-      try {
-        const res = await fetch(
-          `/api/subcategories?parent_category_id=${categoryId}`
-        );
-        const data = await res.json();
-        setSubcategories(data);
-      } catch (err) {
-        console.error("Failed to load subcategories", err);
-        setSubcategories([]);
-      }
-    }
+    return () => {
+      if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+    };
+  }, []);
 
-    if (hoveredCategoryId !== null) {
-      fetchSubcategories(hoveredCategoryId);
-    }
-  }, [hoveredCategoryId]);
+  const openCatalog = () => {
+    if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+    setCatalogOpen(true);
+  };
 
-  const seasonLinks = [
-    { value: "Весна", label: messages.header.seasonSpring },
-    { value: "Літо", label: messages.header.seasonSummer },
-    { value: "Осінь", label: messages.header.seasonAutumn },
-    { value: "Зима", label: messages.header.seasonWinter },
-  ];
+  const closeCatalogSoon = () => {
+    if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+    catalogTimeout.current = setTimeout(() => setCatalogOpen(false), 180);
+  };
+
+  const navLinkClass =
+    "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] font-['Inter'] transition-colors hover:text-[#8C7461]";
 
   return (
     <>
       <header
-        className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 transform -translate-x-1/2 w-full z-50 transition-all duration-300 ${
-          isDark
-            ? "bg-[#1e1e1e] text-white"
-            : "bg-stone-100 text-black"
+        className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 -translate-x-1/2 w-full z-50 transition-all duration-300 ${
+          isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
         } ${isScrolled ? "shadow-md" : ""}`}
-        onMouseLeave={() => {
-          if (!pinnedCatalog) {
-            hoverTimeout.current = setTimeout(() => {
-              setCatalogOpen(false);
-              setHoveredCategoryId(null);
-            }, 200); // Small delay
-          }
-        }}
       >
-        {/* === WRAPPER: everything inside shares same bg and styles === */}
         <div className="w-full transition-all duration-300">
-          {/* Top nav */}
-          <div className="hidden lg:flex justify-between items-center h-20 px-10">
-            <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
+          {/* Desktop */}
+          <div className="hidden lg:flex justify-between items-center h-20 px-8 xl:px-12">
+            <Link
+              href={locale === "uk" ? "/uk" : `/${locale}`}
+              className="shrink-0"
+            >
               <Image
-                height="57"
-                width="200"
+                height={57}
+                width={180}
                 alt="logo"
                 src={
                   isDark
                     ? "/images/dark-theme/chars-logo-header-dark.png"
                     : "/images/light-theme/chars-logo-header-light.png"
                 }
+                className="h-10 w-auto xl:h-12"
               />
             </Link>
 
-            <div className="flex items-center gap-8 font-['Inter'] text-sm font-medium uppercase tracking-[0.08em]">
-              {/* Product Categories shown directly in top nav */}
-              {Array.isArray(categories) && categories.map((category) => (
-                <div
-                  key={category.id}
-                  className="relative group"
-                  onMouseEnter={() => {
-                    if (hoverTimeout.current)
-                      clearTimeout(hoverTimeout.current);
-                    setHoveredCategoryId(category.id);
-                    setCatalogOpen(true);
-                  }}
-                  onMouseLeave={() => {
-                    if (!pinnedCatalog) {
-                      hoverTimeout.current = setTimeout(() => {
-                        setHoveredCategoryId(null);
-                      }, 200);
-                    }
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      const target = `/${locale}/catalog?category=${encodeURIComponent(
-                        buildCategorySlug(category.name)
-                      )}`;
-                      window.location.href = target;
-                    }}
-                    className="cursor-pointer whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461] focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
-                    aria-label={messages.header.goToCategoryAria(
-                      getCategoryLabel(category)
-                    )}
-                    aria-expanded={catalogOpen && hoveredCategoryId === category.id}
-                    aria-haspopup="true"
-                  >
-                    {getCategoryLabel(category)}
-                  </button>
+            <nav
+              className="flex items-center gap-8 xl:gap-10"
+              aria-label="Main"
+              ref={catalogRef}
+            >
+              <Link
+                href={`/${locale}/collections`}
+                className={navLinkClass}
+              >
+                {messages.header.collections}
+              </Link>
 
-                  {/* Subcategories dropdown */}
-                  {hoveredCategoryId === category.id &&
-                    subcategories.length > 0 && (
-                      <div
-                        className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 ${
-                          "bg-white"
-                        }`}
-                      >
-                        {subcategories.map((subcat) => (
-                          <Link
-                            key={subcat.id}
-                            href={`/catalog?subcategory=${encodeURIComponent(
-                              buildSubcategorySlug(subcat.name)
-                            )}`}
-                            className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
-                          >
-                            {getSubcategoryLabel(subcat)}
-                          </Link>
+              <div
+                className="relative"
+                onMouseEnter={openCatalog}
+                onMouseLeave={closeCatalogSoon}
+              >
+                <button
+                  type="button"
+                  className={`${navLinkClass} inline-flex items-center gap-1.5 cursor-pointer`}
+                  aria-expanded={catalogOpen}
+                  aria-haspopup="true"
+                  onClick={() => setCatalogOpen((v) => !v)}
+                >
+                  {messages.header.catalogMenu}
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 24 24"
+                    className={`w-3.5 h-3.5 transition-transform ${
+                      catalogOpen ? "rotate-180" : ""
+                    }`}
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                {/* Mega menu — attached without gap so hover stays active */}
+                <div
+                  className={`fixed left-0 right-0 top-20 z-50 transition-all duration-200 ${
+                    catalogOpen
+                      ? "opacity-100 pointer-events-auto translate-y-0"
+                      : "opacity-0 pointer-events-none -translate-y-1"
+                  }`}
+                  onMouseEnter={openCatalog}
+                  onMouseLeave={closeCatalogSoon}
+                >
+                  <div
+                    className={`border-t shadow-lg ${
+                      isDark
+                        ? "bg-[#1e1e1e] border-stone-700"
+                        : "bg-white border-stone-200"
+                    }`}
+                  >
+                    <div className="max-w-[1920px] mx-auto px-8 xl:px-12 py-8 xl:py-10">
+                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10">
+                        {categories.map((category) => (
+                          <div key={category.id} className="min-w-0">
+                            <Link
+                              href={`/${locale}/catalog?category=${encodeURIComponent(
+                                buildCategorySlug(category.name)
+                              )}`}
+                              className="block text-sm font-semibold uppercase tracking-[0.14em] font-['Inter'] mb-3 hover:text-[#8C7461] transition-colors"
+                              onClick={() => setCatalogOpen(false)}
+                            >
+                              {getCategoryLabel(category)}
+                            </Link>
+                            <ul className="space-y-1.5">
+                              {(category.subcategories || []).map((sub) => (
+                                <li key={sub.id}>
+                                  <Link
+                                    href={`/${locale}/catalog?subcategory=${encodeURIComponent(
+                                      buildSubcategorySlug(sub.name)
+                                    )}`}
+                                    className={`text-[15px] font-normal font-['Inter'] leading-snug transition-colors hover:text-[#8C7461] ${
+                                      isDark
+                                        ? "text-stone-300"
+                                        : "text-stone-600"
+                                    }`}
+                                    onClick={() => setCatalogOpen(false)}
+                                  >
+                                    {getSubcategoryLabel(sub)}
+                                  </Link>
+                                </li>
+                              ))}
+                              {(!category.subcategories ||
+                                category.subcategories.length === 0) && (
+                                <li>
+                                  <Link
+                                    href={`/${locale}/catalog?category=${encodeURIComponent(
+                                      buildCategorySlug(category.name)
+                                    )}`}
+                                    className="text-sm text-[#8C7461] font-['Inter']"
+                                    onClick={() => setCatalogOpen(false)}
+                                  >
+                                    {messages.header.viewAllCategory}
+                                  </Link>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
                         ))}
                       </div>
-                    )}
+                    </div>
+                  </div>
                 </div>
-              ))}
+              </div>
 
               <Link
                 href={`/${locale}/certificate`}
-                className="cursor-pointer whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461]"
+                className={navLinkClass}
               >
                 {messages.header.certificates}
               </Link>
-              {/* Information dropdown */}
-              <div
-                className="relative"
-                onMouseEnter={() => {
-                  if (infoTimeout.current) clearTimeout(infoTimeout.current);
-                  setInfoMenuOpen(true);
-                }}
-                onMouseLeave={() => {
-                  infoTimeout.current = setTimeout(() => {
-                    setInfoMenuOpen(false);
-                  }, 200); // delay in ms
-                }}
-              >
-                <span className="cursor-default whitespace-nowrap rounded px-2 py-1 transition-colors hover:text-[#8C7461]">
-                  {messages.header.info}
-                </span>
+            </nav>
 
-                <div
-                  className={`absolute top-full left-0 mt-2 shadow-md rounded px-4 py-2 flex flex-col min-w-[200px] z-50 transition-opacity duration-200 bg-white ${
-                    infoMenuOpen
-                      ? "opacity-100 pointer-events-auto"
-                      : "opacity-0 pointer-events-none"
-                  }`}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsCurrencyMenuOpen((prev) => !prev)}
+                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border border-stone-300 gap-1"
+                  aria-label="Змінити валюту"
+                  aria-expanded={isCurrencyMenuOpen}
                 >
-                  <Link
-                    href={`/${locale}/#about`}
-                    className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
-                  >
-                    {messages.header.about}
-                  </Link>
-                  <Link
-                    href={`/${locale}/#payment-and-delivery`}
-                    className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
-                  >
-                    {messages.header.paymentAndDelivery}
-                  </Link>
-                  <Link
-                    href={`/${locale}/#reviews`}
-                    className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
-                  >
-                    {messages.header.reviews}
-                  </Link>
-                  <Link
-                    href={`/${locale}/#contacts`}
-                    className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
-                  >
-                    {messages.header.contacts}
-                  </Link>
-                  <div className="border-t border-stone-200 my-1" />
-                  <span className="text-xs uppercase tracking-wider text-stone-400 py-1 font-['Inter']">
-                    {messages.header.seasonCategory}
+                  <span className="text-base font-medium tabular-nums">
+                    {effectiveCurrency === "EUR" ? "€" : "₴"}
                   </span>
-                  {seasonLinks.map((season) => (
-                    <Link
-                      key={season.value}
-                      href={`/${locale}/catalog?season=${encodeURIComponent(season.value)}`}
-                      className="hover:text-[#8C7461] text-base py-1 font-normal font-['Inter'] text-black"
+                  <svg aria-hidden viewBox="0 0 24 24" className="w-4 h-4">
+                    <path
+                      d="M7 10l5 5 5-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {isCurrencyMenuOpen && (
+                  <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 min-w-[140px]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrency("UAH");
+                        setIsCurrencyMenuOpen(false);
+                      }}
+                      className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
+                        effectiveCurrency === "UAH"
+                          ? "bg-[#8C7461] text-white border-[#8C7461]"
+                          : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                      }`}
                     >
-                      {season.label}
-                    </Link>
-                  ))}
-                </div>
+                      UAH
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrency("EUR");
+                        setIsCurrencyMenuOpen(false);
+                      }}
+                      className={`mt-1 px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
+                        effectiveCurrency === "EUR"
+                          ? "bg-[#8C7461] text-white border-[#8C7461]"
+                          : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                      }`}
+                    >
+                      EUR
+                    </button>
+                  </div>
+                )}
               </div>
-              {/* Currency + Language switchers (desktop) */}
-              <div className="flex items-center gap-3">
-                {/* Currency switcher (desktop) – dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsCurrencyMenuOpen((prev) => !prev)}
-                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border border-stone-300 gap-1"
-                    aria-label="Змінити валюту"
-                    aria-expanded={isCurrencyMenuOpen}
-                  >
-                    <span className="text-base font-medium tabular-nums">
-                      {effectiveCurrency === "EUR" ? "€" : "₴"}
-                    </span>
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      className="w-4 h-4"
-                    >
-                      <path
-                        d="M7 10l5 5 5-5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  {isCurrencyMenuOpen && (
-                    <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 backdrop-blur-sm min-w-[140px]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrency("UAH");
-                          setIsCurrencyMenuOpen(false);
-                        }}
-                        className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
-                          effectiveCurrency === "UAH"
-                            ? "bg-[#8C7461] text-white border-[#8C7461]"
-                            : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
-                        }`}
-                        aria-pressed={effectiveCurrency === "UAH"}
-                      >
-                        UAH
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCurrency("EUR");
-                          setIsCurrencyMenuOpen(false);
-                        }}
-                        className={`mt-1 px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
-                          effectiveCurrency === "EUR"
-                            ? "bg-[#8C7461] text-white border-[#8C7461]"
-                            : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
-                        }`}
-                        aria-pressed={effectiveCurrency === "EUR"}
-                      >
-                        EUR
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {/* Language switcher (desktop) */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsLangMenuOpen((prev) => !prev)}
-                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border border-stone-300"
-                    aria-label={messages.header.langSwitcherAria}
-                    aria-expanded={isLangMenuOpen}
-                  >
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      className="w-6 h-6"
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      />
-                      <path
-                        d="M3 12h18"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M12 3c2.5 2.2 3.5 4.9 3.5 9s-1 6.8-3.5 9c-2.5-2.2-3.5-4.9-3.5-9s1-6.8 3.5-9Z"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.1"
-                      />
-                      <path
-                        d="M6 7c1.6.8 3.3 1.1 6 1.1s4.4-.3 6-1.1M6 17c1.6-.8 3.3-1.1 6-1.1s4.4.3 6 1.1"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.1"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                  {isLangMenuOpen && (
-                    <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 backdrop-blur-sm min-w-[140px]">
-                      {["uk", "de", "en"].map((lng) => (
-                        <button
-                          key={lng}
-                          type="button"
-                          onClick={() => {
-                            switchLocale(lng as Locale);
-                            setIsLangMenuOpen(false);
-                          }}
-                          className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide uppercase transition-colors ${
-                            locale === lng
-                              ? "bg-[#8C7461] text-white border-[#8C7461]"
-                              : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
-                          }`}
-                          aria-current={locale === lng ? "page" : undefined}
-                        >
-                          {lng.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* Right Icons */}
-            <div className="flex items-center gap-1.5">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsLangMenuOpen((prev) => !prev)}
+                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border border-stone-300"
+                  aria-label={messages.header.langSwitcherAria}
+                  aria-expanded={isLangMenuOpen}
+                >
+                  <svg aria-hidden viewBox="0 0 24 24" className="w-6 h-6">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                    />
+                    <path
+                      d="M3 12h18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M12 3c2.5 2.2 3.5 4.9 3.5 9s-1 6.8-3.5 9c-2.5-2.2-3.5-4.9-3.5-9s1-6.8 3.5-9Z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.1"
+                    />
+                    <path
+                      d="M6 7c1.6.8 3.3 1.1 6 1.1s4.4-.3 6-1.1M6 17c1.6-.8 3.3-1.1 6-1.1s4.4.3 6 1.1"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.1"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+                {isLangMenuOpen && (
+                  <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 min-w-[140px]">
+                    {["uk", "de", "en"].map((lng) => (
+                      <button
+                        key={lng}
+                        type="button"
+                        onClick={() => {
+                          switchLocale(lng as Locale);
+                          setIsLangMenuOpen(false);
+                        }}
+                        className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide uppercase transition-colors ${
+                          locale === lng
+                            ? "bg-[#8C7461] text-white border-[#8C7461]"
+                            : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                        }`}
+                      >
+                        {lng.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <button
                 className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
                 onClick={toggleTheme}
@@ -477,10 +406,10 @@ export default function Header() {
                 aria-pressed={isDark}
               >
                 <Image
-                  height="26"
-                  width="26"
+                  height={26}
+                  width={26}
                   alt=""
-                  aria-hidden="true"
+                  aria-hidden
                   src={
                     isDark
                       ? "/images/dark-theme/theme-switch.svg"
@@ -499,8 +428,8 @@ export default function Header() {
                 aria-expanded={isSearchOpen}
               >
                 <Image
-                  height="24"
-                  width="24"
+                  height={24}
+                  width={24}
                   alt=""
                   src={
                     isDark
@@ -516,10 +445,121 @@ export default function Header() {
                 aria-expanded={isBasketOpen}
               >
                 <Image
-                  height="24"
-                  width="24"
+                  height={24}
+                  width={24}
                   alt=""
-                  aria-hidden="true"
+                  aria-hidden
+                  src={
+                    isDark
+                      ? "/images/dark-theme/basket.svg"
+                      : "/images/light-theme/basket.svg"
+                  }
+                />
+                {totalItems > 0 && (
+                  <span
+                    className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+                    aria-label={messages.header.basketCountAria(totalItems)}
+                  >
+                    {totalItems > 99 ? "99+" : totalItems}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile */}
+          <div
+            className={`lg:hidden w-full h-16 px-4 flex items-center justify-between transition-all duration-300 ${
+              isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
+            }`}
+          >
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="relative w-12 h-12 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Відкрити меню"
+                aria-expanded={isSidebarOpen}
+              >
+                <svg aria-hidden viewBox="0 0 24 24" className="w-7 h-7">
+                  <path
+                    d="M4 7h16M4 12h16M4 17h16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+              <button
+                className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                onClick={toggleTheme}
+                aria-label={
+                  isDark
+                    ? messages.header.themeToggleAriaLight
+                    : messages.header.themeToggleAriaDark
+                }
+                aria-pressed={isDark}
+              >
+                <Image
+                  height={24}
+                  width={24}
+                  alt=""
+                  aria-hidden
+                  src={
+                    isDark
+                      ? "/images/dark-theme/theme-switch.svg"
+                      : "/images/light-theme/theme-switch.svg"
+                  }
+                />
+              </button>
+            </div>
+
+            <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
+              <Image
+                height={28}
+                width={100}
+                alt="logo"
+                src={
+                  isDark
+                    ? "/images/dark-theme/chars-logo-header-dark.png"
+                    : "/images/light-theme/chars-logo-header-light.png"
+                }
+              />
+            </Link>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                onClick={() => {
+                  setIsSearchOpen(!isSearchOpen);
+                  setIsBasketOpen(false);
+                }}
+                aria-label={messages.header.searchOpenAria}
+                aria-expanded={isSearchOpen}
+              >
+                <Image
+                  height={24}
+                  width={24}
+                  alt=""
+                  src={
+                    isDark
+                      ? "/images/dark-theme/search.svg"
+                      : "/images/light-theme/search.svg"
+                  }
+                />
+              </button>
+              <button
+                onClick={() => setIsBasketOpen(!isBasketOpen)}
+                className="relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                aria-label={messages.header.basketOpenAria(totalItems)}
+                aria-expanded={isBasketOpen}
+              >
+                <Image
+                  height={24}
+                  width={24}
+                  alt=""
+                  aria-hidden
                   src={
                     isDark
                       ? "/images/dark-theme/basket.svg"
@@ -538,129 +578,23 @@ export default function Header() {
             </div>
           </div>
         </div>
-
-        {/* Mobile Header */}
-        <div
-          className={`lg:hidden w-full h-16 relative overflow-hidden px-4 flex items-center justify-between transition-all duration-300 ${
-            isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
-          }`}
-        >
-          <div className="flex items-center gap-0.5">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="relative w-12 h-12 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Відкрити меню"
-              aria-expanded={isSidebarOpen}
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="w-7 h-7"
-              >
-                <path
-                  d="M4 7h16M4 12h16M4 17h16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <button
-              className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
-              onClick={toggleTheme}
-              aria-label={
-                isDark
-                  ? messages.header.themeToggleAriaLight
-                  : messages.header.themeToggleAriaDark
-              }
-              aria-pressed={isDark}
-            >
-              <Image
-                height="24"
-                width="24"
-                alt=""
-                aria-hidden="true"
-                src={
-                  isDark
-                    ? "/images/dark-theme/theme-switch.svg"
-                    : "/images/light-theme/theme-switch.svg"
-                }
-              />
-            </button>
-          </div>
-
-          <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
-            <Image
-              height="28"
-              width="100"
-              alt="logo"
-              src={
-                isDark
-                  ? "/images/dark-theme/chars-logo-header-dark.png"
-                  : "/images/light-theme/chars-logo-header-light.png"
-              }
-            />
-          </Link>
-
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
-              onClick={() => {
-                setIsSearchOpen(!isSearchOpen);
-                setIsBasketOpen(false);
-              }}
-              aria-label={messages.header.searchOpenAria}
-              aria-expanded={isSearchOpen}
-            >
-              <Image
-                height="24"
-                width="24"
-                alt=""
-                src={
-                  isDark
-                    ? "/images/dark-theme/search.svg"
-                    : "/images/light-theme/search.svg"
-                }
-              />
-            </button>
-            <button
-              onClick={() => setIsBasketOpen(!isBasketOpen)}
-              className="relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
-              aria-label={messages.header.basketOpenAria(totalItems)}
-              aria-expanded={isBasketOpen}
-            >
-              <Image
-                height="24"
-                width="24"
-                alt=""
-                aria-hidden="true"
-                src={
-                  isDark
-                    ? "/images/dark-theme/basket.svg"
-                    : "/images/light-theme/basket.svg"
-                }
-              />
-              {totalItems > 0 && (
-                <span
-                  className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
-                  aria-label={messages.header.basketCountAria(totalItems)}
-                >
-                  {totalItems > 99 ? "99+" : totalItems}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
       </header>
+
+      {/* Dim overlay when catalog open */}
+      {catalogOpen && (
+        <button
+          type="button"
+          aria-label="Close catalog"
+          className="hidden lg:block fixed inset-0 top-20 z-40 bg-black/20 cursor-default"
+          onClick={() => setCatalogOpen(false)}
+        />
+      )}
 
       <SidebarMenu
         isDark={isDark}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
       />
-
       <SidebarBasket
         isDark={isDark}
         isOpen={isBasketOpen}

@@ -19,6 +19,7 @@ type Messages = {
     basketOpenAria: (count: number) => string;
     basketCountAria: (count: number) => string;
     seasonCategory: string;
+    collections: string;
     seasonSpring: string;
     seasonSummer: string;
     seasonAutumn: string;
@@ -28,6 +29,14 @@ type Messages = {
     languageLabel: string;
     langSwitcherAria: string;
     certificates: string;
+    catalogMenu: string;
+    viewAllCategory: string;
+  };
+  collections: {
+    title: string;
+    subtitle: string;
+    chooseSeason: string;
+    viewCollection: string;
   };
   footer: {
     showroomAddressLabel: string;
@@ -285,6 +294,7 @@ export const messages: MessagesMap = {
       basketOpenAria: (count) => `Відкрити кошик. Товарів в кошику: ${count}`,
       basketCountAria: (count) => `${count} товарів в кошику`,
       seasonCategory: "Сезон",
+      collections: "Колекції",
       seasonSpring: "Весна",
       seasonSummer: "Літо",
       seasonAutumn: "Осінь",
@@ -294,6 +304,14 @@ export const messages: MessagesMap = {
       languageLabel: "Мова",
       langSwitcherAria: "Змінити мову сайту",
       certificates: "Сертифікати",
+      catalogMenu: "Каталог",
+      viewAllCategory: "Усі товари",
+    },
+    collections: {
+      title: "Колекції",
+      subtitle: "Оберіть сезон — і відкрийте речі, зібрані під настрій і погоду.",
+      chooseSeason: "Обрати сезон",
+      viewCollection: "Дивитись колекцію",
     },
     footer: {
       showroomAddressLabel: "Адреса шоуруму:",
@@ -649,6 +667,7 @@ export const messages: MessagesMap = {
         `Warenkorb öffnen. Artikel im Warenkorb: ${count}`,
       basketCountAria: (count) => `${count} Artikel im Warenkorb`,
       seasonCategory: "Saison",
+      collections: "Kollektionen",
       seasonSpring: "Frühling",
       seasonSummer: "Sommer",
       seasonAutumn: "Herbst",
@@ -658,6 +677,15 @@ export const messages: MessagesMap = {
       languageLabel: "Sprache",
       langSwitcherAria: "Sprache der Website ändern",
       certificates: "Gutscheine",
+      catalogMenu: "Katalog",
+      viewAllCategory: "Alle Artikel",
+    },
+    collections: {
+      title: "Kollektionen",
+      subtitle:
+        "Wählen Sie eine Saison — und entdecken Sie Looks für Stimmung und Wetter.",
+      chooseSeason: "Saison wählen",
+      viewCollection: "Kollektion ansehen",
     },
     footer: {
       showroomAddressLabel: "Adresse des Showrooms:",
@@ -1019,6 +1047,7 @@ export const messages: MessagesMap = {
       basketOpenAria: (count) => `Open cart. Items in cart: ${count}`,
       basketCountAria: (count) => `${count} items in cart`,
       seasonCategory: "Season",
+      collections: "Collections",
       seasonSpring: "Spring",
       seasonSummer: "Summer",
       seasonAutumn: "Autumn",
@@ -1028,6 +1057,15 @@ export const messages: MessagesMap = {
       languageLabel: "Language",
       langSwitcherAria: "Change website language",
       certificates: "Certificates",
+      catalogMenu: "Catalog",
+      viewAllCategory: "View all",
+    },
+    collections: {
+      title: "Collections",
+      subtitle:
+        "Choose a season — and discover pieces curated for mood and weather.",
+      chooseSeason: "Choose a season",
+      viewCollection: "View collection",
     },
     footer: {
       showroomAddressLabel: "Showroom address:",

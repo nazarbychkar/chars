@@ -1332,7 +1332,8 @@ export async function sqlGetOrderByInvoiceId(
 export async function sqlGetAllCategories() {
   return await sql`
     SELECT * FROM categories
-    ORDER BY priority DESC;
+    WHERE COALESCE(priority, 0) >= 0
+    ORDER BY priority DESC, id ASC;
   `;
 }
 
@@ -1413,6 +1414,7 @@ export async function sqlGetSubcategoriesByCategory(categoryId: number) {
   return await sql`
     SELECT * FROM subcategories
     WHERE category_id = ${categoryId}
+      AND COALESCE(priority, 0) >= 0
     ORDER BY priority DESC, id ASC;
   `;
 }

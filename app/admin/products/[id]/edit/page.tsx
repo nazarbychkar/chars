@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { RecommendProductThumb } from "@/components/admin/RecommendProductThumb";
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import ComponentCard from "@/components/admin/ComponentCard";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import Label from "@/components/admin/form/Label";
@@ -43,10 +43,23 @@ type ProductOption = {
   first_media?: { url: string; type: string } | null;
 };
 
-export default function EditProductPage() {
+function EditProductPageContent() {
   const params = useParams();
   const productId = params?.id;
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const productsListHref = (() => {
+    const listParams = new URLSearchParams();
+    const returnPage = searchParams.get("returnPage");
+    const returnQ = searchParams.get("returnQ");
+    if (returnPage && Number(returnPage) > 1) {
+      listParams.set("page", returnPage);
+    }
+    if (returnQ?.trim()) listParams.set("q", returnQ.trim());
+    const qs = listParams.toString();
+    return qs ? `/admin/products?${qs}` : "/admin/products";
+  })();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -527,7 +540,7 @@ export default function EditProductPage() {
       if (!res.ok) throw new Error("Failed to update product");
 
       setSuccess("Товар успішно оновлено");
-      router.push("/admin/products");
+      router.push(productsListHref);
     } catch (err) {
       console.error(err);
       setError("Не вдалося оновити товар");
@@ -1376,5 +1389,17 @@ export default function EditProductPage() {
         </form>
       )}
     </div>
+  );
+}
+
+export default function EditProductPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-4 text-center text-lg">Завантаження даних...</div>
+      }
+    >
+      <EditProductPageContent />
+    </Suspense>
   );
 }
