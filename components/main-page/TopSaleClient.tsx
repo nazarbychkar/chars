@@ -2,9 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules";
 import "swiper/css";
-import "swiper/css/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
@@ -12,7 +10,6 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { buildProductSlug } from "@/lib/slug";
 
-// Video component with proper mobile autoplay
 function VideoWithAutoplay({ src, className }: { src: string; className?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -21,15 +18,14 @@ function VideoWithAutoplay({ src, className }: { src: string; className?: string
     if (video) {
       video.muted = true;
       video.playsInline = true;
-      video.setAttribute('muted', '');
-      video.setAttribute('playsinline', '');
-      video.setAttribute('webkit-playsinline', '');
-      
+      video.setAttribute("muted", "");
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+
       const playVideo = async () => {
         try {
           await video.play();
         } catch {
-          // Retry after delay for mobile (silently fail if still blocked)
           setTimeout(async () => {
             try {
               await video.play();
@@ -39,12 +35,12 @@ function VideoWithAutoplay({ src, className }: { src: string; className?: string
           }, 200);
         }
       };
-      
+
       if (video.readyState >= 2) {
         playVideo();
       } else {
-        video.addEventListener('loadeddata', playVideo, { once: true });
-        video.addEventListener('canplay', playVideo, { once: true });
+        video.addEventListener("loadeddata", playVideo, { once: true });
+        video.addEventListener("canplay", playVideo, { once: true });
         video.load();
       }
     }
@@ -97,8 +93,8 @@ function ProductPrice({
   if (hasDiscount) {
     const salePrice = basePrice * (1 - discountPct / 100);
     return (
-      <div className={`mt-1 flex flex-wrap items-center gap-1.5 ${alignClass}`}>
-        <span className="font-medium opacity-100">
+      <div className={`flex flex-wrap items-center gap-1.5 ${alignClass}`}>
+        <span className="font-medium">
           {salePrice.toFixed(2)}
           {currencySymbol}
         </span>
@@ -106,9 +102,7 @@ function ProductPrice({
           {basePrice.toLocaleString()}
           {currencySymbol}
         </span>
-        <span className="text-xs tracking-wide opacity-55">
-          −{discountPct}%
-        </span>
+        <span className="text-xs tracking-wide opacity-55">−{discountPct}%</span>
       </div>
     );
   }
@@ -120,122 +114,129 @@ function ProductPrice({
   );
 }
 
+function getDisplayName(
+  product: Product,
+  locale: string
+): string {
+  if (locale === "en") return product.name_en || product.name;
+  if (locale === "de") return product.name_de || product.name;
+  return product.name;
+}
+
 export default function TopSaleClient({ products }: TopSaleClientProps) {
   const { locale, messages, withLocalePath } = useI18n();
   const { currency } = useBasket();
   const isEuro =
     (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+
   if (products.length === 0) {
     return (
-      <div className="text-center py-10">
-        {messages.home.topSaleSubtitle}
-      </div>
+      <div className="text-center py-10">{messages.home.topSaleSubtitle}</div>
     );
   }
 
   const limitedProducts = products.slice(0, 4);
 
   return (
-    <section className="site-shell mb-24 md:mb-35 relative overflow-hidden flex flex-col gap-10">
-      <div className="site-px border-b-2 pb-10 flex flex-col lg:flex-row justify-between mt-16 lg:mt-20 lg:items-center gap-3">
-        <div className="font-display text-3xl lg:text-5xl font-medium tracking-[0.03em]">
-          {messages.home.topSaleTitle}
+    <section className="site-shell relative my-10 md:my-16">
+      <div className="site-px flex flex-col gap-10">
+        <div className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between border-b-2 py-10">
+          <div className="text-left font-display text-4xl md:text-5xl font-medium tracking-[0.03em]">
+            {messages.home.topSaleTitle}
+          </div>
+          <div className="opacity-70 text-base md:text-xl font-normal capitalize leading-normal">
+            {messages.home.topSaleSubtitle}
+          </div>
         </div>
-        <div className="text-left opacity-70 text-base lg:text-xl font-normal capitalize leading-normal">
-          {messages.home.topSaleSubtitle}
+
+        {/* Mobile — same card layout as Limited Edition */}
+        <div className="sm:hidden -mr-4 lg:-mr-8 xl:-mr-12">
+          <Swiper
+            spaceBetween={12}
+            slidesPerView={1.35}
+            centeredSlides={false}
+            grabCursor
+            slidesOffsetAfter={16}
+            breakpoints={{
+              320: { slidesPerView: 1.25, spaceBetween: 10 },
+              480: { slidesPerView: 1.4, spaceBetween: 12 },
+            }}
+          >
+            {limitedProducts.map((product, index) => {
+              const displayName = getDisplayName(product, locale);
+              const basePrice =
+                isEuro && product.price_eur != null
+                  ? Number(product.price_eur)
+                  : Number(product.price);
+              const currencySymbol = isEuro ? "€" : "₴";
+
+              return (
+                <SwiperSlide key={product.id}>
+                  <Link
+                    href={withLocalePath(
+                      `/product/${buildProductSlug(product.name, product.id)}`
+                    )}
+                    className="w-full group space-y-5"
+                  >
+                    <div className="relative w-full h-[500px]">
+                      {product.first_media?.type === "video" ? (
+                        <VideoWithAutoplay
+                          src={`/api/images/${product.first_media.url}`}
+                          className="object-cover group-hover:brightness-90 transition duration-300 w-full h-full"
+                        />
+                      ) : (
+                        <Image
+                          className="object-cover group-hover:brightness-90 transition duration-300"
+                          src={getProductImageSrc(
+                            product.first_media,
+                            "https://placehold.co/432x682"
+                          )}
+                          alt={displayName}
+                          fill
+                          sizes="90vw"
+                          priority={index === 0}
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-left text-xl font-normal capitalize leading-normal">
+                        {displayName}
+                      </div>
+                      <div className="text-left text-xl font-normal leading-none mt-1">
+                        <ProductPrice
+                          basePrice={basePrice}
+                          currencySymbol={currencySymbol}
+                          discountPercentage={product.discount_percentage}
+                          align="left"
+                        />
+                      </div>
+                    </div>
+                  </Link>
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
         </div>
-      </div>
 
-      {/* Desktop layout */}
-      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 site-px">
-        {limitedProducts.map((product, index) => {
-          const displayName =
-            locale === "en"
-              ? product.name_en || product.name
-              : locale === "de"
-              ? product.name_de || product.name
-              : product.name;
-          const basePrice =
-            isEuro && product.price_eur != null ? product.price_eur : product.price;
-          const currencySymbol = isEuro ? "€" : "₴";
-
-          return (
-            <Link
-              href={withLocalePath(
-                `/product/${buildProductSlug(product.name, product.id)}`
-              )}
-              key={product.id}
-              className="flex flex-col gap-3 group w-full"
-            >
-            <div className="aspect-[2/3] w-full overflow-hidden relative">
-              {product.first_media?.type === "video" ? (
-                <VideoWithAutoplay
-                  src={`/api/images/${product.first_media.url}`}
-                  className="object-cover group-hover:brightness-90 transition duration-300 w-full h-full"
-                />
-              ) : (
-                <Image
-                  className="object-cover group-hover:brightness-90 transition duration-300"
-                  src={getProductImageSrc(
-                    product.first_media,
-                    "https://placehold.co/432x613"
-                  )}
-                  alt={displayName}
-                  fill
-                  sizes="(max-width: 420px) 90vw, (max-width: 640px) 45vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                  priority={index < 2} // Only first 2 images get priority for mobile
-                  loading={index < 2 ? undefined : "lazy"}
-                  quality={index < 4 ? 85 : 75} // Higher quality for first 4, lower for others
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-                />
-              )}
-            </div>
-
-            <div className="text-center text-base sm:text-lg md:text-xl font-normal capitalize leading-normal">
-              {displayName}
-              <br />
-              <ProductPrice
-                basePrice={Number(basePrice)}
-                currencySymbol={currencySymbol}
-                discountPercentage={product.discount_percentage}
-              />
-            </div>
-          </Link>
-        );
-        })}
-      </div>
-
-      {/* Mobile swiper carousel — left-aligned, peek next card */}
-      <div className="sm:hidden pl-4 lg:pl-8 xl:pl-12">
-        <Swiper
-          modules={[Navigation]}
-          spaceBetween={12}
-          slidesPerView={1.35}
-          centeredSlides={false}
-          grabCursor
-          slidesOffsetAfter={16}
-        >
+        {/* Desktop — same card layout as Limited Edition */}
+        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
           {limitedProducts.map((product, index) => {
-            const displayName =
-              locale === "en"
-                ? product.name_en || product.name
-                : locale === "de"
-                ? product.name_de || product.name
-                : product.name;
+            const displayName = getDisplayName(product, locale);
             const basePrice =
-              isEuro && product.price_eur != null ? product.price_eur : product.price;
+              isEuro && product.price_eur != null
+                ? Number(product.price_eur)
+                : Number(product.price);
             const currencySymbol = isEuro ? "€" : "₴";
 
             return (
-              <SwiperSlide key={product.id}>
-                <Link
-                  href={withLocalePath(
-                    `/product/${buildProductSlug(product.name, product.id)}`
-                  )}
-                  className="relative flex flex-col gap-3 group"
-                >
-                <div className="relative w-full h-[350px]">
+              <Link
+                href={withLocalePath(
+                  `/product/${buildProductSlug(product.name, product.id)}`
+                )}
+                key={product.id}
+                className="group space-y-4 sm:space-y-5 w-full"
+              >
+                <div className="aspect-[2/3] w-full overflow-hidden relative">
                   {product.first_media?.type === "video" ? (
                     <VideoWithAutoplay
                       src={`/api/images/${product.first_media.url}`}
@@ -246,34 +247,32 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                       className="object-cover group-hover:brightness-90 transition duration-300"
                       src={getProductImageSrc(
                         product.first_media,
-                        "https://placehold.co/432x613"
+                        "https://placehold.co/432x682"
                       )}
                       alt={displayName}
                       fill
-                      sizes="70vw"
-                      priority={index === 0}
-                      loading={index === 0 ? undefined : "lazy"}
-                      quality={index === 0 ? 90 : 70}
-                      placeholder="blur"
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                      priority={index < 2}
                     />
                   )}
                 </div>
-                <div className="text-left text-lg font-normal capitalize leading-normal">
-                  {displayName}
-                  <br />
-                  <ProductPrice
-                    basePrice={Number(basePrice)}
-                    currencySymbol={currencySymbol}
-                    discountPercentage={product.discount_percentage}
-                    align="left"
-                  />
+
+                <div>
+                  <div className="text-center text-base sm:text-lg md:text-xl font-normal capitalize leading-normal">
+                    {displayName}
+                  </div>
+                  <div className="text-center text-base sm:text-lg font-normal leading-none mt-1">
+                    <ProductPrice
+                      basePrice={basePrice}
+                      currencySymbol={currencySymbol}
+                      discountPercentage={product.discount_percentage}
+                    />
+                  </div>
                 </div>
               </Link>
-            </SwiperSlide>
-          );
+            );
           })}
-        </Swiper>
+        </div>
       </div>
     </section>
   );
