@@ -231,10 +231,10 @@ function PaymentStatusContent() {
         <div className="mb-4">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current"></div>
         </div>
-        <h1 className="text-2xl md:text-3xl font-['Inter'] mb-4">
+        <h1 className="text-2xl md:text-3xl mb-4">
           {messages.checkout.paymentStatusTitle}
         </h1>
-        <p className="text-base md:text-lg opacity-70 font-['Inter']">
+        <p className="text-base md:text-lg opacity-70">
           {messages.checkout.paymentStatusDescription}
         </p>
       </div>

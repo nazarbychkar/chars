@@ -76,49 +76,50 @@ export default function WhyChooseUs() {
   return (
     <section
       // h-[2659px]
-      className={`max-w-[1920px] mx-auto w-full relative ${
-        isDark ? "" : "bg-[#e3dfd7]"
+      className={`site-shell relative ${
+        isDark ? "" : "bg-[#eef7ff]"
       } overflow-hidden`}
     >
-      <div className="flex flex-col lg:flex-row lg:justify-between items-start lg:items-center m-10">
-        <div className="text-start lg:text-center justify-center text-3xl lg:text-5xl font-normal font-['Inter'] uppercase">
+      <div className="site-px flex flex-col lg:flex-row lg:justify-between items-start lg:items-center gap-3 py-10">
+        <div className="font-display text-3xl lg:text-5xl font-medium tracking-[0.03em]">
           {messages.home.whyChooseUsTitle}
         </div>
-        <div className=" justify-center opacity-70 lg:text-xl font-normal font-['Inter'] leading-normal">
+        <div className="opacity-70 text-base lg:text-xl font-normal leading-normal">
           {messages.home.whyChooseUsSubtitle}
         </div>
       </div>
 
-      <div className="flex flex-col p-4 sm:p-10">
+      <div className="site-px flex flex-col pb-10">
         {info.map((item, i) => (
           <div
             key={i}
             // ref={itemRef(i)}
             className="border-y"
           >
-            <div className="flex justify-between gap-3 sm:gap-5 m-3 sm:m-5 lg:m-15">
+            <div className="flex justify-between gap-3 sm:gap-5 py-5 lg:py-10">
               <div className="flex flex-col lg:flex-row gap-3 lg:gap-15 items-center">
-                <Image
-                  className="w-full md:w-[589px] md:h-80 object-cover"
-                  src={item.pic}
-                  alt={`image-${i}`}
-                  width={589}
-                  height={320}
-                  sizes="(max-width: 420px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 70vw, 589px"
-                  quality={i < 2 ? 85 : 75} // Higher quality for first 2 images
-                  loading={i < 2 ? "eager" : "lazy"}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
-                />
-                <div className="w-full justify-center text-xl sm:text-3xl lg:text-5xl font-normal font-['Inter']">
+                <div className="relative w-full max-w-[589px] aspect-[589/320] shrink-0 overflow-hidden">
+                  <Image
+                    className="object-cover"
+                    src={item.pic}
+                    alt={`image-${i}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 589px"
+                    quality={i < 2 ? 85 : 75}
+                    loading={i < 2 ? "eager" : "lazy"}
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                  />
+                </div>
+                <div className="w-full justify-center text-xl sm:text-3xl lg:text-5xl font-normal">
                   {item.top_text} <br />
-                  <span className="justify-center text-sm sm:text-lg lg:text-xl font-normal font-['Inter']">
+                  <span className="justify-center text-sm sm:text-lg lg:text-xl font-normal">
                     {item.bottom_text}
                   </span>
                 </div>
               </div>
 
-              <div className="text-center justify-center text-xl sm:text-2xl lg:text-4xl font-normal font-['Inter'] lowercase">
+              <div className="text-center justify-center text-xl sm:text-2xl lg:text-4xl font-normal lowercase">
                 {`0${i + 1}`}
               </div>
             </div>

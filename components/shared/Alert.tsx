@@ -13,7 +13,7 @@ export default function Alert({ message, onClose, isVisible }: AlertProps) {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3">
       <span className="text-sm md:text-base">
         {message}
       </span>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./critical.css";
 import "./globals.css";
 import "./mobile-optimizations.css";
@@ -16,12 +16,20 @@ import SmoothScrollInit from "@/components/shared/SmoothScrollInit";
 import { generateOrganizationStructuredData, generateWebsiteStructuredData } from "@/lib/seo";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
   display: "swap",
   preload: true,
-  fallback: ["system-ui", "arial"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
+  adjustFontFallback: true,
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
+  variable: "--font-cormorant",
   adjustFontFallback: true,
 });
 
@@ -47,9 +55,13 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/images/CHARS-06.png",
-    shortcut: "/images/CHARS-06.png",
-    apple: "/images/CHARS-06.png",
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/images/CHARS-06.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     type: "website",
@@ -108,25 +120,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uk" className={inter.className}>
+    <html lang="uk" className={`${manrope.variable} ${cormorant.variable} ${manrope.className}`}>
       <head>
         {/* Mobile viewport optimization */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="format-detection" content="telephone=no" />
         
         {/* Favicon and App Icons */}
-        <link rel="icon" type="image/png" href="/images/CHARS-06.png" />
-        <link rel="shortcut icon" type="image/png" href="/images/CHARS-06.png" />
-        <link rel="apple-touch-icon" href="/images/CHARS-06.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="theme-color" content="#072a6b" />
+        <meta name="msapplication-TileColor" content="#072a6b" />
         
         {/* Preload critical resources */}
         <link rel="preload" href="/images/light-theme/chars-logo-header-light.png" as="image" />
-        {/* Conditional preload: image for mobile, video for desktop */}
-        <link rel="preload" href="/images/Знімок екрана 2025-10-17 о 22.25.53.png" as="image" media="(max-width: 767px)" />
-        <link rel="preload" href="/images/IMG_5831.webm" as="video" type="video/webm" media="(min-width: 768px)" />
+        <link rel="preload" href="/images/hero-photo.jpg" as="image" />
         <link rel="preload" href="/api/products/top-sale" as="fetch" crossOrigin="anonymous" />
         
         {/* Conditional preload for mobile vs desktop */}
@@ -143,17 +153,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
         <link rel="preconnect" href="https://www.clarity.ms" crossOrigin="anonymous" />
         
-        {/* Resource hints for better performance */}
-        <link rel="modulepreload" href="/_next/static/chunks/webpack.js" />
-        <link rel="modulepreload" href="/_next/static/chunks/framework.js" />
-        <link rel="modulepreload" href="/_next/static/chunks/main.js" />
-        
-        {/* Mobile-specific optimizations */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* Apple touch icon */}
-        <link rel="apple-touch-icon" href="/images/CHARS-06.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         

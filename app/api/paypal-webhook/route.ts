@@ -21,6 +21,7 @@ async function notifyPaidOrder(
   const order = await sqlGetOrderByInvoiceId(invoiceId);
   if (!order) return;
 
+  // PayPal amounts are already in the order currency; no separate ccy code.
   if (order.delivery_method === "certificate") {
     await processPaidOrderNotifications(invoiceId);
     const cert = await sqlGetGiftCertificateByPurchaseOrderId(order.id);

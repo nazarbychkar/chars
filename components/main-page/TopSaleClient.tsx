@@ -71,11 +71,53 @@ interface Product {
   name_de?: string | null;
   price: number;
   price_eur?: number | null;
+  discount_percentage?: number | null;
   first_media?: { url: string; type: string } | null;
 }
 
 interface TopSaleClientProps {
   products: Product[];
+}
+
+function ProductPrice({
+  basePrice,
+  currencySymbol,
+  discountPercentage,
+  align = "center",
+}: {
+  basePrice: number;
+  currencySymbol: string;
+  discountPercentage?: number | null;
+  align?: "center" | "left";
+}) {
+  const discountPct = Number(discountPercentage);
+  const hasDiscount = Number.isFinite(discountPct) && discountPct > 0;
+  const alignClass = align === "left" ? "justify-start" : "justify-center";
+
+  if (hasDiscount) {
+    const salePrice = basePrice * (1 - discountPct / 100);
+    return (
+      <div className={`mt-1 flex flex-wrap items-center gap-1.5 ${alignClass}`}>
+        <span className="font-medium opacity-100">
+          {salePrice.toFixed(2)}
+          {currencySymbol}
+        </span>
+        <span className="opacity-40 line-through text-base">
+          {basePrice.toLocaleString()}
+          {currencySymbol}
+        </span>
+        <span className="text-xs tracking-wide opacity-55">
+          −{discountPct}%
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {basePrice.toLocaleString()} {currencySymbol}
+    </>
+  );
 }
 
 export default function TopSaleClient({ products }: TopSaleClientProps) {
@@ -94,18 +136,18 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
   const limitedProducts = products.slice(0, 4);
 
   return (
-    <section className="max-w-[1920px] mx-auto w-full mb-35 relative overflow-hidden flex flex-col gap-10">
-      <div className="border-b-2 pb-10 flex flex-col lg:flex-row justify-between mt-20 mx-10 lg:items-center">
-        <div className="lg:text-center justify-center text-2xl lg:text-5xl font-normal font-['Inter'] uppercase">
+    <section className="site-shell mb-24 md:mb-35 relative overflow-hidden flex flex-col gap-10">
+      <div className="site-px border-b-2 pb-10 flex flex-col lg:flex-row justify-between mt-16 lg:mt-20 lg:items-center gap-3">
+        <div className="font-display text-3xl lg:text-5xl font-medium tracking-[0.03em]">
           {messages.home.topSaleTitle}
         </div>
-        <div className="text-left opacity-70 text-base lg:text-xl font-normal font-['Inter'] capitalize leading-normal">
+        <div className="text-left opacity-70 text-base lg:text-xl font-normal capitalize leading-normal">
           {messages.home.topSaleSubtitle}
         </div>
       </div>
 
       {/* Desktop layout */}
-      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 px-6">
+      <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10 site-px">
         {limitedProducts.map((product, index) => {
           const displayName =
             locale === "en"
@@ -150,23 +192,29 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
               )}
             </div>
 
-            <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
-              {displayName} <br />
-              {basePrice.toLocaleString()} {currencySymbol}
+            <div className="text-center text-base sm:text-lg md:text-xl font-normal capitalize leading-normal">
+              {displayName}
+              <br />
+              <ProductPrice
+                basePrice={Number(basePrice)}
+                currencySymbol={currencySymbol}
+                discountPercentage={product.discount_percentage}
+              />
             </div>
           </Link>
         );
         })}
       </div>
 
-      {/* Mobile swiper carousel */}
-      <div className="sm:hidden">
+      {/* Mobile swiper carousel — left-aligned, peek next card */}
+      <div className="sm:hidden pl-4 lg:pl-8 xl:pl-12">
         <Swiper
           modules={[Navigation]}
-          spaceBetween={16}
-          slidesPerView={1.5}
-          centeredSlides
+          spaceBetween={12}
+          slidesPerView={1.35}
+          centeredSlides={false}
           grabCursor
+          slidesOffsetAfter={16}
         >
           {limitedProducts.map((product, index) => {
             const displayName =
@@ -202,18 +250,24 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                       )}
                       alt={displayName}
                       fill
-                      sizes="85vw"
-                      priority={index === 0} // Only first image gets priority on mobile
+                      sizes="70vw"
+                      priority={index === 0}
                       loading={index === 0 ? undefined : "lazy"}
-                      quality={index === 0 ? 90 : 70} // First image high quality, others lower
+                      quality={index === 0 ? 90 : 70}
                       placeholder="blur"
                       blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                     />
                   )}
                 </div>
-                <div className="justify-center text-lg font-normal font-['Inter'] capitalize leading-normal text-center">
-                  {displayName} <br />
-                  {basePrice.toLocaleString()} {currencySymbol}
+                <div className="text-left text-lg font-normal capitalize leading-normal">
+                  {displayName}
+                  <br />
+                  <ProductPrice
+                    basePrice={Number(basePrice)}
+                    currencySymbol={currencySymbol}
+                    discountPercentage={product.discount_percentage}
+                    align="left"
+                  />
                 </div>
               </Link>
             </SwiperSlide>

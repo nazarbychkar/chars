@@ -1,10 +1,88 @@
 import type { GiftCertificateRow, OrderRowForNotification } from "@/lib/sql";
 
+const DELIVERY_LABELS: Record<string, string> = {
+  nova_poshta_branch: "Нова пошта (відділення)",
+  nova_poshta_courier: "Нова пошта (кур'єр)",
+  nova_poshta_locker: "Нова пошта (поштомат)",
+  showroom_pickup: "Самовивіз з шоуруму",
+  international_shipping: "Міжнародна доставка",
+  certificate: "Подарунковий сертифікат",
+};
+
+function currencySymbol(currency: string | null | undefined): string {
+  return currency === "EUR" ? "€" : "₴";
+}
+
+function formatMoney(amount: number, currency: string | null | undefined): string {
+  const decimals = currency === "EUR" ? 2 : 2;
+  return `${Number(amount).toFixed(decimals)} ${currencySymbol(currency)}`;
+}
+
+function localeLabel(locale: string | null | undefined): string {
+  if (locale === "en") return "EN";
+  if (locale === "de") return "DE";
+  if (locale === "uk") return "UK";
+  return locale || "—";
+}
+
+function deliveryLabel(method: string | null | undefined): string {
+  if (!method) return "—";
+  return DELIVERY_LABELS[method] || method;
+}
+
+/** Paid amount in the order's currency (items), not Mono webhook amount. */
+function paidAmountFromOrder(order: OrderRowForNotification): number {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const subtotal = items.reduce(
+    (sum, item) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),
+    0
+  );
+  const discount = Number(order.certificate_discount || 0);
+
+  if (order.payment_type === "prepay") return 300;
+  if (order.payment_type === "certificate") return 0;
+  return Math.max(0, subtotal - discount);
+}
+
+/**
+ * Mono webhook `amount` is in the invoice currency's minor units.
+ * If ccy mismatches the order currency (e.g. UAH settlement on an EUR order),
+ * ignoring it avoids showing e.g. 3149.60 € next to a 62 € line item.
+ */
+function paidAmountForDisplay(
+  order: OrderRowForNotification,
+  amountMinorUnits?: number,
+  amountCcy?: number
+): number {
+  const fromOrder = paidAmountFromOrder(order);
+  if (amountMinorUnits == null) return fromOrder;
+
+  const expectedCcy = order.currency === "EUR" ? 978 : 980;
+  if (amountCcy != null && amountCcy !== expectedCcy) {
+    return fromOrder;
+  }
+
+  const fromWebhook = amountMinorUnits / 100;
+
+  // No ccy from webhook: if EUR order but amount looks like UAH (~fx rate), trust order.
+  if (
+    amountCcy == null &&
+    order.currency === "EUR" &&
+    fromOrder > 0 &&
+    fromWebhook / fromOrder > 10
+  ) {
+    return fromOrder;
+  }
+
+  return fromWebhook;
+}
+
 export async function sendCertificatePurchaseTelegram(
   order: OrderRowForNotification,
   invoiceId: string,
   cert: GiftCertificateRow,
-  amountMinorUnits?: number
+  amountMinorUnits?: number,
+  amountCcy?: number
 ) {
   const BOT_TOKEN = process.env.BOT_TOKEN;
   const CHAT_ID = process.env.CHAT_ID;
@@ -17,18 +95,11 @@ export async function sendCertificatePurchaseTelegram(
 
   const adminOrderUrl = `${PUBLIC_URL}/admin/orders/${order.id}/edit`;
   const adminCertsUrl = `${PUBLIC_URL}/admin/certificates`;
-  const currencySymbol = cert.currency === "EUR" ? "€" : "₴";
-  const localeLabel =
-    order.locale === "en"
-      ? "EN"
-      : order.locale === "de"
-        ? "DE"
-        : order.locale === "uk"
-          ? "UK"
-          : order.locale || "—";
-
+  const symbolCurrency = cert.currency;
+  const expectedCcy = cert.currency === "EUR" ? 978 : 980;
   const paidAmount =
-    amountMinorUnits != null
+    amountMinorUnits != null &&
+    (amountCcy == null || amountCcy === expectedCcy)
       ? amountMinorUnits / 100
       : Number(cert.initial_balance);
 
@@ -38,21 +109,21 @@ export async function sendCertificatePurchaseTelegram(
 🎁 <b>Новий подарунковий сертифікат (ОПЛАЧЕНО ✅)</b>
 
 🎫 <b>Код:</b> <code>${cert.code}</code>
-💰 <b>Номінал:</b> ${Number(cert.initial_balance).toFixed(2)} ${currencySymbol}
+💰 <b>Номінал:</b> ${formatMoney(Number(cert.initial_balance), symbolCurrency)}
 
 👤 <b>Ім'я:</b> ${order.customer_name}
 📱 <b>Тел:</b> ${order.phone_number}
 📧 <b>Email:</b> ${order.email || "—"}
 📝 <b>Коментар:</b> ${order.comment || "—"}
-🌐 <b>Мова сайту:</b> ${localeLabel}
-🧾 <b>Сплачено:</b> ${paidAmount.toFixed(2)} ${currencySymbol}
+🌐 <b>Мова сайту:</b> ${localeLabel(order.locale)}
+🧾 <b>Сплачено:</b> ${formatMoney(paidAmount, symbolCurrency)}
 💳 <b>Статус:</b> ОПЛАЧЕНО ✅ · Не використаний
 
 📦 <b>Номінал:</b>
 ${items
   .map(
     (item, i) =>
-      `${i + 1}. ${item.product_name || "Сертифікат"} | ${item.size} UAH | ${item.price} ${currencySymbol}`
+      `${i + 1}. ${item.product_name || "Сертифікат"} | ${item.size} UAH | ${formatMoney(Number(item.price), symbolCurrency)}`
   )
   .join("\n")}
 
@@ -77,7 +148,8 @@ ${items
 export async function sendOrderTelegramNotification(
   order: OrderRowForNotification,
   invoiceId: string,
-  amountMinorUnits?: number
+  amountMinorUnits?: number,
+  amountCcy?: number
 ) {
   const BOT_TOKEN = process.env.BOT_TOKEN;
   const CHAT_ID = process.env.CHAT_ID;
@@ -89,27 +161,12 @@ export async function sendOrderTelegramNotification(
     "https://charsua.com";
 
   const adminOrderUrl = `${PUBLIC_URL}/admin/orders/${order.id}/edit`;
-  const currencySymbol = order.currency === "EUR" ? "€" : "₴";
-  const localeLabel =
-    order.locale === "en"
-      ? "EN"
-      : order.locale === "de"
-        ? "DE"
-        : order.locale === "uk"
-          ? "UK"
-          : order.locale || "—";
+  const currency = order.currency === "EUR" ? "EUR" : "UAH";
 
   const isCertificate = order.delivery_method === "certificate";
   const items = Array.isArray(order.items) ? order.items : [];
-  const subtotal = items.reduce(
-    (sum, item) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),
-    0
-  );
   const discount = Number(order.certificate_discount || 0);
-  const paidAmount =
-    amountMinorUnits != null
-      ? amountMinorUnits / 100
-      : Math.max(0, subtotal - discount);
+  const paidAmount = paidAmountForDisplay(order, amountMinorUnits, amountCcy);
 
   const paymentLabel =
     order.payment_type === "prepay"
@@ -126,20 +183,20 @@ ${isCertificate ? "🎁" : "🛒"} <b>${isCertificate ? "Новий подару
 👤 <b>Ім'я:</b> ${order.customer_name}
 📱 <b>Тел:</b> ${order.phone_number}
 📧 <b>Email:</b> ${order.email || "—"}
-${isCertificate ? "" : `🚚 <b>Доставка:</b> ${order.delivery_method}
+${isCertificate ? "" : `🚚 <b>Доставка:</b> ${deliveryLabel(order.delivery_method)}
 🏙️ <b>Місто:</b> ${order.city}
 🏤 <b>Відділення:</b> ${order.post_office}
-`}${discount > 0 ? `🎫 <b>Сертифікат:</b> ${order.gift_certificate_code} (−${discount.toFixed(2)} ${currencySymbol})\n` : ""}📝 <b>Коментар:</b> ${order.comment || "—"}
-🌐 <b>Мова сайту:</b> ${localeLabel}
+`}${discount > 0 ? `🎫 <b>Сертифікат:</b> ${order.gift_certificate_code} (−${formatMoney(discount, currency)})\n` : ""}📝 <b>Коментар:</b> ${order.comment || "—"}
+🌐 <b>Мова сайту:</b> ${localeLabel(order.locale)}
 💰 <b>Оплата:</b> ${paymentLabel}
-🧾 <b>Сума:</b> ${paidAmount.toFixed(2)} ${currencySymbol}
+🧾 <b>Сума:</b> ${formatMoney(paidAmount, currency)}
 💳 <b>Статус:</b> ОПЛАЧЕНО ✅
 
 📦 <b>Товари:</b>
 ${items
   .map(
     (item, i) =>
-      `${i + 1}. ${item.product_name || "Товар"}${item.color ? ` (${item.color})` : ""} | ${item.size} | x${item.quantity} | ${item.price} ${currencySymbol}`
+      `${i + 1}. ${item.product_name || "Товар"}${item.color ? ` (${item.color})` : ""} | ${item.size} | x${item.quantity} | ${formatMoney(Number(item.price), currency)}`
   )
   .join("\n")}
 

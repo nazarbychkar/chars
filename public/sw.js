@@ -1,22 +1,22 @@
 // Mobile-optimized service worker for CHARS e-commerce
-const CACHE_NAME = 'chars-mobile-v3';
-const STATIC_CACHE = 'chars-static-v3';
-const DYNAMIC_CACHE = 'chars-dynamic-v3';
-const IMAGE_CACHE = 'chars-images-v3';
-const MOBILE_CACHE = 'chars-mobile-v3';
+const CACHE_NAME = 'chars-mobile-v4';
+const STATIC_CACHE = 'chars-static-v4';
+const DYNAMIC_CACHE = 'chars-dynamic-v4';
+const IMAGE_CACHE = 'chars-images-v4';
+const MOBILE_CACHE = 'chars-mobile-v4';
 
 // Critical resources to cache immediately
 const STATIC_ASSETS = [
   '/',
   '/catalog',
   '/images/light-theme/chars-logo-header-light.png',
-  '/images/Знімок екрана 2025-10-17 о 22.25.53.png', // Mobile hero image
   '/images/dark-theme/chars-logo-header-dark.png',
+  '/images/hero-photo.jpg',
+  '/favicon-32x32.png',
   '/images/location-icon.svg',
   '/images/email-icon.svg',
   '/images/instagram-icon.svg',
   '/images/facebook-icon.svg'
-  // Video only cached on desktop, Why Choose Us images load on scroll
 ];
 
 // Install event - cache critical resources

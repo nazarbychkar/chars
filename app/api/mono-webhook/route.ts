@@ -9,7 +9,8 @@ export async function GET() {
 
 async function notifyPaidOrder(
   invoiceId: string,
-  amountMinorUnits?: number
+  amountMinorUnits?: number,
+  amountCcy?: number
 ) {
   const order = await sqlGetOrderByInvoiceId(invoiceId);
   if (!order) return;
@@ -22,12 +23,18 @@ async function notifyPaidOrder(
         order,
         invoiceId,
         cert,
-        amountMinorUnits
+        amountMinorUnits,
+        amountCcy
       );
       console.log("✅ Certificate Telegram notification sent:", cert.code);
     }
   } else {
-    await sendOrderTelegramNotification(order, invoiceId, amountMinorUnits);
+    await sendOrderTelegramNotification(
+      order,
+      invoiceId,
+      amountMinorUnits,
+      amountCcy
+    );
     await processPaidOrderNotifications(invoiceId);
     console.log("✅ Telegram notification sent for order:", order.id);
   }
@@ -37,8 +44,8 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
-    const { invoiceId, status, amount } = data;
-    console.log("🔔 Webhook received:", { invoiceId, status });
+    const { invoiceId, status, amount, ccy } = data;
+    console.log("🔔 Webhook received:", { invoiceId, status, amount, ccy });
 
     if (!invoiceId || !status) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -50,7 +57,11 @@ export async function POST(req: NextRequest) {
     }
 
     await sqlUpdatePaymentStatus(invoiceId, "paid");
-    await notifyPaidOrder(invoiceId, amount);
+    await notifyPaidOrder(
+      invoiceId,
+      typeof amount === "number" ? amount : undefined,
+      typeof ccy === "number" ? ccy : undefined
+    );
 
     return NextResponse.json({ success: true });
   } catch (err) {

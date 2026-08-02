@@ -27,7 +27,7 @@ export default function CertificatePage() {
 
   return (
     <main>
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+      <div className="site-shell site-px pt-2">
         <Breadcrumbs items={breadcrumbItems} className="mb-3" />
         <BreadcrumbsSchema items={breadcrumbItems} baseUrl={baseUrl} />
       </div>

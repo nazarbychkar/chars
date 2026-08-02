@@ -4,6 +4,7 @@ import { useAppContext } from "@/lib/GeneralProvider";
 import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { siteContact } from "@/lib/siteContact";
 
 export default function SocialMedia() {
   const { isDark } = useAppContext();
@@ -13,46 +14,58 @@ export default function SocialMedia() {
     // h-[977px]
     <section
       id="contacts"
-      className="scroll-mt-30 max-w-[1920px] mx-auto w-full relative overflow-hidden lg:my-36"
+      className="scroll-mt-30 site-shell site-px relative overflow-hidden my-16 lg:my-36"
     >
-      <div className="flex flex-col-reverse lg:flex-row justify-center">
-        <div className="flex justify-center gap-4 sm:gap-7 overflow-x-auto">
+      <div className="flex flex-col-reverse lg:flex-row justify-between items-center gap-10 lg:gap-16">
+        <div className="flex justify-center gap-4 sm:gap-7 overflow-x-auto w-full lg:w-auto">
           <Image
             className="w-44 h-auto sm:w-80 sm:h-auto rounded-[24px] sm:rounded-[46.43px] max-w-full max-h-[calc(100vh-20px)]"
             src="/images/social-media-0.png"
-            alt="image-1"
-            width={320}
-            height={480}
+            alt="TikTok"
+            width={353}
+            height={726}
           />
           <Image
             className="w-44 h-auto sm:w-80 sm:h-auto rounded-[24px] sm:rounded-[53.20px] max-w-full max-h-[calc(100vh-20px)]"
             src="/images/social-media-1.png"
-            alt="image-2"
-            width={320}
-            height={480}
+            alt="Instagram"
+            width={353}
+            height={726}
           />
         </div>
 
-        <div className="flex flex-col gap-10 m-8 lg:ml-25 lg:m-18">
+        <div className="flex flex-col gap-10 w-full lg:max-w-xl">
           <div className="flex flex-col">
-            <span className="text-stone-500 text-5xl lg:text-8xl font-normal font-['Inter']">
+            <span
+              className={`font-display text-5xl lg:text-8xl font-medium tracking-[0.02em] ${
+                isDark ? "text-white/40" : "text-[#072a6b]/40"
+              }`}
+            >
               {messages.home.socialTitleLine1}{" "}
             </span>
-            <span className="text-5xl lg:text-8xl font-normal font-['Inter']">
+            <span
+              className={`font-display text-5xl lg:text-8xl font-medium tracking-[0.02em] ${
+                isDark ? "text-white" : "text-[#072a6b]"
+              }`}
+            >
               {messages.home.socialTitleLine2}
             </span>
           </div>
 
-          <div className="border-b lg:border-0 lg:w-[465px] justify-center text-lg lg:text-3xl font-normal font-['Inter'] capitalize leading-9">
+          <div className="border-b lg:border-0 lg:w-[465px] justify-center text-lg lg:text-2xl font-normal leading-relaxed opacity-80">
             {messages.home.socialSubtitle}
           </div>
 
           <div className="flex justify-start gap-10 lg:justify-between items-center w-full lg:w-115">
             <Link
-              href="https://www.tiktok.com/"
+              href={siteContact.tiktokUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className={`w-60 h-12 md:w-80 md:h-16 text-center flex items-center ${
-                isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
-              } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
+                isDark
+                  ? "bg-[#eef7ff] text-[#072a6b]"
+                  : "bg-[#072a6b] text-white"
+              } justify-center text-sm md:text-lg font-medium uppercase leading-none tracking-[0.14em]`}
             >
               {messages.home.socialTikTok}
             </Link>
@@ -69,10 +82,14 @@ export default function SocialMedia() {
 
           <div className="flex justify-start gap-10 lg:justify-between items-center w-full lg:w-115 mt-4 md:mt-0">
             <Link
-              href="https://www.instagram.com/chars.wear/"
+              href={siteContact.instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className={`w-60 h-12 md:w-80 md:h-16 text-center flex items-center ${
-                isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
-              } justify-center text-base md:text-2xl font-normal font-['Inter'] uppercase leading-none tracking-tight`}
+                isDark
+                  ? "bg-[#eef7ff] text-[#072a6b]"
+                  : "bg-[#072a6b] text-white"
+              } justify-center text-sm md:text-lg font-medium uppercase leading-none tracking-[0.14em]`}
             >
               {messages.home.socialInstagram}
             </Link>

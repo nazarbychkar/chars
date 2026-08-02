@@ -641,7 +641,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               <div
                 key={size}
                 onClick={() => setSelectedSize(size)}
-                className={`w-19 sm:w-19 md:w-22 p-2 sm:p-3 border-2 flex justify-center text-base md:text-lg font-['Inter'] uppercase cursor-pointer transition-all duration-200 ${
+                className={`h-11 w-11 sm:h-12 sm:w-12 md:h-14 md:w-14 border-2 rounded-full flex items-center justify-center text-sm sm:text-base md:text-lg font-['Inter'] uppercase cursor-pointer transition-all duration-200 ${
                   selectedSize === size
                     ? "border-black dark:border-white font-bold scale-105 shadow-md"
                     : "border-gray-300 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md"

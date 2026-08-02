@@ -1,6 +1,7 @@
 "use client";
 
 import SidebarMenu from "@/components/layout/SidebarMenu";
+import BrandMark from "@/components/shared/BrandMark";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
@@ -25,6 +26,14 @@ export default function Hero() {
           className="pointer-events-none absolute left-1/2 top-[58%] w-full max-w-6xl -translate-x-1/2 -translate-y-1/2 px-6 text-center text-white md:top-[47%] lg:top-[45%]"
           style={{ zIndex: 3 }}
         >
+          <div className="mb-4 flex justify-center sm:mb-5">
+            <BrandMark
+              variant="light"
+              size={56}
+              className="h-10 w-auto drop-shadow-md sm:h-12 md:h-14"
+              priority
+            />
+          </div>
           <h1 className="mx-auto max-w-5xl text-5xl font-semibold uppercase leading-[0.95] tracking-[0.04em] sm:text-6xl md:text-7xl lg:text-8xl">
             <span className="block font-sans text-xs font-semibold uppercase tracking-[0.4em] text-white/85 sm:text-sm md:text-base">
               chars

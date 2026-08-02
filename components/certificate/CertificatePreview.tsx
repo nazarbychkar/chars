@@ -18,7 +18,7 @@ export default function CertificatePreview({
 
   if (!imageSrc) {
     return (
-      <div className="w-full max-w-[560px] mx-auto p-8 text-center text-sm opacity-70 font-['Inter']">
+      <div className="w-full max-w-[560px] mx-auto p-8 text-center text-sm opacity-70">
         {messages.certificate.previewTagline}
       </div>
     );

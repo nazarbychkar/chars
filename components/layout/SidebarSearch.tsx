@@ -62,7 +62,7 @@ export default function SearchSidebar({
       {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 h-full w-full sm:w-4/5 sm:max-w-md ${
-          isDark ? "bg-stone-900" : "bg-stone-100"
+          isDark ? "bg-stone-900" : "bg-[#eef7ff]"
         } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } overflow-y-auto`}
@@ -72,7 +72,7 @@ export default function SearchSidebar({
           <div className="flex justify-between items-center text-xl sm:text-2xl font-semibold">
             <span>{messages.header.searchOpenAria}</span>
             <button
-              className="hover:text-[#8C7461] text-2xl"
+              className="hover:text-[#072a6b] text-2xl"
               onClick={() => setIsOpen(false)}
             >
               ×

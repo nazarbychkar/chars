@@ -65,29 +65,30 @@ export default function LimitedEdition() {
   }
 
   return (
-    <section className="max-w-[1920px] w-full mx-auto relative m-10">
-      <div className="flex flex-col m-10 gap-10">
+    <section className="site-shell relative my-10 md:my-16">
+      <div className="site-px flex flex-col gap-10">
         <div className="flex flex-col gap-4 md:gap-0 md:flex-row justify-between border-b-2 py-10">
-          <div className="text-left justify-center text-5xl font-normal font-['Inter'] uppercase">
+          <div className="text-left font-display text-4xl md:text-5xl font-medium tracking-[0.03em]">
             {messages.home.limitedTitle}
           </div>
-          <div className="justify-center opacity-70 text-xl font-normal font-['Inter'] capitalize leading-normal">
+          <div className="opacity-70 text-base md:text-xl font-normal capitalize leading-normal">
             {messages.home.limitedSubtitle}
           </div>
         </div>
 
-        {/* Mobile layout: Two stacked sliders */}
-        <div className="sm:hidden">
+        {/* Mobile layout: Two stacked sliders — left-aligned */}
+        <div className="sm:hidden -mr-4 lg:-mr-8 xl:-mr-12">
           {/* First Slider */}
           <Swiper
             spaceBetween={12}
-            slidesPerView={1.5}
-            centeredSlides={true}
+            slidesPerView={1.35}
+            centeredSlides={false}
             grabCursor={true}
             initialSlide={0}
+            slidesOffsetAfter={16}
             breakpoints={{
-              320: { slidesPerView: 1.2, spaceBetween: 8 },
-              480: { slidesPerView: 1.5, spaceBetween: 12 },
+              320: { slidesPerView: 1.25, spaceBetween: 10 },
+              480: { slidesPerView: 1.4, spaceBetween: 12 },
             }}
           >
             {products.map((product, i) => {
@@ -130,10 +131,10 @@ export default function LimitedEdition() {
                       />
                     </div>
                     <div>
-                      <div className="text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
+                      <div className="text-left text-xl font-normal capitalize leading-normal">
                         {displayName}
                       </div>
-                      <div className="text-xl font-normal font-['Inter'] leading-none text-center">
+                      <div className="text-left text-xl font-normal leading-none">
                         {basePrice.toLocaleString()} {currencySymbol}
                       </div>
                     </div>
@@ -146,13 +147,14 @@ export default function LimitedEdition() {
           {/* Second Slider */}
           <Swiper
             spaceBetween={12}
-            slidesPerView={1.5}
-            centeredSlides={true}
+            slidesPerView={1.35}
+            centeredSlides={false}
             grabCursor={true}
             initialSlide={0}
+            slidesOffsetAfter={16}
             breakpoints={{
-              320: { slidesPerView: 1.2, spaceBetween: 8 },
-              480: { slidesPerView: 1.5, spaceBetween: 12 },
+              320: { slidesPerView: 1.25, spaceBetween: 10 },
+              480: { slidesPerView: 1.4, spaceBetween: 12 },
             }}
           >
             {products.map((product, i) => {
@@ -195,10 +197,10 @@ export default function LimitedEdition() {
                       />
                     </div>
                     <div>
-                      <div className="text-xl font-normal font-['Inter'] capitalize leading-normal text-center">
+                      <div className="text-left text-xl font-normal capitalize leading-normal">
                         {displayName}
                       </div>
-                      <div className="text-xl font-normal font-['Inter'] leading-none text-center">
+                      <div className="text-left text-xl font-normal leading-none">
                         {basePrice.toLocaleString()} {currencySymbol}
                       </div>
                     </div>
@@ -262,10 +264,10 @@ export default function LimitedEdition() {
                 </div>
 
                 <div>
-                  <div className="text-center text-base sm:text-lg md:text-xl font-normal font-['Inter'] capitalize leading-normal">
+                  <div className="text-center text-base sm:text-lg md:text-xl font-normal capitalize leading-normal">
                     {displayName}
                   </div>
-                  <div className="text-center text-base sm:text-lg font-normal font-['Inter'] leading-none">
+                  <div className="text-center text-base sm:text-lg font-normal leading-none">
                     {basePrice.toLocaleString()} {currencySymbol}
                   </div>
                 </div>

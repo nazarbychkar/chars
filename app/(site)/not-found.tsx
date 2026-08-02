@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Montserrat } from "next/font/google";
-
-const montserrat = Montserrat({ subsets: ["latin"] });
+import BrandMark from "@/components/shared/BrandMark";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+    <div className="site-shell site-px min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-32 h-32 border border-black dark:border-white rounded-full"></div>
@@ -17,9 +15,13 @@ export default function NotFound() {
       </div>
 
       <div className="text-center max-w-4xl mx-auto relative z-10">
+        <div className="mb-8 flex justify-center">
+          <BrandMark size={72} className="h-16 w-auto md:h-20" />
+        </div>
+
         {/* Large 404 with CHARS style */}
-        <div className="mb-12">
-          <div className={`${montserrat.className} text-[200px] md:text-[300px] font-bold leading-none tracking-widest opacity-10 dark:opacity-20`}>
+        <div className="mb-12 relative">
+          <div className="font-display text-[200px] md:text-[300px] font-bold leading-none tracking-widest opacity-10 dark:opacity-20">
             404
           </div>
           <div className="absolute inset-0 flex items-center justify-center">

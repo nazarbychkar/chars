@@ -108,7 +108,7 @@ export default function SidebarMenu({
 
       <div
         className={`fixed top-0 left-0 h-full w-full sm:w-4/5 sm:max-w-md ${
-          isDark ? "bg-stone-900" : "bg-stone-100"
+          isDark ? "bg-stone-900" : "bg-[#eef7ff]"
         } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } overflow-y-auto`}
@@ -117,7 +117,7 @@ export default function SidebarMenu({
           <div className="flex justify-between items-center mb-4">
             <h2>{messages.header.menuLabel}</h2>
             <button
-              className="text-2xl sm:text-3xl cursor-pointer hover:text-[#8C7461]"
+              className="text-2xl sm:text-3xl cursor-pointer hover:text-[#072a6b]"
               onClick={() => setIsOpen(false)}
             >
               ×
@@ -133,7 +133,7 @@ export default function SidebarMenu({
                 <div className="flex justify-between items-center">
                   <Link
                     href={withLocalePath("/collections")}
-                    className="hover:text-[#8C7461]"
+                    className="hover:text-[#072a6b]"
                     onClick={() => setIsOpen(false)}
                   >
                     {messages.header.collections}
@@ -179,7 +179,7 @@ export default function SidebarMenu({
                           buildCategorySlug(cat.name)
                         )}`
                       )}
-                      className="hover:text-[#8C7461]"
+                      className="hover:text-[#072a6b]"
                       onClick={() => setIsOpen(false)}
                     >
                       {getCategoryLabel(cat)}
@@ -209,7 +209,7 @@ export default function SidebarMenu({
                               buildSubcategorySlug(sub.name)
                             )}`
                           )}
-                          className="hover:text-[#8C7461]"
+                          className="hover:text-[#072a6b]"
                           onClick={() => setIsOpen(false)}
                         >
                           {getSubcategoryLabel(sub)}
@@ -224,7 +224,7 @@ export default function SidebarMenu({
 
           <Link
             href={withLocalePath("/certificate")}
-            className="hover:text-[#8C7461]"
+            className="hover:text-[#072a6b]"
             onClick={() => setIsOpen(false)}
           >
             {messages.header.certificates}
@@ -239,7 +239,7 @@ export default function SidebarMenu({
                   onClick={() => setCurrency("UAH")}
                   className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
                     effectiveCurrency === "UAH"
-                      ? "bg-[#8C7461] text-white border-[#8C7461]"
+                      ? "bg-[#072a6b] text-white border-[#072a6b]"
                       : "bg-white border-stone-300 text-stone-900"
                   }`}
                   aria-pressed={effectiveCurrency === "UAH"}
@@ -251,7 +251,7 @@ export default function SidebarMenu({
                   onClick={() => setCurrency("EUR")}
                   className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
                     effectiveCurrency === "EUR"
-                      ? "bg-[#8C7461] text-white border-[#8C7461]"
+                      ? "bg-[#072a6b] text-white border-[#072a6b]"
                       : "bg-white border-stone-300 text-stone-900"
                   }`}
                   aria-pressed={effectiveCurrency === "EUR"}
@@ -271,7 +271,7 @@ export default function SidebarMenu({
                     onClick={() => switchLocale(lng as Locale)}
                     className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
                       locale === lng
-                        ? "bg-[#8C7461] text-white border-[#8C7461]"
+                        ? "bg-[#072a6b] text-white border-[#072a6b]"
                         : "bg-white border-stone-300 text-stone-900"
                     }`}
                     aria-current={locale === lng ? "page" : undefined}

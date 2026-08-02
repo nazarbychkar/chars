@@ -685,7 +685,7 @@ export default function FinalCard() {
       orderCurrency === "EUR" && item.price_eur != null ? item.price_eur : item.price;
 
     return (
-      <section className="max-w-[1280px] w-full mx-auto p-6 flex flex-col items-center gap-10">
+      <section className="site-shell site-px py-10 flex flex-col items-center gap-10">
         {/* Heading */}
         <div className="text-center">
           <h1 className="text-5xl sm:text-6xl font-normal leading-tight">
@@ -731,7 +731,7 @@ export default function FinalCard() {
                       </div>
                     )}
                     <div className="flex flex-col flex-1 gap-1">
-                      <div className="text-base font-['Inter'] ">
+                      <div className="text-base ">
                         {item.name}
                       </div>
                       <div className="text-base  font-['Helvetica']">
@@ -749,18 +749,18 @@ export default function FinalCard() {
                       <div className="text-base text-zinc-600 font-['Helvetica']">
                         {item.discount_percentage ? (
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-red-600">
+                            <span className="font-medium text-[#072a6b]">
                               {(
                                 displayPrice *
                                 (1 - item.discount_percentage / 100)
                               ).toFixed(2)}
                               {summarySymbol}
                             </span>
-                            <span className="text-gray-500 line-through">
+                            <span className="opacity-45 line-through">
                               {displayPrice}
                               {summarySymbol}
                             </span>
-                            <span className="text-green-600 text-sm">
+                            <span className="text-xs tracking-wide text-[#072a6b] bg-[#eef7ff] px-1.5 py-0.5">
                               -{item.discount_percentage}%
                             </span>
                           </div>
@@ -831,7 +831,7 @@ export default function FinalCard() {
                 isDark ? "bg-stone-100 text-black" : "bg-stone-900 text-white"
               } inline-flex justify-center items-center gap-2.5 p-2.5 rounded`}
               >
-              <span className=" text-xl font-medium font-['Inter'] tracking-tight leading-snug">
+              <span className=" text-xl font-medium tracking-tight leading-snug">
                 {messages.common.backToHome}
               </span>
             </Link>
@@ -842,9 +842,9 @@ export default function FinalCard() {
   }
 
   return (
-    <section className="max-w-[1922px] w-full mx-auto relative overflow-hidden px-4 sm:px-6 lg:px-8">
+    <section className="site-shell site-px relative overflow-hidden">
       {items.length == 0 ? (
-        <div className="py-12 px-4 sm:py-20 flex flex-col items-center gap-10 sm:gap-14 w-full max-w-2xl mx-auto">
+        <div className="py-12 sm:py-20 flex flex-col items-center gap-10 sm:gap-14 w-full max-w-2xl mx-auto">
           <Image
             src={`${
               isDark
@@ -855,7 +855,7 @@ export default function FinalCard() {
             width={200}
             height={200}
           />
-          <span className="text-center text-2xl sm:text-4xl md:text-6xl font-normal font-['Inter'] leading-tight sm:leading-[64.93px]">
+          <span className="text-center text-2xl sm:text-4xl md:text-6xl font-normal leading-tight sm:leading-[64.93px]">
             {messages.checkout.emptyTitle}
           </span>
           <Link
@@ -872,7 +872,7 @@ export default function FinalCard() {
       ) : (
         <>
           <div className="flex flex-col sm:flex-row justify-center gap-10 sm:gap-50">
-            <div className="mt-10 text-center sm:text-left text-3xl sm:text-6xl font-normal font-['Inter'] leading-snug sm:leading-[64.93px] mb-5">
+            <div className="mt-10 text-center sm:text-left text-3xl sm:text-6xl font-normal leading-snug sm:leading-[64.93px] mb-5">
               {messages.checkout.title}
             </div>
 
@@ -932,13 +932,13 @@ export default function FinalCard() {
               {/* Country selector */}
               <label
                 htmlFor="country"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
+                className="text-xl sm:text-2xl font-normal"
               >
                 {messages.checkout.countryLabel}
               </label>
               <select
                 id="country"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded mb-2"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded mb-2"
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
               >
@@ -956,7 +956,7 @@ export default function FinalCard() {
                 <div className="flex flex-col mb-2">
                   <label
                     htmlFor="countryName"
-                    className="text-base sm:text-lg font-normal font-['Arial']"
+                    className="text-base sm:text-lg font-normal"
                   >
                     {messages.checkout.countryOtherLabel}
                   </label>
@@ -966,20 +966,20 @@ export default function FinalCard() {
                     value={countryName}
                     onChange={(e) => setCountryName(e.target.value)}
                     placeholder={messages.checkout.countryOtherPlaceholder}
-                    className="border p-3 sm:p-4 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                    className="border p-3 sm:p-4 text-lg sm:text-xl font-normal rounded"
                   />
                 </div>
               )}
 
               <label
                 htmlFor="deliveryMethod"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
+                className="text-xl sm:text-2xl font-normal"
               >
                 {messages.checkout.deliveryMethodLabel}
               </label>
               <select
                 id="deliveryMethod"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                 value={deliveryMethod}
                 onChange={(e) => setDeliveryMethod(e.target.value)}
                 required
@@ -1014,7 +1014,7 @@ export default function FinalCard() {
                   <div className="flex flex-col">
                     <label
                       htmlFor="city"
-                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      className="text-xl sm:text-2xl font-normal"
                     >
                       {deliveryMethod === "nova_poshta_courier"
                         ? messages.checkout.cityCourierLabel
@@ -1026,7 +1026,7 @@ export default function FinalCard() {
                       value={city}
                       onChange={handleCityChange} // Update city on input change
                       placeholder={messages.checkout.cityPlaceholder}
-                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                       required
                     />
                     {loadingCities ? (
@@ -1055,7 +1055,7 @@ export default function FinalCard() {
                     <div className="flex flex-col">
                       <label
                         htmlFor="postOffice"
-                        className="text-xl sm:text-2xl font-normal font-['Arial']"
+                        className="text-xl sm:text-2xl font-normal"
                       >
                         {messages.checkout.addressLabel}
                       </label>
@@ -1065,7 +1065,7 @@ export default function FinalCard() {
                         value={postOffice}
                         onChange={(e) => setPostOffice(e.target.value)}
                         placeholder={messages.checkout.addressPlaceholder}
-                        className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                        className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                         required
                       />
                     </div>
@@ -1073,7 +1073,7 @@ export default function FinalCard() {
                     <div className="flex flex-col">
                       <label
                         htmlFor="postOffice"
-                        className="text-xl sm:text-2xl font-normal font-['Arial']"
+                        className="text-xl sm:text-2xl font-normal"
                       >
                         {deliveryMethod === "nova_poshta_locker"
                           ? messages.checkout.postOfficeLockerLabel
@@ -1089,7 +1089,7 @@ export default function FinalCard() {
                             ? messages.checkout.postOfficeLockerPlaceholder
                             : messages.checkout.postOfficePlaceholder
                         }
-                        className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                        className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                         required
                       />
                       {loadingPostOffices ? (
@@ -1132,7 +1132,7 @@ export default function FinalCard() {
                   <div className="flex flex-col">
                     <label
                       htmlFor="city"
-                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      className="text-xl sm:text-2xl font-normal"
                     >
                       {messages.checkout.cityLabel}
                     </label>
@@ -1142,13 +1142,13 @@ export default function FinalCard() {
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder={messages.checkout.cityPlaceholder}
-                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                     />
                   </div>
                   <div className="flex flex-col">
                     <label
                       htmlFor="postalCode"
-                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      className="text-xl sm:text-2xl font-normal"
                     >
                       {messages.checkout.postalCodeLabel}
                     </label>
@@ -1158,13 +1158,13 @@ export default function FinalCard() {
                       value={postalCode}
                       onChange={(e) => setPostalCode(e.target.value)}
                       placeholder={messages.checkout.postalCodePlaceholder}
-                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                     />
                   </div>
                   <div className="flex flex-col">
                     <label
                       htmlFor="streetAddress"
-                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      className="text-xl sm:text-2xl font-normal"
                     >
                       {messages.checkout.addressLabel}
                     </label>
@@ -1174,7 +1174,7 @@ export default function FinalCard() {
                       value={streetAddress}
                       onChange={(e) => setStreetAddress(e.target.value)}
                       placeholder={messages.checkout.addressPlaceholder}
-                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                      className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                     />
                   </div>
                   <p className="text-sm sm:text-base text-gray-600 mt-2">
@@ -1185,7 +1185,7 @@ export default function FinalCard() {
 
               <label
                 htmlFor="comment"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
+                className="text-xl sm:text-2xl font-normal"
               >
                 {messages.checkout.commentLabel}
               </label>
@@ -1193,7 +1193,7 @@ export default function FinalCard() {
                 type="text"
                 id="comment"
                 placeholder={messages.checkout.commentPlaceholder}
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
@@ -1207,7 +1207,7 @@ export default function FinalCard() {
                   <>
                     <label
                       htmlFor="giftCertificate"
-                      className="text-xl sm:text-2xl font-normal font-['Arial']"
+                      className="text-xl sm:text-2xl font-normal"
                     >
                       {messages.checkout.giftCertificateLabel}
                     </label>
@@ -1234,7 +1234,7 @@ export default function FinalCard() {
                         disabled={
                           isApplyingCertificate || !giftCertificateInput.trim()
                         }
-                        className={`shrink-0 px-6 py-3 sm:py-3.5 text-sm sm:text-base font-['Inter'] tracking-wide transition-opacity disabled:opacity-40 ${
+                        className={`shrink-0 px-6 py-3 sm:py-3.5 text-sm sm:text-base tracking-wide transition-opacity disabled:opacity-40 ${
                           isDark
                             ? "bg-white text-black hover:bg-stone-200"
                             : "bg-black text-white hover:bg-stone-800"
@@ -1247,7 +1247,7 @@ export default function FinalCard() {
                     </div>
                     {certificateMessage && (
                       <p
-                        className={`text-sm font-['Inter'] ${
+                        className={`text-sm ${
                           isDark ? "text-amber-200/90" : "text-amber-800"
                         }`}
                         role="alert"
@@ -1261,12 +1261,12 @@ export default function FinalCard() {
                     className={`relative overflow-hidden rounded border px-4 py-4 sm:px-5 sm:py-5 ${
                       isDark
                         ? "border-stone-600 bg-stone-900/50"
-                        : "border-[#8C7461]/25 bg-[#f8f6f1]"
+                        : "border-[#072a6b]/25 bg-[#eef7ff]"
                     }`}
                   >
                     <div
                       className={`absolute left-0 top-0 h-full w-0.5 ${
-                        isDark ? "bg-[#8C7461]" : "bg-[#8C7461]"
+                        isDark ? "bg-[#072a6b]" : "bg-[#072a6b]"
                       }`}
                       aria-hidden
                     />
@@ -1275,8 +1275,8 @@ export default function FinalCard() {
                         <span
                           className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                             isDark
-                              ? "bg-[#8C7461]/20 text-[#c4b5a5]"
-                              : "bg-[#8C7461]/12 text-[#8C7461]"
+                              ? "bg-[#072a6b]/20 text-[#9eb6d9]"
+                              : "bg-[#072a6b]/12 text-[#072a6b]"
                           }`}
                           aria-hidden
                         >
@@ -1295,14 +1295,14 @@ export default function FinalCard() {
                           </svg>
                         </span>
                         <div className="min-w-0">
-                          <p className="text-[11px] sm:text-xs font-['Inter'] uppercase tracking-[0.2em] text-[#8C7461]">
+                          <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-[#072a6b]">
                             {messages.checkout.giftCertificateAppliedStatus}
                           </p>
                           <p className="mt-1 font-mono text-base sm:text-lg tracking-[0.14em] truncate">
                             {appliedCertificateCode}
                           </p>
                           {certificateDiscount > 0 && (
-                            <p className="mt-1.5 text-sm font-['Inter'] text-[#8C7461]">
+                            <p className="mt-1.5 text-sm text-[#072a6b]">
                               {messages.checkout.giftCertificateAppliedAmount(
                                 certificateDiscount.toFixed(2),
                                 effectiveBasketCurrency === "EUR" ? "€" : "₴"
@@ -1314,7 +1314,7 @@ export default function FinalCard() {
                       <button
                         type="button"
                         onClick={handleRemoveCertificate}
-                        className={`self-start sm:self-center text-sm font-['Inter'] underline-offset-4 transition-opacity hover:opacity-70 ${
+                        className={`self-start sm:self-center text-sm underline-offset-4 transition-opacity hover:opacity-70 ${
                           isDark ? "text-stone-400" : "text-stone-600"
                         }`}
                       >
@@ -1327,13 +1327,13 @@ export default function FinalCard() {
 
               <label
                 htmlFor="paymentType"
-                className="text-xl sm:text-2xl font-normal font-['Arial']"
+                className="text-xl sm:text-2xl font-normal"
               >
                 {messages.checkout.paymentMethodLabel}
               </label>
               <select
                 id="paymentType"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded"
+                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
                 value={paymentType}
                 onChange={(e) =>
                   setPaymentType(
@@ -1373,7 +1373,7 @@ export default function FinalCard() {
               </button>
 
               {error && (
-                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3">
                   <span className="text-sm md:text-base">
                     {error}
                   </span>
@@ -1399,7 +1399,7 @@ export default function FinalCard() {
                 </div>
               )}
               {success && (
-                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3 font-['Inter']">
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-4 z-50 flex items-center gap-3">
                   <span className="text-sm md:text-base">
                     {success}
                   </span>
@@ -1426,7 +1426,7 @@ export default function FinalCard() {
               )}
             </form>
 
-            <div className="w-full sm:w-1/4 px-4 sm:px-0 flex flex-col gap-4">
+            <div className="w-full sm:w-1/4 flex flex-col gap-4">
               {items.length === 0 ? (
                 <p>{messages.checkout.basketEmptyInline}</p>
               ) : (
@@ -1447,7 +1447,7 @@ export default function FinalCard() {
                       height={160}
                     />
                     <div className="flex flex-col flex-1 gap-1">
-                      <div className="text-base font-normal font-['Inter'] leading-normal">
+                      <div className="text-base font-normal leading-normal">
                         {item.name}
                       </div>
                       <div className="text-zinc-600 text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
@@ -1459,18 +1459,18 @@ export default function FinalCard() {
                               : item.price;
                           return item.discount_percentage ? (
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-red-600">
+                              <span className="font-medium text-[#072a6b]">
                                 {(
                                   displayPrice *
                                   (1 - item.discount_percentage / 100)
                                 ).toFixed(2)}
                                 {symbol}
                               </span>
-                              <span className="text-gray-500 line-through">
+                              <span className="opacity-45 line-through">
                                 {displayPrice}
                                 {symbol}
                               </span>
-                              <span className="text-green-600 text-sm">
+                              <span className="text-xs tracking-wide text-[#072a6b] bg-[#eef7ff] px-1.5 py-0.5">
                                 -{item.discount_percentage}%
                               </span>
                             </div>
@@ -1495,7 +1495,7 @@ export default function FinalCard() {
                       <div className="flex justify-start items-center gap-3 mt-auto">
                         <div className="w-20 h-9 border border-neutral-400/60 flex justify-around items-center rounded">
                           <button
-                            className={`text-zinc-500 text-base font-normal font-['Inter'] leading-normal ${
+                            className={`text-zinc-500 text-base font-normal leading-normal ${
                               item.stock !== undefined && item.quantity >= item.stock
                                 ? "opacity-50 cursor-not-allowed"
                                 : "hover:text-black dark:hover:text-white"
@@ -1523,7 +1523,7 @@ export default function FinalCard() {
                           >
                             +
                           </button>
-                          <div className="text-base font-normal font-['Inter'] leading-normal">
+                          <div className="text-base font-normal leading-normal">
                             {item.quantity}
                             {item.stock !== undefined && (
                               <span className="text-xs text-gray-500 ml-1">
@@ -1532,7 +1532,7 @@ export default function FinalCard() {
                             )}
                           </div>
                           <button
-                            className="text-zinc-500 text-base font-normal font-['Inter'] leading-normal hover:text-black dark:hover:text-white"
+                            className="text-zinc-500 text-base font-normal leading-normal hover:text-black dark:hover:text-white"
                             onClick={() =>
                               updateQuantity(
                                 item.id,
@@ -1564,7 +1564,7 @@ export default function FinalCard() {
 
               {/* Total price container — у вибраній валюті з хедера */}
               <div className="p-5 border-t mt-4 space-y-2">
-                <div className="flex justify-between text-base sm:text-xl font-normal font-['Arial']">
+                <div className="flex justify-between text-base sm:text-xl font-normal">
                   <div>{messages.checkout.subtotalLabel}</div>
                   <div className="font-['Helvetica']">
                     {getCartTotal().toFixed(2)}{" "}
@@ -1572,7 +1572,7 @@ export default function FinalCard() {
                   </div>
                 </div>
                 {certificateDiscount > 0 && (
-                  <div className="flex justify-between text-base sm:text-xl font-normal font-['Arial'] text-[#8C7461]">
+                  <div className="flex justify-between text-base sm:text-xl font-normal text-[#072a6b]">
                     <div>{messages.checkout.giftCertificateDiscountLabel}</div>
                     <div className="font-['Helvetica']">
                       −{certificateDiscount.toFixed(2)}{" "}
@@ -1580,7 +1580,7 @@ export default function FinalCard() {
                     </div>
                   </div>
                 )}
-                <div className="flex justify-between text-base sm:text-2xl font-normal font-['Arial'] pt-2 border-t">
+                <div className="flex justify-between text-base sm:text-2xl font-normal pt-2 border-t">
                   <div>{messages.checkout.totalLabel}</div>
                   <div className="font-['Helvetica'] leading-relaxed tracking-wide">
                     {Math.max(0, getCartTotal() - certificateDiscount).toFixed(2)}{" "}

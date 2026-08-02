@@ -17,7 +17,7 @@ export default function TermsOfServiceContent() {
       : "Договір публічної оферти";
 
   return (
-    <div className="min-h-screen py-20 px-6">
+    <div className="site-shell site-px min-h-screen py-20">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-16">

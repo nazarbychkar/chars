@@ -32,7 +32,7 @@ export default function SidebarBasket({
 
       <div
         className={`fixed top-0 right-0 h-full w-full sm:w-4/5 sm:max-w-md ${
-          isDark ? "bg-stone-900" : "bg-stone-100"
+          isDark ? "bg-stone-900" : "bg-[#eef7ff]"
         } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } overflow-y-auto`}
@@ -41,7 +41,7 @@ export default function SidebarBasket({
           <div className="flex justify-between items-center text-xl sm:text-2xl font-semibold">
             <span>{messages.basket.title}</span>
             <button
-              className="hover:text-[#8C7461] text-2xl"
+              className="hover:text-[#072a6b] text-2xl"
               onClick={() => setIsOpen(false)}
             >
               ×
@@ -79,18 +79,18 @@ export default function SidebarBasket({
                     <div className="text-zinc-600 mt-1">
                       {item.discount_percentage ? (
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-red-600">
+                          <span className="font-medium text-[#072a6b]">
                             {(
                               displayPrice *
                               (1 - item.discount_percentage / 100)
                             ).toFixed(2)}
                             {symbol}
                           </span>
-                          <span className="line-through">
+                          <span className="opacity-45 line-through">
                             {displayPrice}
                             {symbol}
                           </span>
-                          <span className="text-green-600 text-sm">
+                          <span className="text-xs tracking-wide text-[#072a6b] bg-[#eef7ff] px-1.5 py-0.5">
                             -{item.discount_percentage}%
                           </span>
                         </div>

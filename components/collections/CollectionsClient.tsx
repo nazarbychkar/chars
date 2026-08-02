@@ -28,15 +28,15 @@ export default function CollectionsClient() {
 
   return (
     <section
-      className={`max-w-[1920px] w-full mx-auto px-4 md:px-10 pb-16 pt-6 md:pt-10 ${
-        isDark ? "text-white" : "text-black"
+      className={`site-shell site-px pb-16 pt-6 md:pt-10 ${
+        isDark ? "text-white" : "text-[#072a6b]"
       }`}
     >
       <div className="max-w-2xl mx-auto mb-8 md:mb-12 text-center">
-        <h1 className="text-3xl md:text-5xl font-['Inter'] font-normal tracking-tight mb-4">
+        <h1 className="font-display text-4xl md:text-5xl font-medium tracking-[0.02em] mb-4">
           {messages.collections.title}
         </h1>
-        <p className="text-base md:text-lg opacity-75 font-['Inter'] leading-relaxed">
+        <p className="text-base md:text-lg opacity-75 leading-relaxed">
           {messages.collections.subtitle}
         </p>
       </div>
@@ -64,10 +64,10 @@ export default function CollectionsClient() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10 transition-opacity duration-500 group-hover:from-black/75" />
               <div className="absolute inset-0 flex flex-col justify-end p-5 md:p-8">
-                <h2 className="text-white text-2xl md:text-4xl font-['Inter'] tracking-wide mb-2">
+                <h2 className="font-display text-white text-3xl md:text-4xl font-medium tracking-[0.02em] mb-2">
                   {label}
                 </h2>
-                <span className="text-white/85 text-sm md:text-base font-['Inter'] tracking-[0.12em] uppercase inline-flex items-center gap-2">
+                <span className="text-white/85 text-sm md:text-base tracking-[0.16em] uppercase inline-flex items-center gap-2">
                   {messages.collections.viewCollection}
                   <span
                     aria-hidden

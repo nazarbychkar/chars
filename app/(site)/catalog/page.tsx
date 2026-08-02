@@ -87,7 +87,7 @@ export default async function Page({ searchParams }: PageProps) {
 
     return (
         <>
-            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+            <div className="site-shell site-px pt-5">
                 <Breadcrumbs />
                 <BreadcrumbsSchema
                   items={[

@@ -65,7 +65,7 @@ export default function FormField({
     <div className={`flex flex-col gap-2 ${className}`}>
       <label
         htmlFor={id}
-        className="text-xl sm:text-2xl font-normal font-['Arial']"
+        className="text-xl sm:text-2xl font-normal"
       >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -74,7 +74,7 @@ export default function FormField({
           type={type !== "textarea" ? type : undefined}
           id={id}
           placeholder={placeholder}
-          className={`border p-3 sm:p-5 text-lg sm:text-xl font-normal font-['Arial'] rounded w-full transition-all ${
+          className={`border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded w-full transition-all ${
             error && touched
               ? "border-red-500 focus:ring-red-500 focus:border-red-500"
               : isValid && touched

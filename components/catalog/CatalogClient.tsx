@@ -206,7 +206,7 @@ export default function CatalogClient({
 
   return (
     <>
-      <section className="max-w-[1824px] mx-auto px-4 sm:px-6 lg:px-8 pt-5 mt-10 mb-20">
+      <section className="site-shell site-px pt-5 mt-10 mb-20">
         {/* Top Controls */}
         <div className="flex justify-between items-center text-xl sm:text-2xl md:text-3xl mb-6">
           <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ export default function CatalogClient({
                 {product.discount_percentage ? (
                   <div className="flex items-center gap-2">
                     {/* Discounted price */}
-                    <span className="font-medium text-red-600">
+                    <span className="font-medium text-[#072a6b]">
                       {(
                         basePrice *
                         (1 - product.discount_percentage / 100)
@@ -301,13 +301,13 @@ export default function CatalogClient({
                     </span>
 
                     {/* Original (crossed-out) price */}
-                    <span className="text-gray-500 line-through">
+                    <span className="opacity-45 line-through">
                       {basePrice}
                       {currencySymbol}
                     </span>
 
                     {/* Optional: show discount percentage */}
-                    <span className="text-green-600 text-sm">
+                    <span className="text-xs tracking-wide text-[#072a6b] bg-[#eef7ff] px-1.5 py-0.5">
                       -{product.discount_percentage}%
                     </span>
                   </div>
@@ -337,10 +337,10 @@ export default function CatalogClient({
                   return next;
                 })
               }
-              className={`cursor-pointer px-6 py-3 ${
+              className={`cursor-pointer px-6 py-3 text-sm font-medium uppercase tracking-[0.14em] ${
                 isDark
-                  ? "bg-stone-100 text-stone-900"
-                  : "bg-stone-900 text-stone-100"
+                  ? "bg-[#eef7ff] text-[#072a6b]"
+                  : "bg-[#072a6b] text-white"
               }`}
             >
               {messages.catalog.showMoreLabel}

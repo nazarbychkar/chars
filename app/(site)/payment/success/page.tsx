@@ -110,7 +110,7 @@ function PaymentSuccessContent() {
       >
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
-          <p className="font-['Inter']">{messages.checkout.paymentStatusDescription}</p>
+          <p className="">{messages.checkout.paymentStatusDescription}</p>
         </div>
       </div>
     );
@@ -129,7 +129,7 @@ function PaymentSuccessContent() {
 
   return (
     <div
-      className={`min-h-screen py-12 px-4 ${
+      className={`site-shell site-px min-h-screen py-12 ${
         isDark ? "bg-black text-white" : "bg-white text-black"
       }`}
     >
@@ -150,12 +150,12 @@ function PaymentSuccessContent() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold font-['Inter'] mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">
             {isCertificate
               ? messages.certificate.paymentSuccessTitle
               : "Оплата успішна! ✅"}
           </h1>
-          <p className="text-lg md:text-xl opacity-70 font-['Inter']">
+          <p className="text-lg md:text-xl opacity-70">
             {isCertificate
               ? messages.certificate.paymentSuccessDescription
               : "Ваше замовлення прийнято до обробки"}
@@ -169,12 +169,12 @@ function PaymentSuccessContent() {
               : "border-gray-200 bg-gray-50"
           }`}
         >
-          <h2 className="text-xl font-semibold font-['Inter'] mb-4">
+          <h2 className="text-xl font-semibold mb-4">
             {isCertificate
               ? messages.certificate.title
               : "Деталі замовлення"}
           </h2>
-          <div className="space-y-3 font-['Inter']">
+          <div className="space-y-3">
             <div>
               <span className="opacity-70">
                 {isCertificate
@@ -226,12 +226,12 @@ function PaymentSuccessContent() {
 
           {!isCertificate && order.items && order.items.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-300 dark:border-gray-700">
-              <h3 className="text-lg font-semibold font-['Inter'] mb-3">
+              <h3 className="text-lg font-semibold mb-3">
                 Товари:
               </h3>
               <ul className="space-y-2">
                 {order.items.map((item: OrderItem, index: number) => (
-                  <li key={index} className="font-['Inter']">
+                  <li key={index} className="">
                     {item.product_name}
                     {item.color &&
                       ` (${messages.catalog.colorNames[item.color] || item.color})`}{" "}
@@ -245,7 +245,7 @@ function PaymentSuccessContent() {
         </div>
 
         <div className="text-center space-y-4">
-          <p className="text-base md:text-lg opacity-70 font-['Inter'] mb-6">
+          <p className="text-base md:text-lg opacity-70 mb-6">
             {isCertificate && order.email
               ? messages.certificate.paymentSuccessEmailHint(order.email)
               : "Ми надішлемо вам SMS з номером відправлення після комплектування замовлення."}
@@ -253,7 +253,7 @@ function PaymentSuccessContent() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href={withLocalePath("/catalog")}
-              className={`px-6 py-3 rounded border font-['Inter'] transition-all duration-200 ${
+              className={`px-6 py-3 rounded border transition-all duration-200 ${
                 isDark
                   ? "border-gray-600 hover:border-white hover:bg-gray-900"
                   : "border-gray-300 hover:border-black hover:bg-gray-100"
@@ -265,7 +265,7 @@ function PaymentSuccessContent() {
             </Link>
             <Link
               href={withLocalePath("/")}
-              className={`px-6 py-3 rounded font-['Inter'] transition-all duration-200 ${
+              className={`px-6 py-3 rounded transition-all duration-200 ${
                 isDark
                   ? "bg-white text-black hover:bg-gray-200"
                   : "bg-black text-white hover:bg-gray-800"
@@ -289,7 +289,7 @@ export default function PaymentSuccessPage() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-current mb-4"></div>
-            <p className="font-['Inter']">Завантаження...</p>
+            <p className="">Завантаження...</p>
           </div>
         </div>
       }

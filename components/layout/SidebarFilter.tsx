@@ -70,7 +70,7 @@ export default function SidebarFilter({
 
       <div
         className={`fixed top-0 right-0 h-full w-full sm:w-4/5 sm:max-w-md ${
-          isDark ? "bg-stone-900" : "bg-stone-100"
+          isDark ? "bg-stone-900" : "bg-[#eef7ff]"
         } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } overflow-y-auto`}
@@ -82,7 +82,7 @@ export default function SidebarFilter({
               {messages.catalog.sidebarTitle}
             </div>
             <button
-              className="text-2xl sm:text-3xl hover:text-[#8C7461]"
+              className="text-2xl sm:text-3xl hover:text-[#072a6b]"
               onClick={() => setIsOpen(false)}
             >
               ×
@@ -106,24 +106,24 @@ export default function SidebarFilter({
             {openAccordion === 1 && (
               <div className="pl-4 mt-2 space-y-2">
                 <button
-                  className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
-                    sortOrder === "newest" ? "font-semibold text-[#8C7461]" : ""
+                  className={`block text-left w-full hover:text-[#072a6b] text-base sm:text-lg ${
+                    sortOrder === "newest" ? "font-semibold text-[#072a6b]" : ""
                   }`}
                   onClick={() => setSortOrder("newest")}
                 >
                   Спочатку новіші
                 </button>
                 <button
-                  className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
-                    sortOrder === "asc" ? "font-semibold text-[#8C7461]" : ""
+                  className={`block text-left w-full hover:text-[#072a6b] text-base sm:text-lg ${
+                    sortOrder === "asc" ? "font-semibold text-[#072a6b]" : ""
                   }`}
                   onClick={() => setSortOrder("asc")}
                 >
                   {messages.catalog.sortAscLabel}
                 </button>
                 <button
-                  className={`block text-left w-full hover:text-[#8C7461] text-base sm:text-lg ${
-                    sortOrder === "desc" ? "font-semibold text-[#8C7461]" : ""
+                  className={`block text-left w-full hover:text-[#072a6b] text-base sm:text-lg ${
+                    sortOrder === "desc" ? "font-semibold text-[#072a6b]" : ""
                   }`}
                   onClick={() => setSortOrder("desc")}
                 >
@@ -158,7 +158,7 @@ export default function SidebarFilter({
                       type="checkbox"
                       checked={selectedSizes.includes(size)}
                       onChange={() => toggleSize(size)}
-                      className="form-checkbox h-4 w-4 text-[#8C7461]"
+                      className="form-checkbox h-4 w-4 text-[#072a6b]"
                     />
                     <span className="text-base sm:text-lg">{size}</span>
                   </label>
@@ -192,7 +192,7 @@ export default function SidebarFilter({
                       type="checkbox"
                       checked={selectedColors.includes(color)}
                       onChange={() => toggleColor(color)}
-                      className="form-checkbox h-4 w-4 text-[#8C7461]"
+                      className="form-checkbox h-4 w-4 text-[#072a6b]"
                     />
                     <span className="text-base sm:text-lg">
                       {messages.catalog.colorNames[color] || color}

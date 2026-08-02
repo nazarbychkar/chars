@@ -125,32 +125,33 @@ export default function Header() {
   };
 
   const navLinkClass =
-    "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] font-['Inter'] transition-colors hover:text-[#8C7461]";
+    "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors hover:text-[#072a6b]";
 
   return (
     <>
       <header
         className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 -translate-x-1/2 w-full z-50 transition-all duration-300 ${
-          isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
+          isDark ? "bg-[#1e1e1e] text-white" : "bg-[#eef7ff] text-[#072a6b]"
         } ${isScrolled ? "shadow-md" : ""}`}
       >
         <div className="w-full transition-all duration-300">
           {/* Desktop */}
-          <div className="hidden lg:flex justify-between items-center h-20 px-8 xl:px-12">
+          <div className="hidden lg:flex justify-between items-center h-20 site-px">
             <Link
               href={locale === "uk" ? "/uk" : `/${locale}`}
               className="shrink-0"
             >
               <Image
-                height={57}
-                width={180}
-                alt="logo"
+                height={80}
+                width={162}
+                alt="CHARS"
                 src={
                   isDark
                     ? "/images/dark-theme/chars-logo-header-dark.png"
                     : "/images/light-theme/chars-logo-header-light.png"
                 }
                 className="h-10 w-auto xl:h-12"
+                priority
               />
             </Link>
 
@@ -214,7 +215,7 @@ export default function Header() {
                         : "bg-white border-stone-200"
                     }`}
                   >
-                    <div className="max-w-[1920px] mx-auto px-8 xl:px-12 py-8 xl:py-10">
+                    <div className="max-w-[1920px] mx-auto site-px py-8 xl:py-10">
                       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10">
                         {categories.map((category) => (
                           <div key={category.id} className="min-w-0">
@@ -222,7 +223,7 @@ export default function Header() {
                               href={`/${locale}/catalog?category=${encodeURIComponent(
                                 buildCategorySlug(category.name)
                               )}`}
-                              className="block text-sm font-semibold uppercase tracking-[0.14em] font-['Inter'] mb-3 hover:text-[#8C7461] transition-colors"
+                              className="block text-sm font-semibold uppercase tracking-[0.14em] mb-3 hover:text-[#072a6b] transition-colors"
                               onClick={() => setCatalogOpen(false)}
                             >
                               {getCategoryLabel(category)}
@@ -234,7 +235,7 @@ export default function Header() {
                                     href={`/${locale}/catalog?subcategory=${encodeURIComponent(
                                       buildSubcategorySlug(sub.name)
                                     )}`}
-                                    className={`text-[15px] font-normal font-['Inter'] leading-snug transition-colors hover:text-[#8C7461] ${
+                                    className={`text-[15px] font-normal leading-snug transition-colors hover:text-[#072a6b] ${
                                       isDark
                                         ? "text-stone-300"
                                         : "text-stone-600"
@@ -252,7 +253,7 @@ export default function Header() {
                                     href={`/${locale}/catalog?category=${encodeURIComponent(
                                       buildCategorySlug(category.name)
                                     )}`}
-                                    className="text-sm text-[#8C7461] font-['Inter']"
+                                    className="text-sm text-[#072a6b]"
                                     onClick={() => setCatalogOpen(false)}
                                   >
                                     {messages.header.viewAllCategory}
@@ -281,7 +282,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setIsCurrencyMenuOpen((prev) => !prev)}
-                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border border-stone-300 gap-1"
+                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border border-stone-300 gap-1"
                   aria-label="Змінити валюту"
                   aria-expanded={isCurrencyMenuOpen}
                 >
@@ -309,7 +310,7 @@ export default function Header() {
                       }}
                       className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
                         effectiveCurrency === "UAH"
-                          ? "bg-[#8C7461] text-white border-[#8C7461]"
+                          ? "bg-[#072a6b] text-white border-[#072a6b]"
                           : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
                       }`}
                     >
@@ -323,7 +324,7 @@ export default function Header() {
                       }}
                       className={`mt-1 px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
                         effectiveCurrency === "EUR"
-                          ? "bg-[#8C7461] text-white border-[#8C7461]"
+                          ? "bg-[#072a6b] text-white border-[#072a6b]"
                           : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
                       }`}
                     >
@@ -337,7 +338,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setIsLangMenuOpen((prev) => !prev)}
-                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border border-stone-300"
+                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border border-stone-300"
                   aria-label={messages.header.langSwitcherAria}
                   aria-expanded={isLangMenuOpen}
                 >
@@ -384,7 +385,7 @@ export default function Header() {
                         }}
                         className={`px-3 py-1.5 text-left rounded-full border text-xs tracking-wide uppercase transition-colors ${
                           locale === lng
-                            ? "bg-[#8C7461] text-white border-[#8C7461]"
+                            ? "bg-[#072a6b] text-white border-[#072a6b]"
                             : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
                         }`}
                       >
@@ -396,7 +397,7 @@ export default function Header() {
               </div>
 
               <button
-                className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2"
                 onClick={toggleTheme}
                 aria-label={
                   isDark
@@ -419,7 +420,7 @@ export default function Header() {
               </button>
               <button
                 type="button"
-                className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2"
                 onClick={() => {
                   setIsSearchOpen(!isSearchOpen);
                   setIsBasketOpen(false);
@@ -439,7 +440,7 @@ export default function Header() {
                 />
               </button>
               <button
-                className="cursor-pointer relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                className="cursor-pointer relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2"
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
                 aria-label={messages.header.basketOpenAria(totalItems)}
                 aria-expanded={isBasketOpen}
@@ -469,8 +470,8 @@ export default function Header() {
 
           {/* Mobile */}
           <div
-            className={`lg:hidden w-full h-16 px-4 flex items-center justify-between transition-all duration-300 ${
-              isDark ? "bg-[#1e1e1e] text-white" : "bg-stone-100 text-black"
+            className={`lg:hidden w-full h-16 site-px flex items-center justify-between transition-all duration-300 ${
+              isDark ? "bg-[#1e1e1e] text-white" : "bg-[#eef7ff] text-[#072a6b]"
             }`}
           >
             <div className="flex items-center gap-0.5">
@@ -491,7 +492,7 @@ export default function Header() {
                 </svg>
               </button>
               <button
-                className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                className="cursor-pointer flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2"
                 onClick={toggleTheme}
                 aria-label={
                   isDark
@@ -516,21 +517,23 @@ export default function Header() {
 
             <Link href={locale === "uk" ? "/uk" : `/${locale}`}>
               <Image
-                height={28}
-                width={100}
-                alt="logo"
+                height={40}
+                width={81}
+                alt="CHARS"
                 src={
                   isDark
                     ? "/images/dark-theme/chars-logo-header-dark.png"
                     : "/images/light-theme/chars-logo-header-light.png"
                 }
+                className="h-7 w-auto"
+                priority
               />
             </Link>
 
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                className="cursor-pointer inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2"
                 onClick={() => {
                   setIsSearchOpen(!isSearchOpen);
                   setIsBasketOpen(false);
@@ -551,7 +554,7 @@ export default function Header() {
               </button>
               <button
                 onClick={() => setIsBasketOpen(!isBasketOpen)}
-                className="relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#8C7461] focus:ring-offset-2"
+                className="relative flex min-h-[38px] min-w-[38px] items-center justify-center rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2"
                 aria-label={messages.header.basketOpenAria(totalItems)}
                 aria-expanded={isBasketOpen}
               >

@@ -4,10 +4,10 @@ import { siteContact } from "@/lib/siteContact";
 import { formatCertificateAmount } from "@/lib/certificates";
 import { readCertificatePdfAttachment } from "@/lib/certificateFiles";
 
-const BG = "#f8f6f1";
-const BODY_TEXT = "#1e1e1e";
-const BODY_MUTED = "#78716c";
-const ACCENT = "#8C7461";
+const BG = "#eef7ff";
+const BODY_TEXT = "#072a6b";
+const BODY_MUTED = "rgba(7, 42, 107, 0.65)";
+const ACCENT = "#072a6b";
 
 type Locale = "uk" | "de" | "en";
 
@@ -99,6 +99,7 @@ export function buildGiftCertificateEmailHtml(
 ): string {
   const locale = resolveLocale(data.locale);
   const t = copy(locale);
+  const markUrl = `${baseUrl.replace(/\/$/, "")}/images/chars-mark-dark.png`;
   const logoUrl = `${baseUrl.replace(/\/$/, "")}/images/light-theme/chars-logo-header-light.png`;
   const displayAmount =
     data.currency === "EUR" ? data.tierEur : data.tierUah;
@@ -113,13 +114,14 @@ export function buildGiftCertificateEmailHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-<body style="margin:0;padding:0;background:${BG};font-family:Inter,Arial,Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background:${BG};font-family:Manrope,Arial,Helvetica,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${BG};">
     <tr>
       <td align="center" style="padding:40px 20px 48px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;">
           <tr>
             <td align="center" style="padding:0 0 32px;">
+              <img src="${escapeHtml(markUrl)}" alt="${escapeHtml(SITE_STORE_NAME)}" width="36" height="88" style="display:block;margin:0 auto 16px;max-height:72px;width:auto;border:0;" />
               <img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(SITE_STORE_NAME)}" width="160" height="46" style="display:block;max-width:160px;height:auto;border:0;" />
             </td>
           </tr>

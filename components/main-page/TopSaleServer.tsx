@@ -8,6 +8,7 @@ interface Product {
   name_de?: string | null;
   price: number;
   price_eur?: number | null;
+  discount_percentage?: number | null;
   first_media?: { url: string; type: string } | null;
 }
 

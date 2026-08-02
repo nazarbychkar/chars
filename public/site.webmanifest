@@ -4,8 +4,8 @@
   "description": "Стильний чоловічий одяг без компромісів. Класика, кежуал та спорт.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#eef7ff",
+  "theme_color": "#072a6b",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "uk",
@@ -41,9 +41,9 @@
   "categories": ["shopping", "lifestyle", "fashion"],
   "screenshots": [
     {
-      "src": "/images/hero-bg.png",
+      "src": "/images/hero-photo.jpg",
       "sizes": "1920x1080",
-      "type": "image/png",
+      "type": "image/jpeg",
       "form_factor": "wide"
     }
   ]

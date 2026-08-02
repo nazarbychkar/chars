@@ -13,9 +13,9 @@ const outfit = Roboto({
 export const metadata: Metadata = {
   title: "CHARS — Admin Panel",
   icons: {
-    icon: "/images/light-theme/chars-logo-header-light.png",
-    shortcut: "/images/light-theme/chars-logo-header-light.png",
-    apple: "/images/light-theme/chars-logo-header-light.png",
+    icon: "/favicon-32x32.png",
+    shortcut: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -27,10 +27,8 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <head>
-        {/* Additional favicon for compatibility */}
-        <link rel="icon" type="image/png" href="/images/light-theme/chars-logo-header-light.png" />
-        <link rel="shortcut icon" type="image/png" href="/images/light-theme/chars-logo-header-light.png" />
-        <link rel="apple-touch-icon" href="/images/light-theme/chars-logo-header-light.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <ThemeProvider>

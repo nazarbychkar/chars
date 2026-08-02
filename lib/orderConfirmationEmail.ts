@@ -8,10 +8,10 @@ import { PAYMENT_TYPE_LABELS_LONG } from "@/lib/paymentTypeLabels";
 import { SITE_STORE_NAME, SITE_TAGLINE } from "@/lib/siteBrand";
 import { siteContact } from "@/lib/siteContact";
 
-const ACCENT = "#8C7461";
-const TEXT = "#1e1e1e";
-const MUTED = "rgba(30,30,30,0.72)";
-const BG = "#f8f6f1";
+const ACCENT = "#072a6b";
+const TEXT = "#072a6b";
+const MUTED = "rgba(7,42,107,0.72)";
+const BG = "#eef7ff";
 
 const DELIVERY_LABELS: Record<string, string> = {
   nova_poshta_branch: "Нова пошта (відділення)",
@@ -65,6 +65,7 @@ export function buildOrderConfirmationHtml(
   baseUrl: string,
   productImageUrls: Map<number, string>
 ): string {
+  const markUrl = `${baseUrl}/images/chars-mark-dark.png`;
   const logoUrl = `${baseUrl}/images/light-theme/chars-logo-header-light.png`;
   const currency = order.currency;
   const subtotal = order.items.reduce(
@@ -99,8 +100,8 @@ export function buildOrderConfirmationHtml(
       return `
         <tr>
           <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;">${imgCell}</td>
-          <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;font-family:'Inter',Arial,sans-serif;font-size:14px;color:${TEXT};">${escapeHtml(name)}${variantText}</td>
-          <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;font-family:'Inter',Arial,sans-serif;font-size:14px;color:${TEXT};text-align:center;">${item.quantity}</td>
+          <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;font-family:Manrope,Arial,Helvetica,sans-serif;font-size:14px;color:${TEXT};">${escapeHtml(name)}${variantText}</td>
+          <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;font-family:Manrope,Arial,Helvetica,sans-serif;font-size:14px;color:${TEXT};text-align:center;">${item.quantity}</td>
           <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:${TEXT};text-align:right;">${escapeHtml(formatMoney(Number(item.price), currency))}</td>
           <td style="padding:12px 14px;border-bottom:1px solid #eee;vertical-align:middle;font-family:Helvetica,Arial,sans-serif;font-size:14px;color:${TEXT};font-weight:600;text-align:right;">${escapeHtml(formatMoney(itemTotal, currency))}</td>
         </tr>`;
@@ -119,7 +120,7 @@ export function buildOrderConfirmationHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Дякуємо за замовлення — ${escapeHtml(SITE_STORE_NAME)}</title>
 </head>
-<body style="margin:0;padding:0;background-color:${BG};font-family:'Inter',Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:${BG};font-family:Manrope,Arial,Helvetica,sans-serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:${BG};">
     <tr>
       <td align="center" style="padding:32px 16px;">
@@ -127,6 +128,7 @@ export function buildOrderConfirmationHtml(
           <tr>
             <td style="background:#ffffff;padding:28px 32px;text-align:center;border-bottom:1px solid #ede8df;">
               <a href="${escapeHtml(baseUrl)}" target="_blank" rel="noopener">
+                <img src="${escapeHtml(markUrl)}" alt="${escapeHtml(SITE_STORE_NAME)}" width="32" height="80" style="display:block;margin:0 auto 12px;max-height:64px;width:auto;border:0;" />
                 <img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(SITE_STORE_NAME)}" width="168" height="48" style="display:inline-block;max-height:48px;width:auto;" />
               </a>
             </td>

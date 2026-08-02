@@ -109,11 +109,11 @@ export default function CertificateClient() {
   };
 
   return (
-    <section className="max-w-[1920px] w-full mx-auto">
-      <div className="flex flex-col lg:flex-row justify-around px-4 pb-4 pt-1 md:px-10 md:pb-8 md:pt-2 gap-10">
+    <section className="site-shell">
+      <div className="site-px flex flex-col lg:flex-row justify-between pb-4 pt-1 md:pb-8 md:pt-2 gap-10">
         <div
           className={`relative w-full lg:w-1/2 flex flex-col items-center transition-opacity duration-300 ${
-            isDark ? "bg-[#1e1e1e]" : "bg-[#f8f6f1]"
+            isDark ? "bg-[#141414]" : "bg-[#eef7ff]"
           } py-4 lg:py-6 rounded-sm`}
         >
           <CertificatePreview
@@ -122,16 +122,16 @@ export default function CertificateClient() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 md:gap-5 px-4 md:px-0 w-full lg:w-1/2">
-          <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide text-[#8C7461]">
+        <div className="flex flex-col gap-4 md:gap-5 w-full lg:w-1/2">
+          <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide text-[#072a6b]">
             {messages.certificate.availabilityLabel}
           </div>
 
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-normal font-['Inter'] capitalize leading-tight">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-normal capitalize leading-tight">
             {messages.certificate.title}
           </h1>
 
-          <p className="text-base md:text-lg font-['Inter'] leading-relaxed opacity-80">
+          <p className="text-base md:text-lg leading-relaxed opacity-80">
             {messages.certificate.subtitle}
           </p>
 
@@ -140,14 +140,14 @@ export default function CertificateClient() {
               <span className="text-2xl md:text-3xl font-['Helvetica'] font-medium">
                 {formatCertificateAmount(displayPrice, effectiveCurrency)}
               </span>
-              <span className="text-sm font-['Inter'] opacity-60">
+              <span className="text-sm opacity-60">
                 {messages.certificate.amountPrefix}{" "}
                 {formatCertificateAmount(displayPrice, effectiveCurrency)}
               </span>
             </div>
           </div>
 
-          <div className="text-base md:text-lg font-['Inter'] uppercase tracking-tight">
+          <div className="text-base md:text-lg uppercase tracking-tight">
             {messages.certificate.chooseAmountLabel}
           </div>
 
@@ -163,7 +163,7 @@ export default function CertificateClient() {
                   key={tier.id}
                   type="button"
                   onClick={() => setSelectedTier(tier)}
-                  className={`min-w-[88px] px-4 py-3 border-2 flex justify-center text-base md:text-lg font-['Inter'] cursor-pointer transition-all duration-200 ${
+                  className={`min-w-[88px] px-4 py-3 border-2 flex justify-center text-base md:text-lg cursor-pointer transition-all duration-200 ${
                     isSelected
                       ? "border-black dark:border-white font-bold scale-105 shadow-md"
                       : "border-gray-300 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105"
@@ -178,7 +178,7 @@ export default function CertificateClient() {
           <button
             type="button"
             onClick={handleBuy}
-            className={`w-full py-4 md:py-5 text-base md:text-lg font-['Inter'] uppercase tracking-wide transition-all duration-200 hover:scale-[1.02] cursor-pointer ${
+            className={`w-full py-4 md:py-5 text-base md:text-lg uppercase tracking-wide transition-all duration-200 hover:scale-[1.02] cursor-pointer ${
               isDark
                 ? "bg-white text-black hover:bg-stone-200"
                 : "bg-black text-white hover:bg-stone-800"
@@ -188,19 +188,19 @@ export default function CertificateClient() {
           </button>
 
           <div className="mt-2">
-            <h2 className="text-xl md:text-2xl font-['Inter'] uppercase tracking-tight mb-3">
+            <h2 className="text-xl md:text-2xl uppercase tracking-tight mb-3">
               {messages.certificate.descriptionTitle}
             </h2>
-            <p className="text-base md:text-lg font-['Inter'] leading-relaxed opacity-80 mb-4">
+            <p className="text-base md:text-lg leading-relaxed opacity-80 mb-4">
               {messages.certificate.description}
             </p>
             <ul className="space-y-2">
               {messages.certificate.features.map((feature, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-2 text-sm md:text-base font-['Inter'] opacity-80"
+                  className="flex items-start gap-2 text-sm md:text-base opacity-80"
                 >
-                  <span className="text-[#8C7461] mt-0.5">✦</span>
+                  <span className="text-[#072a6b] mt-0.5">✦</span>
                   {feature}
                 </li>
               ))}
@@ -221,7 +221,7 @@ export default function CertificateClient() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl md:text-2xl font-['Inter'] uppercase tracking-tight">
+              <h3 className="text-xl md:text-2xl uppercase tracking-tight">
                 {messages.certificate.formTitle}
               </h3>
               <button
@@ -234,7 +234,7 @@ export default function CertificateClient() {
               </button>
             </div>
 
-            <p className="text-sm font-['Inter'] opacity-70 mb-6">
+            <p className="text-sm opacity-70 mb-6">
               {messages.certificate.formSubtitle(
                 isEuro
                   ? formatCertificateAmount(selectedTier.eur, "EUR")
@@ -244,7 +244,7 @@ export default function CertificateClient() {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-['Inter'] uppercase tracking-wide mb-1.5">
+                <label className="block text-sm uppercase tracking-wide mb-1.5">
                   {messages.certificate.nameLabel}
                 </label>
                 <input
@@ -252,7 +252,7 @@ export default function CertificateClient() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={messages.certificate.namePlaceholder}
-                  className={`w-full px-4 py-3 border font-['Inter'] text-base focus:outline-none focus:ring-2 focus:ring-[#8C7461] ${
+                  className={`w-full px-4 py-3 border text-base focus:outline-none focus:ring-2 focus:ring-[#072a6b] ${
                     isDark
                       ? "bg-stone-900 border-stone-700 text-white"
                       : "bg-white border-stone-300 text-black"
@@ -262,7 +262,7 @@ export default function CertificateClient() {
               </div>
 
               <div>
-                <label className="block text-sm font-['Inter'] uppercase tracking-wide mb-1.5">
+                <label className="block text-sm uppercase tracking-wide mb-1.5">
                   {messages.certificate.phoneLabel}
                 </label>
                 <input
@@ -270,7 +270,7 @@ export default function CertificateClient() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder={messages.certificate.phonePlaceholder}
-                  className={`w-full px-4 py-3 border font-['Inter'] text-base focus:outline-none focus:ring-2 focus:ring-[#8C7461] ${
+                  className={`w-full px-4 py-3 border text-base focus:outline-none focus:ring-2 focus:ring-[#072a6b] ${
                     isDark
                       ? "bg-stone-900 border-stone-700 text-white"
                       : "bg-white border-stone-300 text-black"
@@ -280,7 +280,7 @@ export default function CertificateClient() {
               </div>
 
               <div>
-                <label className="block text-sm font-['Inter'] uppercase tracking-wide mb-1.5">
+                <label className="block text-sm uppercase tracking-wide mb-1.5">
                   {messages.certificate.emailLabel}
                 </label>
                 <input
@@ -288,7 +288,7 @@ export default function CertificateClient() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={messages.certificate.emailPlaceholder}
-                  className={`w-full px-4 py-3 border font-['Inter'] text-base focus:outline-none focus:ring-2 focus:ring-[#8C7461] ${
+                  className={`w-full px-4 py-3 border text-base focus:outline-none focus:ring-2 focus:ring-[#072a6b] ${
                     isDark
                       ? "bg-stone-900 border-stone-700 text-white"
                       : "bg-white border-stone-300 text-black"
@@ -300,7 +300,7 @@ export default function CertificateClient() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-4 mt-2 text-base font-['Inter'] uppercase tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-full py-4 mt-2 text-base uppercase tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                   isDark
                     ? "bg-white text-black hover:bg-stone-200"
                     : "bg-black text-white hover:bg-stone-800"

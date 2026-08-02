@@ -1,58 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background-color-light: #f8f6f1;
+  /* Brand palette (sRGB) */
+  --brand-primary: #072a6b;
+  --brand-soft: #eef7ff;
+  --brand-white: #ffffff;
+
+  --background-color-light: var(--brand-white);
   --background-color-dark: #1e1e1e;
-  --text-color-light: #1e1e1e;
-  --text-color-dark: #ffffff;
+  --text-color-light: var(--brand-primary);
+  --text-color-dark: var(--brand-white);
+  --accent: var(--brand-primary);
+  --surface-soft: var(--brand-soft);
+
+  --font-sans: var(--font-manrope), "Manrope", ui-sans-serif, sans-serif;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", ui-serif, serif;
 }
 
-/* @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme inline {
+  --color-brand: var(--brand-primary);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-white: var(--brand-white);
+  --font-sans: var(--font-manrope), "Manrope", ui-sans-serif, sans-serif;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", ui-serif, serif;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
 
 body {
   background-color: var(--background-color-light);
   color: var(--text-color-light);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .dark-theme {
   background-color: var(--background-color-dark);
   color: var(--text-color-dark);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 400;
 }
 
-/* Ensure all text elements use Inter by default */
 * {
   font-family: inherit;
 }
 
-/* Force Inter font for all buttons and links */
 button,
 a,
+.font-sans,
 .font-inter {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: var(--font-sans) !important;
 }
 
-/* Keep Montserrat only for hero title */
-.font-\[\'Montserrat\'\] {
-  font-family: 'Montserrat', sans-serif !important;
+.font-display,
+.font-\[\'Montserrat\'\],
+.font-\[\'Cormorant_Garamond\'\] {
+  font-family: var(--font-display) !important;
 }
 
-/* Keep Helvetica only where explicitly specified */
+/* Legacy Helvetica price/mono-ish UI → clean sans */
 .font-\[\'Helvetica\'\] {
-  font-family: 'Helvetica', Arial, sans-serif !important;
+  font-family: var(--font-sans) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+h1,
+h2,
+h3,
+.heading-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+}
+
+.nav-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Match header horizontal gutters site-wide: mobile px-4, lg px-8, xl px-12 */
+.site-px {
+  padding-left: 1rem; /* px-4 */
+  padding-right: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .site-px {
+    padding-left: 2rem; /* lg:px-8 */
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .site-px {
+    padding-left: 3rem; /* xl:px-12 */
+    padding-right: 3rem;
+  }
+}
+
+.site-shell {
+  width: 100%;
+  max-width: 1920px;
+  margin-left: auto;
+  margin-right: auto;
 }
