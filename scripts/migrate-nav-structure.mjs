@@ -133,6 +133,26 @@ async function hideCategory(client, aliases) {
   console.log(`  ✓ hidden category #${cat.id}: ${cat.name}`);
 }
 
+async function reassignProductsByName(client, { categoryId, subcategoryId, patterns, label }) {
+  const list = Array.isArray(patterns) ? patterns : [patterns];
+  const res = await client.query(
+    `UPDATE products
+     SET category_id = $1, subcategory_id = $2
+     WHERE (
+       ${list.map((_, i) => `name ILIKE $${i + 3}`).join(" OR ")}
+     )
+     RETURNING id, name`,
+    [categoryId, subcategoryId, ...list.map((p) => `%${p}%`)]
+  );
+  if (res.rowCount === 0) {
+    console.log(`  · no products matched for ${label}`);
+    return;
+  }
+  for (const row of res.rows) {
+    console.log(`  ✓ product #${row.id} «${row.name}» → ${label}`);
+  }
+}
+
 async function main() {
   const dbUrl = loadEnvUrl();
   const pool = new Pool({
@@ -511,6 +531,64 @@ async function main() {
         [extra.rows[0].id]
       );
       console.log(`  ✓ hidden subcategory: ${name}`);
+    }
+
+    console.log("→ Reassigning products by name…");
+
+    const pajamaSub = await findSub(client, underwear.id, [
+      "Піжамні костюми",
+      "Піжами",
+    ]);
+    if (pajamaSub) {
+      await reassignProductsByName(client, {
+        categoryId: underwear.id,
+        subcategoryId: pajamaSub.id,
+        patterns: ["ПІЖАМ", "ПИЖАМ", "піжам", "пижам", "pajama", "Pajama"],
+        label: "Білизна | Піжамні костюми → Піжамні костюми",
+      });
+      const exactPajama = await client.query(
+        `UPDATE products
+         SET category_id = $1, subcategory_id = $2
+         WHERE TRIM(BOTH FROM name) ILIKE 'КОСТЮМ ПІЖАМНИЙ ШОВКОВИЙ КАРАМЕЛЬНИЙ%'
+         RETURNING id, name`,
+        [underwear.id, pajamaSub.id]
+      );
+      for (const row of exactPajama.rows) {
+        console.log(`  ✓ product #${row.id} «${row.name}» → Піжамні костюми`);
+      }
+    }
+
+    const corsetSub = await findSub(client, shirts.id, ["Корсети"]);
+    if (corsetSub) {
+      await reassignProductsByName(client, {
+        categoryId: shirts.id,
+        subcategoryId: corsetSub.id,
+        patterns: ["КОРСЕТ", "корсет", "Corset", "CORSET"],
+        label: "Сорочки | Футболки → Корсети",
+      });
+      const exactCorset = await client.query(
+        `UPDATE products
+         SET category_id = $1, subcategory_id = $2
+         WHERE TRIM(BOTH FROM name) ILIKE 'КОРСЕТ ЧОРНИЙ%'
+         RETURNING id, name`,
+        [shirts.id, corsetSub.id]
+      );
+      for (const row of exactCorset.rows) {
+        console.log(`  ✓ product #${row.id} «${row.name}» → Корсети`);
+      }
+    }
+
+    const loungeSub = await findSub(client, underwear.id, [
+      "Шорти домашні",
+      "Шорти",
+    ]);
+    if (loungeSub) {
+      await reassignProductsByName(client, {
+        categoryId: underwear.id,
+        subcategoryId: loungeSub.id,
+        patterns: ["ШОРТИ ДОМАШН", "шорти домашн"],
+        label: "Білизна | Піжамні костюми → Шорти домашні",
+      });
     }
 
     await client.query("COMMIT");
