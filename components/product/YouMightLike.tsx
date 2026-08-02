@@ -143,16 +143,16 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                 <div className="mt-1 min-h-[24px] text-lg sm:text-xl font-normal font-['Inter'] leading-none text-center">
                   {hasDiscount ? (
                     <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-                      <span className="font-medium text-red-600">
+                      <span className="font-medium">
                         {salePrice.toFixed(2)}
                         {currencySymbol}
                       </span>
-                      <span className="text-gray-500 line-through text-base sm:text-lg">
+                      <span className="opacity-40 line-through text-base sm:text-lg">
                         {basePrice}
                         {currencySymbol}
                       </span>
-                      <span className="text-green-600 text-sm sm:text-base">
-                        -{discountPct}%
+                      <span className="text-sm sm:text-base opacity-55">
+                        −{discountPct}%
                       </span>
                     </div>
                   ) : (

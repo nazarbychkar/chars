@@ -416,11 +416,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           )}
           {media && media.length > 0 ? (
             <>
-          <div
-            className={`w-full max-w-[800px] overflow-hidden rounded-sm ${
-              isDark ? "bg-[#1e1e1e]" : "bg-[#f8f6f1]"
-            }`}
-          >
+          <div className="w-full max-w-[800px] overflow-hidden rounded-sm">
           <Swiper
             modules={[Navigation]}
             onSwiper={setSwiper}
@@ -447,9 +443,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             {media.map((item, i) => (
               <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
                 <div 
-                  className={`flex min-h-[min(85vh,58rem)] max-h-[85vh] w-full items-center justify-center overflow-hidden ${
-                    isDark ? "bg-[#1e1e1e]" : "bg-[#f8f6f1]"
-                  }`}
+                  className="flex min-h-[min(85vh,58rem)] max-h-[85vh] w-full items-center justify-center overflow-hidden"
                   style={{ 
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
@@ -534,9 +528,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           ) : (
             <div
               className={`flex aspect-[2/3] w-full max-w-[800px] items-center justify-center rounded-lg border ${
-                isDark
-                  ? "border-stone-700 bg-[#1e1e1e]"
-                  : "border-stone-200 bg-[#f8f6f1]"
+                isDark ? "border-stone-700" : "border-stone-200"
               }`}
             >
               <div className="text-center p-8">
@@ -590,16 +582,16 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                     basePrice * (1 - product.discount_percentage / 100);
                   return (
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-red-600">
+                      <span className="font-medium">
                         {discounted.toFixed(2)}
                         {currencySymbol}
                       </span>
-                      <span className="line-through">
+                      <span className="opacity-40 line-through">
                         {basePrice}
                         {currencySymbol}
                       </span>
-                      <span className="text-green-600 text-sm">
-                        -{product.discount_percentage}%
+                      <span className="text-sm opacity-55">
+                        −{product.discount_percentage}%
                       </span>
                     </div>
                   );

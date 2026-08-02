@@ -22,10 +22,7 @@ export default function Hero() {
           className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent"
           style={{ zIndex: 2 }}
         />
-        <div
-          className="pointer-events-none absolute left-1/2 top-[58%] w-full max-w-6xl -translate-x-1/2 -translate-y-1/2 px-6 text-center text-white md:top-[47%] lg:top-[45%]"
-          style={{ zIndex: 3 }}
-        >
+        <div className="absolute inset-x-0 bottom-0 top-[42%] z-[3] flex flex-col items-center justify-end px-6 pb-16 text-center text-white sm:top-[38%] sm:pb-20 md:top-[36%] md:justify-center md:pb-0 lg:top-[34%]">
           <div className="mb-4 flex justify-center sm:mb-5">
             <BrandMark
               variant="light"
@@ -45,15 +42,9 @@ export default function Hero() {
           <p className="mt-5 text-base font-medium uppercase tracking-[0.18em] text-white/90 sm:text-lg md:mt-6 md:text-xl">
             New Collection
           </p>
-        </div>
-
-        <div
-          className="absolute bottom-14 left-1/2 z-10 -translate-x-1/2 sm:bottom-16 md:bottom-auto md:top-[63%] lg:top-[61%]"
-          style={{ zIndex: 4 }}
-        >
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="cursor-pointer inline-flex h-12 w-52 items-center justify-center border border-white/90 bg-transparent px-4 text-white transition-colors duration-300 hover:bg-white/10 sm:h-14 sm:w-56 md:h-16 md:w-64"
+            className="mt-8 cursor-pointer inline-flex h-12 w-52 items-center justify-center border border-white/90 bg-transparent px-4 text-white transition-colors duration-300 hover:bg-white/10 sm:mt-10 sm:h-14 sm:w-56 md:h-16 md:w-64"
           >
             <div className="text-center font-sans text-base font-medium uppercase leading-none tracking-[0.08em] sm:text-lg md:text-xl">
               {messages.home.heroCatalogButton}
