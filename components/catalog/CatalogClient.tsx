@@ -290,25 +290,20 @@ export default function CatalogClient({
                 {displayName}
                 <br />
                 {product.discount_percentage ? (
-                  <div className="flex items-center gap-2">
-                    {/* Discounted price */}
-                    <span className="font-medium text-[#072a6b]">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span className="font-medium">
                       {(
                         basePrice *
                         (1 - product.discount_percentage / 100)
                       ).toFixed(2)}
                       {currencySymbol}
                     </span>
-
-                    {/* Original (crossed-out) price */}
-                    <span className="opacity-45 line-through">
+                    <span className="opacity-40 line-through">
                       {basePrice}
                       {currencySymbol}
                     </span>
-
-                    {/* Optional: show discount percentage */}
-                    <span className="text-xs tracking-wide text-[#072a6b] bg-[#eef7ff] px-1.5 py-0.5">
-                      -{product.discount_percentage}%
+                    <span className="text-xs tracking-wide opacity-55">
+                      −{product.discount_percentage}%
                     </span>
                   </div>
                 ) : (
