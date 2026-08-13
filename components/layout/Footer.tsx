@@ -347,14 +347,14 @@ export default function Footer() {
         </div>
         <div className="flex gap-4 md:gap-6 items-center">
           <Link
-            href="/privacy-policy"
+            href={`/${locale}/privacy-policy`}
             className="text-sm md:text-lg hover:opacity-100 opacity-60 transition-opacity duration-300 text-center"
           >
             {messages.footer.privacyPolicy}
           </Link>
           <span className="text-sm md:text-lg hidden sm:inline opacity-30">|</span>
           <Link
-            href="/terms-of-service"
+            href={`/${locale}/terms-of-service`}
             className="text-sm md:text-lg hover:opacity-100 opacity-60 transition-opacity duration-300 text-center"
           >
             {messages.footer.termsOfService}

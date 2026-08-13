@@ -5,6 +5,12 @@ type Messages = {
     backToHome: string;
     loading: string;
     noResults: string;
+    notFoundTitle: string;
+    notFoundDescription: string;
+    notFoundCatalog: string;
+    notFoundHint: string;
+    searchPlaceholder: string;
+    searchHint: string;
   };
   header: {
     info: string;
@@ -280,6 +286,13 @@ export const messages: MessagesMap = {
       backToHome: "На головну",
       loading: "Завантаження...",
       noResults: "Нічого не знайдено",
+      notFoundTitle: "Сторінку не знайдено",
+      notFoundDescription:
+        "Схоже, що сторінка, яку ви шукаєте, загубилася у просторах інтернету. Але не хвилюйтеся — у нас є багато інших цікавих речей!",
+      notFoundCatalog: "Каталог товарів",
+      notFoundHint: "Якщо ви вважаєте, що це помилка, будь ласка, зв'яжіться з нами",
+      searchPlaceholder: "Пошук...",
+      searchHint: "Введіть запит, щоб знайти товари.",
     },
     header: {
       info: "ІНФО",
@@ -652,6 +665,13 @@ export const messages: MessagesMap = {
       backToHome: "Zur Startseite",
       loading: "Wird geladen...",
       noResults: "Keine Ergebnisse gefunden",
+      notFoundTitle: "Seite nicht gefunden",
+      notFoundDescription:
+        "Die gesuchte Seite scheint verloren gegangen zu sein. Keine Sorge — bei uns gibt es noch vieles zu entdecken.",
+      notFoundCatalog: "Produktkatalog",
+      notFoundHint: "Wenn Sie glauben, dass dies ein Fehler ist, kontaktieren Sie uns bitte",
+      searchPlaceholder: "Suche...",
+      searchHint: "Geben Sie eine Suchanfrage ein, um Produkte zu finden.",
     },
     header: {
       info: "INFO",
@@ -1033,6 +1053,13 @@ export const messages: MessagesMap = {
       backToHome: "Back to home",
       loading: "Loading...",
       noResults: "No results found",
+      notFoundTitle: "Page not found",
+      notFoundDescription:
+        "The page you are looking for seems to have wandered off. There is plenty more to explore.",
+      notFoundCatalog: "Product catalog",
+      notFoundHint: "If you think this is a mistake, please get in touch",
+      searchPlaceholder: "Search...",
+      searchHint: "Type a query to search products.",
     },
     header: {
       info: "INFO",

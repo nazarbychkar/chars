@@ -84,7 +84,7 @@ export default function SearchSidebar({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search..."
+            placeholder={messages.common.searchPlaceholder}
             className={`p-3 border text-lg rounded w-full focus:outline-none ${
               isDark
                 ? "bg-stone-800 text-white border-stone-700 placeholder-stone-400"
@@ -155,7 +155,7 @@ export default function SearchSidebar({
 
             {!query && !loading && (
               <p className="text-neutral-500">
-                Type a query to search products.
+                {messages.common.searchHint}
               </p>
             )}
           </div>

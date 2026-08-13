@@ -3,7 +3,6 @@
 import { createContext, useContext, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  DEFAULT_LOCALE,
   SUPPORTED_LOCALES,
   type Locale,
   getLocaleFromPath,
@@ -19,16 +18,16 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
+export function I18nProvider({
+  children,
+  locale: localeProp,
+}: {
+  children: React.ReactNode;
+  locale?: Locale;
+}) {
   const pathname = usePathname();
   const router = useRouter();
-
-  // Use real browser URL (with /uk, /de, /en) because Next rewrites
-  // strip the locale prefix from the internal pathname.
-  const browserPath =
-    typeof window !== "undefined" ? window.location.pathname : pathname || "/";
-
-  const locale = getLocaleFromPath(browserPath || "/");
+  const locale = localeProp ?? getLocaleFromPath(pathname || "/");
 
   const value = useMemo<I18nContextValue>(() => {
     const messages = getMessages(locale);
@@ -36,30 +35,20 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     const switchLocale = (nextLocale: Locale) => {
       if (nextLocale === locale) return;
 
-      const currentPath =
-        typeof window !== "undefined"
-          ? window.location.pathname
-          : pathname || "/";
-
+      const currentPath = pathname || "/";
       const segments = currentPath.split("/");
       const hasLocalePrefix = SUPPORTED_LOCALES.includes(
         (segments[1] || "") as Locale
       );
 
       let newPath: string;
-
       if (hasLocalePrefix) {
         segments[1] = nextLocale;
-        newPath = segments.join("/") || "/";
+        newPath = segments.join("/") || `/${nextLocale}`;
       } else {
-        newPath =
-          nextLocale === DEFAULT_LOCALE
-            ? `/${nextLocale}${pathname === "/" ? "" : pathname}`
-            : `/${nextLocale}${pathname === "/" ? "" : pathname}`;
+        newPath = `/${nextLocale}${currentPath === "/" ? "" : currentPath}`;
       }
 
-      // Full reload to ensure all server-rendered content (metadata, hero, etc.)
-      // is refreshed in the new language.
       if (typeof window !== "undefined") {
         window.location.href = newPath;
       } else {
@@ -71,9 +60,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       if (path.startsWith("http") || path.startsWith("#")) {
         return path;
       }
-
       const cleanPath = path.startsWith("/") ? path : `/${path}`;
-
       return `/${locale}${cleanPath === "/" ? "" : cleanPath}`;
     };
 

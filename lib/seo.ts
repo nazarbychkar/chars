@@ -98,7 +98,7 @@ export function generateProductStructuredData(
     },
     offers: {
       "@type": "Offer",
-      url: `${baseUrl}/product/${product.id}`,
+      url: `${baseUrl}/uk/product/${product.id}`,
       priceCurrency: "UAH",
       price: Number(finalPrice).toFixed(2),
       availability: "https://schema.org/InStock",
@@ -172,7 +172,7 @@ export function generateWebsiteStructuredData(baseUrl: string) {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${baseUrl}/catalog?search={search_term_string}`,
+        urlTemplate: `${baseUrl}/uk/catalog?search={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

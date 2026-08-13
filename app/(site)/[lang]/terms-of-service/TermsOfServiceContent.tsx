@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export default function TermsOfServiceContent() {
-  const { locale } = useI18n();
+  const { locale, messages, withLocalePath } = useI18n();
   const lang = locale === "en" || locale === "de" ? locale : "uk";
 
-  const backToHomeLabel =
-    lang === "en" ? "← Back to home" : lang === "de" ? "← Zur Startseite" : "← На головну";
+  const backToHomeLabel = `← ${messages.common.backToHome}`;
   const title =
     lang === "en"
       ? "Public offer agreement"
@@ -22,7 +21,7 @@ export default function TermsOfServiceContent() {
         {/* Header */}
         <div className="mb-16">
           <Link
-            href="/"
+            href={withLocalePath("/")}
             className="inline-block mb-8 text-lg opacity-60 hover:opacity-100 transition-opacity duration-300"
           >
             {backToHomeLabel}

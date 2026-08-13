@@ -19,7 +19,7 @@ function localePrefixFromData(
   if (locale === "de") return "/de";
   if (locale === "en") return "/en";
   if (typeCertificate) return "/uk";
-  return "";
+  return "/uk";
 }
 
 function PaymentStatusContent() {
