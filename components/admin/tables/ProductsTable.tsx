@@ -63,7 +63,7 @@ export default function ProductsTable() {
       if (page > 1) params.set("page", String(page));
       else params.delete("page");
 
-      if (q.trim()) params.set("q", q.trim());
+      if (q) params.set("q", q);
       else params.delete("q");
 
       const qs = params.toString();
@@ -73,8 +73,8 @@ export default function ProductsTable() {
   );
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return products;
     return products.filter((p) => {
       return (
         p.name.toLowerCase().includes(q) ||

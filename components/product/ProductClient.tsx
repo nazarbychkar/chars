@@ -629,19 +629,27 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             </div>
           ) : (
           <div className="flex flex-wrap gap-2 md:gap-3">
-            {sizes.map((size) => (
+            {sizes.map((size) => {
+              const label = SIZE_MAP[size] || size;
+              const isWide = label.length > 3;
+              return (
               <div
                 key={size}
                 onClick={() => setSelectedSize(size)}
-                className={`h-11 w-11 sm:h-12 sm:w-12 md:h-14 md:w-14 border-2 rounded-full flex items-center justify-center text-sm sm:text-base md:text-lg font-['Inter'] uppercase cursor-pointer transition-all duration-200 ${
+                className={`h-11 sm:h-12 md:h-14 border-2 rounded-full flex items-center justify-center text-sm sm:text-base md:text-lg font-['Inter'] uppercase cursor-pointer transition-all duration-200 ${
+                  isWide
+                    ? "w-auto px-4 sm:px-5 md:px-6"
+                    : "w-11 sm:w-12 md:w-14"
+                } ${
                   selectedSize === size
                     ? "border-black dark:border-white font-bold scale-105 shadow-md"
                     : "border-gray-300 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md"
                 }`}
               >
-                {SIZE_MAP[size] || size}
+                {label}
               </div>
-            ))}
+              );
+            })}
           </div>
           )}
 

@@ -28,6 +28,7 @@ const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
   // Static family (no variable cut in next/font) — keep explicit weights.
   weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
   preload: true,
   variable: "--font-cormorant",
@@ -71,7 +72,20 @@ export default function SiteHtmlShell({
           href="/images/light-theme/chars-logo-header-light.png"
           as="image"
         />
-        <link rel="preload" href="/images/hero-photo.jpg" as="image" />
+        <link
+          rel="preload"
+          href="/images/hero-mobile.webp"
+          as="image"
+          type="image/webp"
+          media="(max-width: 767px)"
+        />
+        <link
+          rel="preload"
+          href="/images/hero-desktop.webp"
+          as="image"
+          type="image/webp"
+          media="(min-width: 768px)"
+        />
         <link
           rel="preload"
           href="/api/products/top-sale"

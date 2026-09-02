@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAppContext } from "@/lib/GeneralProvider";
 import { useBasket } from "@/lib/BasketProvider";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/config";
+import { getLocaleFromPath } from "@/lib/i18n/config";
 import SidebarBasket from "./SidebarBasket";
 import SidebarSearch from "./SidebarSearch";
 import SidebarMenu from "./SidebarMenu";
@@ -46,7 +48,15 @@ export default function Header() {
   const effectiveCurrency =
     currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
   const toggleTheme = () => setIsDark((prev) => !prev);
+  const pathname = usePathname();
+  const localeFromPath = getLocaleFromPath(pathname);
+  const isHomePage =
+    pathname === "/" ||
+    pathname === `/${localeFromPath}` ||
+    pathname === `/${localeFromPath}/`;
   const [isScrolled, setIsScrolled] = useState(false);
+  const isTransparent = isHomePage && !isScrolled;
+  const useLightAssets = isTransparent || isDark;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -124,15 +134,26 @@ export default function Header() {
     catalogTimeout.current = setTimeout(() => setCatalogOpen(false), 180);
   };
 
-  const navLinkClass =
-    "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors hover:text-[#072a6b]";
+  const navLinkClass = isTransparent
+    ? "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors text-white hover:text-white/75"
+    : "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors hover:text-[#072a6b]";
+
+  const headerSurface = isTransparent
+    ? "bg-transparent text-white"
+    : isDark
+      ? "bg-[#1e1e1e] text-white"
+      : "bg-[#eef7ff] text-[#072a6b]";
+
+  const chipBorder = isTransparent
+    ? "border-white/45"
+    : "border-stone-300";
 
   return (
     <>
       <header
-        className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 -translate-x-1/2 w-full z-50 transition-all duration-300 ${
-          isDark ? "bg-[#1e1e1e] text-white" : "bg-[#eef7ff] text-[#072a6b]"
-        } ${isScrolled ? "shadow-md" : ""}`}
+        className={`max-w-[1920px] mx-auto fixed top-0 left-1/2 -translate-x-1/2 w-full z-50 transition-all duration-300 ${headerSurface} ${
+          isScrolled && !isTransparent ? "shadow-md" : ""
+        }`}
       >
         <div className="w-full transition-all duration-300">
           {/* Desktop */}
@@ -146,7 +167,7 @@ export default function Header() {
                 width={162}
                 alt="CHARS"
                 src={
-                  isDark
+                  useLightAssets
                     ? "/images/dark-theme/chars-logo-header-dark.png"
                     : "/images/light-theme/chars-logo-header-light.png"
                 }
@@ -282,7 +303,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setIsCurrencyMenuOpen((prev) => !prev)}
-                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border border-stone-300 gap-1"
+                  className={`cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2 rounded-full px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border gap-1 ${chipBorder}`}
                   aria-label="Змінити валюту"
                   aria-expanded={isCurrencyMenuOpen}
                 >
@@ -338,7 +359,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setIsLangMenuOpen((prev) => !prev)}
-                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border border-stone-300"
+                  className={`cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#072a6b] focus:ring-offset-2 rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lg border ${chipBorder}`}
                   aria-label={messages.header.langSwitcherAria}
                   aria-expanded={isLangMenuOpen}
                 >
@@ -412,7 +433,7 @@ export default function Header() {
                   alt=""
                   aria-hidden
                   src={
-                    isDark
+                    useLightAssets
                       ? "/images/dark-theme/theme-switch.svg"
                       : "/images/light-theme/theme-switch.svg"
                   }
@@ -433,7 +454,7 @@ export default function Header() {
                   width={24}
                   alt=""
                   src={
-                    isDark
+                    useLightAssets
                       ? "/images/dark-theme/search.svg"
                       : "/images/light-theme/search.svg"
                   }
@@ -451,7 +472,7 @@ export default function Header() {
                   alt=""
                   aria-hidden
                   src={
-                    isDark
+                    useLightAssets
                       ? "/images/dark-theme/basket.svg"
                       : "/images/light-theme/basket.svg"
                   }
@@ -471,7 +492,11 @@ export default function Header() {
           {/* Mobile */}
           <div
             className={`lg:hidden w-full h-16 site-px flex items-center justify-between transition-all duration-300 ${
-              isDark ? "bg-[#1e1e1e] text-white" : "bg-[#eef7ff] text-[#072a6b]"
+              isTransparent
+                ? "bg-transparent text-white"
+                : isDark
+                  ? "bg-[#1e1e1e] text-white"
+                  : "bg-[#eef7ff] text-[#072a6b]"
             }`}
           >
             <div className="flex items-center gap-0.5">
@@ -507,7 +532,7 @@ export default function Header() {
                   alt=""
                   aria-hidden
                   src={
-                    isDark
+                    useLightAssets
                       ? "/images/dark-theme/theme-switch.svg"
                       : "/images/light-theme/theme-switch.svg"
                   }
@@ -521,7 +546,7 @@ export default function Header() {
                 width={81}
                 alt="CHARS"
                 src={
-                  isDark
+                  useLightAssets
                     ? "/images/dark-theme/chars-logo-header-dark.png"
                     : "/images/light-theme/chars-logo-header-light.png"
                 }
@@ -546,7 +571,7 @@ export default function Header() {
                   width={24}
                   alt=""
                   src={
-                    isDark
+                    useLightAssets
                       ? "/images/dark-theme/search.svg"
                       : "/images/light-theme/search.svg"
                   }
@@ -564,7 +589,7 @@ export default function Header() {
                   alt=""
                   aria-hidden
                   src={
-                    isDark
+                    useLightAssets
                       ? "/images/dark-theme/basket.svg"
                       : "/images/light-theme/basket.svg"
                   }
