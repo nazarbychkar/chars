@@ -365,6 +365,25 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
   const outOfStock = sizes.length === 0;
 
+  const cartButtonLabel =
+    availabilityStatus === "sold_out"
+      ? messages.product.outOfStockLabel
+      : availabilityStatus === "coming_soon"
+        ? "pre order"
+        : messages.product.addToCartLabel;
+
+  const isCartDisabled = outOfStock || availabilityStatus === "sold_out";
+
+  const cartButtonClassName = `w-full text-center ${
+    isDark
+      ? "bg-white text-black hover:bg-gray-100"
+      : "bg-black text-white hover:bg-gray-800"
+  } p-3 text-base md:text-xl font-medium font-['Inter'] uppercase tracking-tight transition-all duration-200 ${
+    isCartDisabled
+      ? "opacity-50 cursor-not-allowed"
+      : "cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+  }`;
+
   // SWIPER
   const [swiper, setSwiper] = useState<SwiperType | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -403,8 +422,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   // COLORS
 
   return (
-    <section className="max-w-[1920px] w-full mx-auto">
-      <div className="flex flex-col lg:flex-row justify-around px-4 pb-4 pt-1 md:px-10 md:pb-8 md:pt-2 gap-10">
+    <section className="max-w-[1920px] w-full mx-auto pb-20 lg:pb-0">
+      <div className="flex flex-col lg:flex-row justify-around px-3 pb-3 pt-0 md:px-10 md:pb-8 md:pt-2 gap-4 lg:gap-10">
         <div 
           className={`relative w-full lg:w-1/2 flex justify-center transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}
           style={{ touchAction: 'pan-y pinch-zoom' }}
@@ -443,7 +462,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             {media.map((item, i) => (
               <SwiperSlide key={i} style={{ touchAction: 'pan-y pinch-zoom' }}>
                 <div 
-                  className="flex min-h-[min(85vh,58rem)] max-h-[85vh] w-full items-center justify-center overflow-hidden"
+                  className="flex min-h-[42vh] max-h-[50vh] w-full items-center justify-center overflow-hidden lg:min-h-[min(85vh,58rem)] lg:max-h-[85vh]"
                   style={{ 
                     WebkitUserSelect: 'none',
                     userSelect: 'none',
@@ -452,7 +471,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                 >
                   {item.type === "video" ? (
                     <video
-                      className="object-contain w-full max-h-[85vh]"
+                      className="object-contain w-full max-h-[50vh] lg:max-h-[85vh]"
                       src={`/api/images/${item.url}`}
                       autoPlay
                       loop
@@ -475,9 +494,8 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                       loading={i <= 1 ? undefined : "lazy"}
                       quality={i === 0 ? 85 : 75}
                       placeholder="empty"
-                      className="relative z-[1] h-auto w-auto object-contain"
+                      className="relative z-[1] h-auto w-auto object-contain max-h-[50vh] lg:max-h-[85vh]"
                       style={{ 
-                        maxHeight: "85vh",
                         WebkitUserSelect: 'none',
                         userSelect: 'none',
                         pointerEvents: 'auto'
@@ -554,22 +572,22 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         </div>
 
         {/* Info Section */}
-        <div className="flex flex-col gap-4 md:gap-5 px-4 md:px-0 w-full lg:w-1/2">
+        <div className="flex flex-col gap-2.5 md:gap-5 px-1 md:px-0 w-full lg:w-1/2">
           {/* Availability */}
-          <div className="text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide">
+          <div className="text-sm md:text-lg font-normal font-['Helvetica'] leading-snug tracking-wide">
             {availabilityStatus === "sold_out" || availabilityStatus === "coming_soon"
               ? messages.product.outOfStockLabel
               : messages.product.inStockLabel}
           </div>
 
           {/* Product Name */}
-          <div className={`text-3xl md:text-5xl lg:text-6xl font-normal font-['Inter'] capitalize leading-tight transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
+          <div className={`text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-normal font-['Inter'] capitalize leading-tight transition-opacity duration-300 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
             {displayName}
           </div>
 
           {/* Price */}
-          <div className="w-full flex flex-col sm:flex-row justify-start border-b p-2 sm:p-4 gap-2">
-            <div className="flex justify-start gap-8 text-2xl md:text-3xl font-['Helvetica']">
+          <div className="w-full flex flex-col sm:flex-row justify-start border-b py-2 sm:p-4 gap-2">
+            <div className="flex justify-start gap-4 text-xl md:text-3xl font-['Helvetica']">
               {(() => {
                 const basePrice =
                   isEuro && product.price_eur != null
@@ -727,33 +745,15 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             </div>
           ) : null}
 
-          {/* Add to Cart Button — <button> щоб Meta/Facebook розпізнавав кнопку для подій (AddToCart) */}
+          {/* Add to Cart Button — desktop inline; mobile uses sticky bar */}
           <button
             type="button"
-            disabled={outOfStock || availabilityStatus === "sold_out"}
-            onClick={outOfStock || availabilityStatus === "sold_out" ? undefined : handleAddToCart}
-            className={`w-full text-center ${
-              isDark
-                ? "bg-white text-black hover:bg-gray-100"
-                : "bg-black text-white hover:bg-gray-800"
-            } p-3 text-lg md:text-xl font-medium font-['Inter'] uppercase tracking-tight transition-all duration-200 ${
-              outOfStock || availabilityStatus === "sold_out"
-                ? "opacity-50 cursor-not-allowed"
-                : "cursor-pointer hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-            }`}
-            aria-label={
-              availabilityStatus === "sold_out"
-                ? messages.product.outOfStockLabel
-                : availabilityStatus === "coming_soon"
-                ? "pre order"
-                : messages.product.addToCartLabel
-            }
+            disabled={isCartDisabled}
+            onClick={isCartDisabled ? undefined : handleAddToCart}
+            className={`hidden lg:block ${cartButtonClassName}`}
+            aria-label={cartButtonLabel}
           >
-            {availabilityStatus === "sold_out"
-              ? messages.product.outOfStockLabel
-              : availabilityStatus === "coming_soon"
-              ? "pre order"
-              : messages.product.addToCartLabel}
+            {cartButtonLabel}
           </button>
 
           {/* Telegram Manager Link */}
@@ -931,7 +931,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
 
           {/* Description Section */}
           <div className="w-full md:w-[522px]">
-            <div className="mb-3 md:mb-4 text-xl md:text-2xl font-['Inter'] uppercase tracking-tight">
+            <div className="mb-2 md:mb-4 text-lg md:text-2xl font-['Inter'] uppercase tracking-tight">
               {messages.product.descriptionTitle}
             </div>
             <div className="text-sm md:text-lg font-['Inter'] leading-relaxed tracking-wide">
@@ -953,6 +953,25 @@ export default function ProductClient({ product: initialProduct }: ProductClient
             </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile sticky add-to-cart — always visible while on product page */}
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 border-t px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] lg:hidden ${
+          isDark
+            ? "border-stone-700 bg-[#1e1e1e]"
+            : "border-stone-200 bg-white"
+        }`}
+      >
+        <button
+          type="button"
+          disabled={isCartDisabled}
+          onClick={isCartDisabled ? undefined : handleAddToCart}
+          className={cartButtonClassName}
+          aria-label={cartButtonLabel}
+        >
+          {cartButtonLabel}
+        </button>
       </div>
     </section>
   );

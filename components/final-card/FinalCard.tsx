@@ -29,6 +29,8 @@ const COUNTRY_OPTIONS = [
   { code: "GB", uk: "Велика Британія", en: "United Kingdom", de: "Vereinigtes Königreich" },
   { code: "US", uk: "США", en: "USA", de: "USA" },
   { code: "CA", uk: "Канада", en: "Canada", de: "Kanada" },
+  { code: "AE", uk: "ОАЕ", en: "United Arab Emirates", de: "Vereinigte Arabische Emirate" },
+  { code: "TR", uk: "Туреччина", en: "Turkey", de: "Türkei" },
   { code: "OTHER", uk: "Інша країна", en: "Other country", de: "Anderes Land" },
 ] as const;
 
