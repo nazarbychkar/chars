@@ -324,6 +324,10 @@ export default function OrdersTable() {
                         ? "Повна"
                         : order.payment_type === "prepay"
                         ? "Передоплата"
+                        : order.payment_type === "installments"
+                        ? "Частинами"
+                        : order.payment_type === "certificate"
+                        ? "Сертифікат"
                         : "-"}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">

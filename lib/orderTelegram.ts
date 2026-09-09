@@ -175,7 +175,9 @@ export async function sendOrderTelegramNotification(
         ? "PayPal"
         : order.payment_type === "certificate"
           ? "Подарунковий сертифікат"
-          : "Повна оплата";
+          : order.payment_type === "installments"
+            ? "Покупка частинами monobank"
+            : "Повна оплата";
 
   const orderMessage = `
 ${isCertificate ? "🎁" : "🛒"} <b>${isCertificate ? "Новий подарунковий сертифікат (ОПЛАЧЕНО ✅)" : "Нове замовлення (ОПЛАЧЕНО ✅)"}</b>

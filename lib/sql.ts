@@ -905,7 +905,7 @@ type OrderInput = {
   city: string;
   post_office: string;
   comment?: string;
-  payment_type: "prepay" | "full" | "certificate";
+  payment_type: "prepay" | "full" | "certificate" | "installments";
   invoice_id: string;
   payment_reference?: string | null;
   payment_status: "pending" | "paid" | "canceled";
@@ -926,7 +926,7 @@ type CertificateOrderInput = {
   customer_name: string;
   phone_number: string;
   email?: string;
-  payment_type: "prepay" | "full" | "certificate";
+  payment_type: "prepay" | "full" | "certificate" | "installments";
   invoice_id: string;
   payment_reference: string;
   payment_status: "pending" | "paid" | "canceled";

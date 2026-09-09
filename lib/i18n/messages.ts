@@ -140,6 +140,9 @@ type Messages = {
     paymentOptionFull: string;
     paymentOptionPrepay: string;
     paymentOptionPaypalFull: string;
+    paymentOptionInstallments: string;
+    paymentOptionInstallmentsHint: string;
+    paymentTrustBadgesAria: string;
     submitSending: string;
     submitLabel: string;
     basketEmptyInline: string;
@@ -483,11 +486,14 @@ export const messages: MessagesMap = {
       addressPlaceholder: "Напр.: вул. Січових Стрільців, 10, кв. 25",
       commentLabel: "Коментар",
       commentPlaceholder: "Ваш коментар",
-      paymentMethodLabel: "Спосіб оплати *",
+      paymentMethodLabel: "Оберіть зручну для вас систему оплати",
       paymentMethodPlaceholder: "Оберіть спосіб оплати",
-      paymentOptionFull: "Повна оплата",
+      paymentOptionFull: "Plata by mono",
       paymentOptionPrepay: "Передоплата 300 ₴",
-      paymentOptionPaypalFull: "Повна оплата через PayPal",
+      paymentOptionPaypalFull: "PayPal",
+      paymentOptionInstallments: "Покупка частинами monobank",
+      paymentOptionInstallmentsHint: "Без переплат і комісій",
+      paymentTrustBadgesAria: "Доступні способи оплати карткою",
       submitSending: "Відправка...",
       submitLabel: "Відправити",
       basketEmptyInline: "Ваш кошик порожній",
@@ -898,11 +904,14 @@ export const messages: MessagesMap = {
         "Z.B.: Sitschowyh Strilziw Str. 10, Whg. 25",
       commentLabel: "Kommentar",
       commentPlaceholder: "Ihr Kommentar",
-      paymentMethodLabel: "Zahlungsart *",
+      paymentMethodLabel: "Wählen Sie eine Zahlungsart",
       paymentMethodPlaceholder: "Zahlungsart wählen",
-      paymentOptionFull: "Vollständige Zahlung",
+      paymentOptionFull: "Plata by mono",
       paymentOptionPrepay: "Anzahlung 300 ₴",
-      paymentOptionPaypalFull: "Vollständige Zahlung über PayPal",
+      paymentOptionPaypalFull: "PayPal",
+      paymentOptionInstallments: "Kauf in Raten monobank",
+      paymentOptionInstallmentsHint: "Ohne Überzahlung und Gebühren",
+      paymentTrustBadgesAria: "Verfügbare Kartenzahlungen",
       submitSending: "Wird gesendet...",
       submitLabel: "Senden",
       basketEmptyInline: "Ihr Warenkorb ist leer",
@@ -1311,11 +1320,14 @@ export const messages: MessagesMap = {
       addressPlaceholder: "E.g.: Sichovykh Striltsiv St. 10, apt. 25",
       commentLabel: "Comment",
       commentPlaceholder: "Your comment",
-      paymentMethodLabel: "Payment method *",
+      paymentMethodLabel: "Choose a convenient payment method",
       paymentMethodPlaceholder: "Choose payment method",
-      paymentOptionFull: "Full payment",
+      paymentOptionFull: "Plata by mono",
       paymentOptionPrepay: "Prepayment 300 ₴",
-      paymentOptionPaypalFull: "Full payment via PayPal",
+      paymentOptionPaypalFull: "PayPal",
+      paymentOptionInstallments: "Purchase in parts monobank",
+      paymentOptionInstallmentsHint: "No overpayments or fees",
+      paymentTrustBadgesAria: "Available card payment methods",
       submitSending: "Sending...",
       submitLabel: "Submit",
       basketEmptyInline: "Your cart is empty",

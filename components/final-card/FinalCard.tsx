@@ -100,7 +100,9 @@ export default function FinalCard() {
   }, [items, effectiveBasketCurrency]);
 
   const [comment, setComment] = useState("");
-  const [paymentType, setPaymentType] = useState<"" | "full" | "prepay">("full");
+  const [paymentType, setPaymentType] = useState<
+    "" | "full" | "prepay" | "installments"
+  >("full");
   const [giftCertificateInput, setGiftCertificateInput] = useState("");
   const [appliedCertificateCode, setAppliedCertificateCode] = useState<string | null>(null);
   const [certificateDiscount, setCertificateDiscount] = useState(0);
@@ -138,8 +140,11 @@ export default function FinalCard() {
       if (deliveryMethod !== "international_shipping") {
         setDeliveryMethod("international_shipping");
       }
+      if (paymentType === "prepay" || paymentType === "installments") {
+        setPaymentType("full");
+      }
     }
-  }, [isUkraineShipping, deliveryMethod]);
+  }, [isUkraineShipping, deliveryMethod, paymentType]);
 
   const getCartTotal = () =>
     items.reduce((total, item) => {
@@ -190,7 +195,7 @@ export default function FinalCard() {
       setAppliedCertificateCode(data.code);
       setCertificateDiscount(Number(data.discount || 0));
       setCertificateMessage(null);
-      if (paymentType === "prepay") {
+      if (paymentType === "prepay" || paymentType === "installments") {
         setPaymentType("full");
       }
     } catch {
@@ -1328,40 +1333,155 @@ export default function FinalCard() {
                 )}
               </div>
 
-              <label
-                htmlFor="paymentType"
-                className="text-xl sm:text-2xl font-normal"
-              >
-                {messages.checkout.paymentMethodLabel}
-              </label>
-              <select
-                id="paymentType"
-                className="border p-3 sm:p-5 text-lg sm:text-xl font-normal rounded"
-                value={paymentType}
-                onChange={(e) =>
-                  setPaymentType(
-                    e.target.value as "" | "full" | "prepay"
+              <fieldset className="flex flex-col gap-3 border-0 p-0 m-0">
+                <legend className="text-xl sm:text-2xl font-normal mb-1 px-0">
+                  {messages.checkout.paymentMethodLabel}
+                </legend>
+
+                <div
+                  className="flex flex-wrap items-center gap-3 mb-1 opacity-80"
+                  aria-label={messages.checkout.paymentTrustBadgesAria}
+                >
+                  <Image
+                    src="/images/payments/google-pay.svg"
+                    alt="Google Pay"
+                    width={72}
+                    height={28}
+                    className="h-7 w-auto"
+                  />
+                  <span className="inline-flex h-7 items-center rounded bg-white px-1.5">
+                    <Image
+                      src="/images/payments/apple-pay.svg"
+                      alt="Apple Pay"
+                      width={72}
+                      height={28}
+                      className="h-5 w-auto"
+                    />
+                  </span>
+                  <Image
+                    src="/images/payments/visa.svg"
+                    alt="Visa"
+                    width={60}
+                    height={20}
+                    className="h-5 w-auto"
+                  />
+                  <Image
+                    src="/images/payments/mastercard.svg"
+                    alt="Mastercard"
+                    width={48}
+                    height={30}
+                    className="h-6 w-auto"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  {(
+                    [
+                      {
+                        value: "full" as const,
+                        label: messages.checkout.paymentOptionFull,
+                        icon: "/images/payments/plata-by-mono.svg",
+                        iconAlt: "plata by mono",
+                        iconWidth: 120,
+                        hint: null as string | null,
+                        show: true,
+                        disabled: false,
+                      },
+                      {
+                        value: "prepay" as const,
+                        label: messages.checkout.paymentOptionPrepay,
+                        icon: "/images/payments/prepay.svg",
+                        iconAlt: "prepay",
+                        iconWidth: 36,
+                        hint: null,
+                        show: isUkraineShipping && !appliedCertificateCode,
+                        disabled: false,
+                      },
+                      {
+                        value: "installments" as const,
+                        label: messages.checkout.paymentOptionInstallments,
+                        icon: "/images/payments/monobank-paw.svg",
+                        iconAlt: "monobank",
+                        iconWidth: 28,
+                        hint: messages.checkout.paymentOptionInstallmentsHint,
+                        show:
+                          isUkraineShipping &&
+                          effectiveBasketCurrency === "UAH" &&
+                          !appliedCertificateCode,
+                        disabled: false,
+                      },
+                      {
+                        value: "paypal_disabled" as const,
+                        label: `${messages.checkout.paymentOptionPaypalFull} (скоро)`,
+                        icon: "/images/payments/paypal.svg",
+                        iconAlt: "PayPal",
+                        iconWidth: 90,
+                        hint: null,
+                        show: true,
+                        disabled: true,
+                      },
+                    ] as const
                   )
-                }
-                required
-              >
-                {!isUkraineShipping && (
-                  <option value="">
-                    {messages.checkout.paymentMethodPlaceholder}
-                  </option>
-                )}
-                <option value="full">
-                  {messages.checkout.paymentOptionFull}
-                </option>
-                {isUkraineShipping && (
-                  <option value="prepay">
-                    {messages.checkout.paymentOptionPrepay}
-                  </option>
-                )}
-                <option value="paypal_disabled" disabled>
-                  {messages.checkout.paymentOptionPaypalFull} (скоро)
-                </option>
-              </select>
+                    .filter((opt) => opt.show)
+                    .map((opt) => {
+                      const checked =
+                        !opt.disabled && paymentType === opt.value;
+                      return (
+                        <label
+                          key={opt.value}
+                          className={`flex items-center gap-3 rounded-lg border px-3 py-3 sm:px-4 sm:py-3.5 cursor-pointer transition-colors ${
+                            opt.disabled
+                              ? "opacity-45 cursor-not-allowed"
+                              : checked
+                                ? isDark
+                                  ? "border-white bg-white/5"
+                                  : "border-[#072a6b] bg-[#eef7ff]"
+                                : isDark
+                                  ? "border-stone-600 hover:border-stone-400"
+                                  : "border-stone-300 hover:border-stone-500"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="paymentType"
+                            value={opt.value}
+                            checked={checked}
+                            disabled={opt.disabled}
+                            onChange={() => {
+                              if (opt.disabled) return;
+                              setPaymentType(
+                                opt.value as "full" | "prepay" | "installments"
+                              );
+                            }}
+                            className="h-4 w-4 shrink-0 accent-[#072a6b]"
+                            required={!opt.disabled && opt.value === "full"}
+                          />
+                          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <span className="text-base sm:text-lg font-normal leading-snug">
+                              {opt.label}
+                            </span>
+                            {opt.hint && (
+                              <span
+                                className={`text-sm ${
+                                  isDark ? "text-stone-400" : "text-stone-500"
+                                }`}
+                              >
+                                {opt.hint}
+                              </span>
+                            )}
+                          </span>
+                          <Image
+                            src={opt.icon}
+                            alt={opt.iconAlt}
+                            width={opt.iconWidth}
+                            height={28}
+                            className="h-7 w-auto shrink-0 object-contain"
+                          />
+                        </label>
+                      );
+                    })}
+                </div>
+              </fieldset>
 
               <button
                 className={`${

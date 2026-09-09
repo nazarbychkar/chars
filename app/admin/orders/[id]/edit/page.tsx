@@ -193,8 +193,12 @@ export default function EditOrderPage() {
                     ? "Повна оплата"
                     : formData.payment_type === "prepay"
                     ? "Передоплата 300 ₴"
+                    : formData.payment_type === "installments"
+                    ? "Покупка частинами monobank"
                     : formData.payment_type === "paypal_full"
                     ? "Повна оплата через PayPal"
+                    : formData.payment_type === "certificate"
+                    ? "Подарунковий сертифікат"
                     : "Не вказано"
                 }
                 disabled
