@@ -58,6 +58,46 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isDark]);
 
+  const isOverlayOpen =
+    isSidebarOpen || isBasketOpen || isSearchOpen || isSeasonOpen;
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const body = document.body;
+    if (!isOverlayOpen) {
+      if (body.dataset.appOverlayLock === "1") {
+        body.style.overflow = body.dataset.appOverlayPrevOverflow || "";
+        body.style.paddingRight = body.dataset.appOverlayPrevPadding || "";
+        delete body.dataset.appOverlayLock;
+        delete body.dataset.appOverlayPrevOverflow;
+        delete body.dataset.appOverlayPrevPadding;
+      }
+      return;
+    }
+
+    if (body.dataset.appOverlayLock !== "1") {
+      body.dataset.appOverlayPrevOverflow = body.style.overflow;
+      body.dataset.appOverlayPrevPadding = body.style.paddingRight;
+      body.dataset.appOverlayLock = "1";
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      body.style.overflow = "hidden";
+      if (scrollbarWidth > 0) {
+        body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+    }
+
+    return () => {
+      if (body.dataset.appOverlayLock === "1") {
+        body.style.overflow = body.dataset.appOverlayPrevOverflow || "";
+        body.style.paddingRight = body.dataset.appOverlayPrevPadding || "";
+        delete body.dataset.appOverlayLock;
+        delete body.dataset.appOverlayPrevOverflow;
+        delete body.dataset.appOverlayPrevPadding;
+      }
+    };
+  }, [isOverlayOpen]);
+
   return (
     <AppContext.Provider
       value={{

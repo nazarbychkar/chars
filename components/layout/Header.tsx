@@ -13,6 +13,7 @@ import SidebarBasket from "./SidebarBasket";
 import SidebarSearch from "./SidebarSearch";
 import SidebarMenu from "./SidebarMenu";
 import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 interface Category {
   id: number;
@@ -71,6 +72,7 @@ export default function Header() {
   const catalogRef = useRef<HTMLDivElement | null>(null);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
+  useBodyScrollLock(catalogOpen);
 
   const getCategoryLabel = (category: Category) => {
     if (locale === "en") return category.name_en || category.name;

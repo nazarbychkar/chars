@@ -13,103 +13,130 @@ type RecommendationRule = {
   priority: number;
 };
 
+function parseIds(raw: string | null): number[] {
+  if (!raw) return [];
+  return [
+    ...new Set(
+      raw
+        .split(",")
+        .map((v) => Number(v.trim()))
+        .filter((id) => Number.isInteger(id) && id > 0)
+    ),
+  ];
+}
+
+async function getCategoryRules(categoryId: number | null): Promise<RecommendationRule[]> {
+  if (!categoryId) return [];
+  const rows = await sql`
+    SELECT recommended_look_config
+    FROM categories
+    WHERE id = ${categoryId};
+  `;
+  const row = rows[0] as { recommended_look_config?: string } | undefined;
+  if (!row?.recommended_look_config) return [];
+
+  try {
+    const parsed = JSON.parse(row.recommended_look_config);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((item) => {
+        if (
+          (item.type === "category" || item.type === "subcategory") &&
+          typeof item.priority === "number"
+        ) {
+          return {
+            type: item.type as "category" | "subcategory",
+            category_id:
+              item.type === "category" && typeof item.category_id === "number"
+                ? item.category_id
+                : null,
+            subcategory_id:
+              item.type === "subcategory" &&
+              typeof item.subcategory_id === "number"
+                ? item.subcategory_id
+                : null,
+            priority: item.priority ?? 0,
+          } as RecommendationRule;
+        }
+
+        if (typeof item.target_category_id === "number") {
+          return {
+            type: "category",
+            category_id: item.target_category_id,
+            subcategory_id: null,
+            priority: typeof item.priority === "number" ? item.priority : 0,
+          } as RecommendationRule;
+        }
+
+        return null;
+      })
+      .filter(
+        (r): r is RecommendationRule =>
+          !!r &&
+          ((r.type === "category" && r.category_id != null) ||
+            (r.type === "subcategory" && r.subcategory_id != null))
+      );
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const productIdParam = searchParams.get("product_id");
-    const productId = Number(productIdParam);
+    const productIds = parseIds(
+      searchParams.get("product_ids") || searchParams.get("product_id")
+    );
 
-    if (!productIdParam || isNaN(productId)) {
+    if (productIds.length === 0) {
       return NextResponse.json(
         { error: "Missing or invalid product_id" },
         { status: 400 }
       );
     }
 
-    const products = await sqlGetProduct(productId);
-    const product = products[0];
+    const exclude = new Set(productIds);
+    const orderedExplicitIds: number[] = [];
+    const seenExplicit = new Set<number>();
+    let primaryProduct: Awaited<ReturnType<typeof sqlGetProduct>>[0] | null =
+      null;
 
-    if (!product) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+    for (const id of productIds) {
+      const products = await sqlGetProduct(id);
+      const product = products[0];
+      if (!product) continue;
+      if (!primaryProduct) primaryProduct = product;
+
+      const explicit = Array.isArray(product.recommended_product_ids)
+        ? (product.recommended_product_ids as unknown[])
+            .map((v) => Number(v))
+            .filter(
+              (recId) =>
+                Number.isInteger(recId) &&
+                recId > 0 &&
+                !exclude.has(recId) &&
+                !seenExplicit.has(recId)
+            )
+        : [];
+
+      for (const recId of explicit) {
+        seenExplicit.add(recId);
+        orderedExplicitIds.push(recId);
+      }
     }
 
-    const explicitRecommendations = Array.isArray(product.recommended_product_ids)
-      ? (product.recommended_product_ids as unknown[])
-          .map((id) => Number(id))
-          .filter((id) => Number.isInteger(id) && id > 0 && id !== productId)
-      : [];
-
-    if (explicitRecommendations.length > 0) {
-      const products = await sqlGetProductsByIdsOrdered(explicitRecommendations);
+    if (orderedExplicitIds.length > 0) {
+      const products = await sqlGetProductsByIdsOrdered(orderedExplicitIds);
       return NextResponse.json({ products: products.slice(0, 8) });
     }
 
-    const categoryId = product.category_id as number | null;
-
-    let recommendations: RecommendationRule[] = [];
-
-    if (categoryId) {
-      const rows = await sql`
-        SELECT recommended_look_config
-        FROM categories
-        WHERE id = ${categoryId};
-      `;
-      const row = rows[0] as { recommended_look_config?: string } | undefined;
-      if (row?.recommended_look_config) {
-        try {
-          const parsed = JSON.parse(row.recommended_look_config);
-          if (Array.isArray(parsed)) {
-            recommendations = parsed
-              .map((item) => {
-                // New format with type
-                if (
-                  (item.type === "category" || item.type === "subcategory") &&
-                  typeof item.priority === "number"
-                ) {
-                  return {
-                    type: item.type as "category" | "subcategory",
-                    category_id:
-                      item.type === "category" &&
-                      typeof item.category_id === "number"
-                        ? item.category_id
-                        : null,
-                    subcategory_id:
-                      item.type === "subcategory" &&
-                      typeof item.subcategory_id === "number"
-                        ? item.subcategory_id
-                        : null,
-                    priority: item.priority ?? 0,
-                  } as RecommendationRule;
-                }
-
-                // Backwards compatibility: { target_category_id, priority }
-                if (typeof item.target_category_id === "number") {
-                  return {
-                    type: "category",
-                    category_id: item.target_category_id,
-                    subcategory_id: null,
-                    priority:
-                      typeof item.priority === "number" ? item.priority : 0,
-                  } as RecommendationRule;
-                }
-
-                return null;
-              })
-              .filter(
-                (r): r is RecommendationRule =>
-                  !!r &&
-                  ((r.type === "category" && r.category_id != null) ||
-                    (r.type === "subcategory" && r.subcategory_id != null))
-              );
-          }
-        } catch {
-          // Ignore JSON parse errors, fallback below
-        }
+    if (!primaryProduct) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
-    }
+
+    const categoryId = primaryProduct.category_id as number | null;
+    const recommendations = await getCategoryRules(categoryId);
 
     type ProductWithCategories = {
       id: number;
@@ -118,7 +145,7 @@ export async function GET(req: NextRequest) {
     };
 
     const allProducts = (await sqlGetAllProducts()) as ProductWithCategories[];
-    const otherProducts = allProducts.filter((p) => p.id !== productId);
+    const otherProducts = allProducts.filter((p) => !exclude.has(p.id));
 
     let recommended = otherProducts;
 
@@ -164,19 +191,13 @@ export async function GET(req: NextRequest) {
         const bRank = Math.min(bCatRank, bSubRank);
 
         if (aRank !== bRank) return aRank - bRank;
-
-        // If same priority bucket, keep original order (created_at DESC in sqlGetAllProducts)
         return 0;
       });
     } else {
-      // No config: just randomize
       recommended = [...otherProducts].sort(() => 0.5 - Math.random());
     }
 
-    // Limit to 8 items for safety; client can further slice
-    const limited = recommended.slice(0, 8);
-
-    return NextResponse.json({ products: limited });
+    return NextResponse.json({ products: recommended.slice(0, 8) });
   } catch (error) {
     console.error(
       "[GET /api/products/recommendations] Failed to get recommendations:",
@@ -188,4 +209,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

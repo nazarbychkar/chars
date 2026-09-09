@@ -57,6 +57,7 @@ type Messages = {
     navigationContacts: string;
     privacyPolicy: string;
     termsOfService: string;
+    purchaseInParts: string;
     devCredit: string;
     designCredit: string;
   };
@@ -181,6 +182,7 @@ type Messages = {
     empty: string;
     sizeLabel: string;
     checkoutButton: string;
+    boughtWithThisTitle: string;
   };
   catalog: {
     allProductsLabel: string;
@@ -268,6 +270,19 @@ type Messages = {
     continueShopping: string;
     backToHome: string;
   };
+  purchaseInParts: {
+    title: string;
+    subtitle: string;
+    providerTitle: string;
+    providerBody: string;
+    productTitle: string;
+    productItems: string[];
+    highlightTitle: string;
+    highlightBody: string;
+    legalRate: string;
+    legalBank: string;
+    moreInfo: string;
+  };
   admin?: {
     ordersFetchError: string;
     ordersGenericError: string;
@@ -339,6 +354,7 @@ export const messages: MessagesMap = {
       navigationContacts: "Контакти",
       privacyPolicy: "Політика конфіденційності",
       termsOfService: "Договір оферти",
+      purchaseInParts: "Покупка частинами",
       devCredit: "Telebots | Розробка сайтів",
       designCredit: "Sviat | Дизайн сайту",
     },
@@ -362,7 +378,7 @@ export const messages: MessagesMap = {
           title: "Оплата | CHARS KYIV",
           contentIntro: "Оплата за готові вироби та індивідуальні замовлення",
           contentBody:
-            "Для готових виробів з наявності ми приймаємо:\n— Передплату 300 грн (після підтвердження наявності товару)\n— Повну оплату.\n\nДля індивідуальних замовлень та виробів з корегуванням параметрів (довжина, талія тощо) потрібна 100% оплата перед початком роботи.\n\nУсі деталі щодо оплати ми уточнюємо з вами особисто після оформлення замовлення.",
+            "Для готових виробів з наявності ми приймаємо:\n— Передплату 300 грн (після підтвердження наявності товару)\n— Повну оплату\n— Покупку частинами monobank (без переплат і комісій для покупця).\n\nДля індивідуальних замовлень та виробів з корегуванням параметрів (довжина, талія тощо) потрібна 100% оплата перед початком роботи.\n\nДетальні умови Покупки частинами — на сторінці «Покупка частинами» (у футері сайту).\n\nУсі деталі щодо оплати ми уточнюємо з вами особисто після оформлення замовлення.",
         },
         {
           number: "02",
@@ -528,6 +544,7 @@ export const messages: MessagesMap = {
       empty: "Ваш кошик порожній",
       sizeLabel: "Розмір",
       checkoutButton: "Оформити замовлення",
+      boughtWithThisTitle: "З цим товаром часто беруть",
     },
     catalog: {
       allProductsLabel: "Усі товари",
@@ -655,6 +672,31 @@ export const messages: MessagesMap = {
       continueShopping: "Продовжити покупки",
       backToHome: "На головну",
     },
+    purchaseInParts: {
+      title: "Покупка частинами monobank | Universal Bank",
+      subtitle: "Оплата товарів CHARS частинами — без переплат і комісій для покупця.",
+      providerTitle: "Надавач послуг",
+      providerBody:
+        "АТ «УНІВЕРСАЛ БАНК» ліцензія НБУ No92 від 20.01.1994, номер у держреєстрі банків No 226.",
+      productTitle: "Характеристики продукту",
+      productItems: [
+        "Мінімальна сума розстрочки: 2 грн",
+        "Максимальна сума розстрочки: 400 000 грн",
+        "Реальна річна процентна ставка: 0,000001%",
+        "Доступний строк, платежів: 3 - 25",
+        "Порядок погашення: щомісячні платежі рівними частинами",
+        "Перший платіж у момент оформлення покупки",
+        "Інформація про істотні характеристики продукту та попередження розміщені на сайті продукту chast.monobank.ua",
+      ],
+      highlightTitle: "Без переплат і комісій",
+      highlightBody:
+        "Покупка частинами monobank — зручний спосіб оплатити замовлення CHARS щомісячними платежами без переплат і комісій для покупця.",
+      legalRate:
+        "Реальна річна процентна ставка — 0,000001%, макс. строк кредитування до 400 000 грн — 24 місяці. Перший внесок — аванс у розмірі щомісячного платежу.",
+      legalBank:
+        "АТ «УНІВЕРСАЛ БАНК», Ліцензія НБУ №92 від 20.01.1994, у держреєстрі банків No226, деталі на monobank.ua",
+      moreInfo: "Більше деталей:",
+    },
     admin: {
       ordersFetchError: "Не вдалося завантажити замовлення",
       ordersGenericError: "Щось пішло не так під час завантаження замовлень",
@@ -720,6 +762,7 @@ export const messages: MessagesMap = {
       navigationContacts: "Kontakt",
       privacyPolicy: "Datenschutzerklärung",
       termsOfService: "AGB / Angebot",
+      purchaseInParts: "Kauf in Raten",
       devCredit: "Telebots | Webentwicklung",
       designCredit: "Sviat | Webdesign",
     },
@@ -743,7 +786,7 @@ export const messages: MessagesMap = {
           title: "Zahlung | CHARS KYIV",
           contentIntro: "Zahlung für verfügbare Artikel und Maßanfertigungen",
           contentBody:
-            "Für verfügbare Artikel aus unseren Kollektionen sind zwei Zahlungsarten möglich:\n— Anzahlung von 300 UAH (nach Bestätigung der Verfügbarkeit)\n— Vollständige Bezahlung.\n\nFür Maßanfertigungen und Artikel mit angepassten Parametern (z. B. Länge, Taille) ist eine 100%ige Vorauszahlung vor Beginn der Arbeit erforderlich.\n\nAlle Zahlungsdetails klären wir persönlich mit Ihnen nach Aufgabe der Bestellung.",
+            "Für verfügbare Artikel aus unseren Kollektionen sind folgende Zahlungsarten möglich:\n— Anzahlung von 300 UAH (nach Bestätigung der Verfügbarkeit)\n— Vollständige Bezahlung\n— Kauf in Raten monobank (ohne Überzahlung und Gebühren für den Käufer).\n\nFür Maßanfertigungen und Artikel mit angepassten Parametern (z. B. Länge, Taille) ist eine 100%ige Vorauszahlung vor Beginn der Arbeit erforderlich.\n\nDetails zum Kauf in Raten — auf der Seite «Kauf in Raten» (im Footer der Website).\n\nAlle Zahlungsdetails klären wir persönlich mit Ihnen nach Aufgabe der Bestellung.",
         },
         {
           number: "02",
@@ -916,6 +959,7 @@ export const messages: MessagesMap = {
       empty: "Ihr Warenkorb ist leer",
       sizeLabel: "Größe",
       checkoutButton: "Zur Kasse",
+      boughtWithThisTitle: "Dazu wird oft genommen",
     },
     catalog: {
       allProductsLabel: "Alle Produkte",
@@ -1043,6 +1087,32 @@ export const messages: MessagesMap = {
       continueShopping: "Weiter einkaufen",
       backToHome: "Zur Startseite",
     },
+    purchaseInParts: {
+      title: "Kauf in Raten monobank | Universal Bank",
+      subtitle:
+        "CHARS-Bestellungen in Raten bezahlen — ohne Überzahlung und Gebühren für den Käufer.",
+      providerTitle: "Dienstleister",
+      providerBody:
+        "JSC «UNIVERSAL BANK», NBU-Lizenz Nr. 92 vom 20.01.1994, Eintrag im staatlichen Bankenregister Nr. 226.",
+      productTitle: "Produkteigenschaften",
+      productItems: [
+        "Mindestbetrag der Ratenzahlung: 2 UAH",
+        "Höchstbetrag der Ratenzahlung: 400 000 UAH",
+        "Effektiver Jahreszins: 0,000001%",
+        "Verfügbare Laufzeit, Raten: 3 - 25",
+        "Rückzahlung: monatliche Raten in gleichen Teilen",
+        "Erste Rate zum Zeitpunkt des Kaufs",
+        "Wesentliche Produktmerkmale und Hinweise: chast.monobank.ua",
+      ],
+      highlightTitle: "Ohne Überzahlung und Gebühren",
+      highlightBody:
+        "Kauf in Raten monobank — eine bequeme Möglichkeit, CHARS-Bestellungen in monatlichen Raten ohne Überzahlung und Gebühren für den Käufer zu bezahlen.",
+      legalRate:
+        "Effektiver Jahreszins — 0,000001%, max. Kreditlaufzeit bis 400 000 UAH — 24 Monate. Erste Zahlung — Anzahlung in Höhe der Monatsrate.",
+      legalBank:
+        "JSC «UNIVERSAL BANK», NBU-Lizenz Nr. 92 vom 20.01.1994, staatliches Bankenregister Nr. 226, Details auf monobank.ua",
+      moreInfo: "Weitere Informationen:",
+    },
     admin: {
       ordersFetchError: "Bestellungen konnten nicht geladen werden",
       ordersGenericError: "Beim Laden der Bestellungen ist ein Fehler aufgetreten",
@@ -1107,6 +1177,7 @@ export const messages: MessagesMap = {
       navigationContacts: "Contacts",
       privacyPolicy: "Privacy policy",
       termsOfService: "Public offer",
+      purchaseInParts: "Purchase in parts",
       devCredit: "Telebots | Website development",
       designCredit: "Sviat | Website design",
     },
@@ -1130,7 +1201,7 @@ export const messages: MessagesMap = {
           title: "Payment | CHARS KYIV",
           contentIntro: "Payment for in‑stock items and custom orders",
           contentBody:
-            "For ready‑to‑wear items in stock we offer two payment options:\n— Prepayment of 300 UAH (after confirming availability)\n— Full payment.\n\nFor custom pieces and items with adjusted measurements (length, waist, etc.) we require 100% prepayment before we start.\n\nAll payment details are confirmed with you personally after you place the order.",
+            "For ready‑to‑wear items in stock we offer the following payment options:\n— Prepayment of 300 UAH (after confirming availability)\n— Full payment\n— Purchase in parts with monobank (no overpayments or fees for the buyer).\n\nFor custom pieces and items with adjusted measurements (length, waist, etc.) we require 100% prepayment before we start.\n\nPurchase in parts details — on the “Purchase in parts” page (in the site footer).\n\nAll payment details are confirmed with you personally after you place the order.",
         },
         {
           number: "02",
@@ -1301,6 +1372,7 @@ export const messages: MessagesMap = {
       empty: "Your cart is empty",
       sizeLabel: "Size",
       checkoutButton: "Checkout",
+      boughtWithThisTitle: "Frequently bought with this",
     },
     catalog: {
       allProductsLabel: "All products",
@@ -1427,6 +1499,32 @@ export const messages: MessagesMap = {
       paymentSuccessOrderLabel: "Order number",
       continueShopping: "Continue shopping",
       backToHome: "Back to home",
+    },
+    purchaseInParts: {
+      title: "Purchase in parts monobank | Universal Bank",
+      subtitle:
+        "Pay for CHARS orders in installments — with no overpayments or fees for the buyer.",
+      providerTitle: "Service provider",
+      providerBody:
+        "JSC «UNIVERSAL BANK», NBU license No. 92 dated 20.01.1994, state bank register No. 226.",
+      productTitle: "Product terms",
+      productItems: [
+        "Minimum installment amount: 2 UAH",
+        "Maximum installment amount: 400,000 UAH",
+        "Real annual interest rate: 0.000001%",
+        "Available term, payments: 3 - 25",
+        "Repayment: equal monthly payments",
+        "First payment at the moment of purchase",
+        "Essential product characteristics and warnings: chast.monobank.ua",
+      ],
+      highlightTitle: "No overpayments or fees",
+      highlightBody:
+        "Purchase in parts with monobank — a convenient way to pay for CHARS orders in monthly installments with no overpayments or fees for the buyer.",
+      legalRate:
+        "Real annual interest rate — 0.000001%, max. credit term for amounts up to 400,000 UAH — 24 months. First payment — advance equal to the monthly installment.",
+      legalBank:
+        "JSC «UNIVERSAL BANK», NBU license No. 92 dated 20.01.1994, state bank register No. 226, details at monobank.ua",
+      moreInfo: "More details:",
     },
     admin: {
       ordersFetchError: "Failed to fetch orders",

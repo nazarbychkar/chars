@@ -4,6 +4,7 @@ import { useBasket } from "@/lib/BasketProvider";
 import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import BasketCrossSell from "@/components/basket/BasketCrossSell";
 
 interface SidebarBasketProps {
   isOpen: boolean;
@@ -140,7 +141,7 @@ export default function SidebarBasket({
             {items.length > 0 && (
               <Link
                 href={withLocalePath("/final")}
-                className={`text-center py-3 rounded-md mt-4 ${
+                className={`text-center py-3 rounded-md mt-2 ${
                   isDark ? "bg-white text-black" : "bg-black text-white"
                 }`}
                 onClick={(e) => {
@@ -153,6 +154,16 @@ export default function SidebarBasket({
               >
                 {messages.basket.checkoutButton}
               </Link>
+            )}
+
+            {items.length > 0 && (
+              <BasketCrossSell
+                productIds={items.map((item) => item.id)}
+                isDark={isDark}
+                compact
+                onNavigate={() => setIsOpen(false)}
+                limit={3}
+              />
             )}
           </div>
         </nav>

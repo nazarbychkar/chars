@@ -14,6 +14,7 @@ import "swiper/css/scrollbar";
 import FormField, { validators } from "@/components/shared/FormField";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { trackFbq, trackFbqPurchase } from "@/lib/fbq";
+import BasketCrossSell from "@/components/basket/BasketCrossSell";
 
 const COUNTRY_OPTIONS = [
   { code: "UA", uk: "Україна", en: "Ukraine", de: "Ukraine" },
@@ -1592,6 +1593,16 @@ export default function FinalCard() {
               </div>
             </div>
           </div>
+
+          {items.length > 0 && (
+            <div className="mt-10 mb-8 w-full max-w-5xl mx-auto">
+              <BasketCrossSell
+                productIds={items.map((item) => item.id)}
+                isDark={isDark}
+                limit={4}
+              />
+            </div>
+          )}
         </>
       )}
     </section>

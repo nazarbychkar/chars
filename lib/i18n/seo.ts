@@ -70,6 +70,8 @@ export const seoCopy: Record<
     privacyDescription: string;
     termsTitle: string;
     termsDescription: string;
+    purchaseInPartsTitle: string;
+    purchaseInPartsDescription: string;
     checkoutTitle: string;
     checkoutDescription: string;
     productNotFound: string;
@@ -108,6 +110,9 @@ export const seoCopy: Record<
     termsTitle: "Договір публічної оферти | CHARS",
     termsDescription:
       "Договір публічної оферти CHARS. Умови використання сайту та покупки товарів.",
+    purchaseInPartsTitle: "Покупка частинами monobank | CHARS",
+    purchaseInPartsDescription:
+      "Покупка частинами monobank | Universal Bank на charsua.com. Без переплат і комісій для покупця. Умови та характеристики продукту.",
     checkoutTitle: "Оформлення замовлення | CHARS",
     checkoutDescription: "Оформлення замовлення в CHARS. Доставка по всій Україні.",
     productNotFound: "Товар не знайдено | CHARS",
@@ -145,6 +150,9 @@ export const seoCopy: Record<
     termsTitle: "Öffentliches Angebot | CHARS",
     termsDescription:
       "Öffentliches Angebot von CHARS. Nutzungsbedingungen und Kaufregeln.",
+    purchaseInPartsTitle: "Kauf in Raten monobank | CHARS",
+    purchaseInPartsDescription:
+      "Kauf in Raten monobank | Universal Bank bei charsua.com. Produktbedingungen und rechtliche Informationen.",
     checkoutTitle: "Bestellung | CHARS",
     checkoutDescription: "Bestellung bei CHARS abschließen.",
     productNotFound: "Artikel nicht gefunden | CHARS",
@@ -181,6 +189,9 @@ export const seoCopy: Record<
       "CHARS privacy policy. How we collect, use and protect your personal data.",
     termsTitle: "Public Offer | CHARS",
     termsDescription: "CHARS public offer. Terms of use and purchase.",
+    purchaseInPartsTitle: "Purchase in parts monobank | CHARS",
+    purchaseInPartsDescription:
+      "Purchase in parts monobank | Universal Bank at charsua.com. Product terms and legal information.",
     checkoutTitle: "Checkout | CHARS",
     checkoutDescription: "Complete your CHARS order.",
     productNotFound: "Product not found | CHARS",

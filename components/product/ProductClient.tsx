@@ -14,6 +14,7 @@ import "swiper/css/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { buildProductSlug } from "@/lib/slug";
 import { trackFbq } from "@/lib/fbq";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 // Add custom styles for smooth transitions
 const swiperStyles = `
@@ -119,6 +120,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   >("info");
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  useBodyScrollLock(showSizeGuide);
 
   const displayName =
     locale === "en"

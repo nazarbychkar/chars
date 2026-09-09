@@ -11,6 +11,7 @@ import {
   formatCertificateAmount,
   type CertificateTier,
 } from "@/lib/certificates";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 export default function CertificateClient() {
   const { isDark } = useAppContext();
@@ -24,6 +25,7 @@ export default function CertificateClient() {
     CERTIFICATE_TIERS[1]
   );
   const [showForm, setShowForm] = useState(false);
+  useBodyScrollLock(showForm);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");

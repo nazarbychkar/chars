@@ -1,5 +1,6 @@
 "use client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 interface SidebarFilterProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function SidebarFilter({
   colors,
 }: SidebarFilterProps) {
   const { messages } = useI18n();
+  useBodyScrollLock(isOpen);
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? null : index);
   };

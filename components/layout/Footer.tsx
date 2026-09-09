@@ -359,6 +359,13 @@ export default function Footer() {
           >
             {messages.footer.termsOfService}
           </Link>
+          <span className="text-sm md:text-lg hidden sm:inline opacity-30">|</span>
+          <Link
+            href={`/${locale}/purchase-in-parts`}
+            className="text-sm md:text-lg hover:opacity-100 opacity-60 transition-opacity duration-300 text-center"
+          >
+            {messages.footer.purchaseInParts}
+          </Link>
         </div>
       </div>
 
