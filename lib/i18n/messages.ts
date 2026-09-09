@@ -142,6 +142,8 @@ type Messages = {
     paymentOptionPaypalFull: string;
     paymentOptionInstallments: string;
     paymentOptionInstallmentsHint: string;
+    installmentsPartsLabel: string;
+    installmentsPartsOption: (count: number, monthly: string) => string;
     paymentTrustBadgesAria: string;
     submitSending: string;
     submitLabel: string;
@@ -162,6 +164,8 @@ type Messages = {
     paymentStatusTitle: string;
     paymentStatusDescription: string;
     paymentStatusInstallmentsDescription: string;
+    paymentFailedInstallments: string;
+    paymentPendingInstallments: string;
     errorRequiredFields: string;
     errorFullName: string;
     errorCartEmpty: string;
@@ -495,6 +499,9 @@ export const messages: MessagesMap = {
       paymentOptionPaypalFull: "PayPal",
       paymentOptionInstallments: "Покупка частинами monobank",
       paymentOptionInstallmentsHint: "Без переплат і комісій",
+      installmentsPartsLabel: "Кількість платежів",
+      installmentsPartsOption: (count, monthly) =>
+        `${count} платежів · ~${monthly} ₴/міс`,
       paymentTrustBadgesAria: "Доступні способи оплати карткою",
       submitSending: "Відправка...",
       submitLabel: "Відправити",
@@ -540,6 +547,10 @@ export const messages: MessagesMap = {
       paymentStatusDescription: "Будь ласка, зачекайте",
       paymentStatusInstallmentsDescription:
         "Підтвердіть оплату в застосунку Monobank. Сторінка оновиться автоматично після підтвердження.",
+      paymentFailedInstallments:
+        "Оплату частинами не вдалося підтвердити. Перевірте застосунок Monobank або оберіть інший спосіб оплати.",
+      paymentPendingInstallments:
+        "Очікуємо підтвердження в Monobank. Відкрийте застосунок і підтвердіть покупку частинами — сторінка оновиться автоматично.",
       giftCertificateLabel: "Подарунковий сертифікат",
       giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
       giftCertificateApply: "Застосувати",
@@ -917,6 +928,9 @@ export const messages: MessagesMap = {
       paymentOptionPaypalFull: "PayPal",
       paymentOptionInstallments: "Kauf in Raten monobank",
       paymentOptionInstallmentsHint: "Ohne Überzahlung und Gebühren",
+      installmentsPartsLabel: "Anzahl der Raten",
+      installmentsPartsOption: (count, monthly) =>
+        `${count} Raten · ~${monthly} ₴/Monat`,
       paymentTrustBadgesAria: "Verfügbare Kartenzahlungen",
       submitSending: "Wird gesendet...",
       submitLabel: "Senden",
@@ -962,6 +976,10 @@ export const messages: MessagesMap = {
       paymentStatusDescription: "Bitte warten",
       paymentStatusInstallmentsDescription:
         "Bestätigen Sie die Zahlung in der Monobank-App. Diese Seite aktualisiert sich automatisch nach der Bestätigung.",
+      paymentFailedInstallments:
+        "Ratenzahlung konnte nicht bestätigt werden. Bitte prüfen Sie die Monobank-App oder wählen Sie eine andere Zahlungsmethode.",
+      paymentPendingInstallments:
+        "Wir warten auf die Bestätigung in Monobank. Öffnen Sie die App und bestätigen Sie die Ratenzahlung — diese Seite aktualisiert sich automatisch.",
       giftCertificateLabel: "Geschenkgutschein",
       giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
       giftCertificateApply: "Anwenden",
@@ -1337,6 +1355,9 @@ export const messages: MessagesMap = {
       paymentOptionPaypalFull: "PayPal",
       paymentOptionInstallments: "Purchase in parts monobank",
       paymentOptionInstallmentsHint: "No overpayments or fees",
+      installmentsPartsLabel: "Number of payments",
+      installmentsPartsOption: (count, monthly) =>
+        `${count} payments · ~${monthly} ₴/mo`,
       paymentTrustBadgesAria: "Available card payment methods",
       submitSending: "Sending...",
       submitLabel: "Submit",
@@ -1382,6 +1403,10 @@ export const messages: MessagesMap = {
       paymentStatusDescription: "Please wait",
       paymentStatusInstallmentsDescription:
         "Confirm the payment in the Monobank app. This page will update automatically after confirmation.",
+      paymentFailedInstallments:
+        "Installment payment could not be confirmed. Check the Monobank app or choose another payment method.",
+      paymentPendingInstallments:
+        "Waiting for confirmation in Monobank. Open the app and confirm purchase in parts — this page will update automatically.",
       giftCertificateLabel: "Gift certificate",
       giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
       giftCertificateApply: "Apply",

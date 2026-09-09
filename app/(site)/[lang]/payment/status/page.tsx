@@ -70,6 +70,14 @@ function PaymentStatusContent() {
         return;
       }
 
+      if (data.payment_status === "canceled") {
+        localStorage.removeItem("currentInvoiceId");
+        router.replace(
+          `${prefix}/final?payment=failed&invoiceId=${encodeURIComponent(activeInvoiceId)}`
+        );
+        return;
+      }
+
       if (isCertificate) {
         router.replace(withLocalePath("/certificate"));
         return;
@@ -184,7 +192,7 @@ function PaymentStatusContent() {
     }, 400);
 
     let pollCount = 0;
-    const maxPolls = 30;
+    const maxPolls = isInstallmentsReturn ? 450 : 30;
     const pollInterval = setInterval(async () => {
       pollCount++;
       if (pollCount >= maxPolls) {
@@ -199,10 +207,13 @@ function PaymentStatusContent() {
         } catch {
           /* fall through */
         }
+        const prefix = localePrefixFromData(null, isCertificateReturn);
         router.replace(
           isCertificateReturn
             ? withLocalePath("/certificate")
-            : withLocalePath("/final")
+            : isInstallmentsReturn
+              ? `${prefix}/final?payment=pending&invoiceId=${encodeURIComponent(invoiceId)}`
+              : withLocalePath("/final")
         );
         return;
       }
@@ -219,6 +230,7 @@ function PaymentStatusContent() {
     router,
     redirectForOrder,
     isCertificateReturn,
+    isInstallmentsReturn,
     withLocalePath,
   ]);
 

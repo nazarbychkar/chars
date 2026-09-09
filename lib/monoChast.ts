@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { getAvailableInstallmentParts } from "@/lib/chastConfig";
 
 export type ChastOrderState = "IN_PROCESS" | "SUCCESS" | "FAIL";
 export type ChastOrderSubState =
@@ -31,6 +32,7 @@ export type ChastCreateOrderRequest = {
   totalSum: number;
   products: ChastProduct[];
   resultCallback: string;
+  partsCount: number;
 };
 
 export type ChastCreateOrderResult = {
@@ -57,15 +59,6 @@ export function getChastApiUrl(): string {
     process.env.MONO_CHAST_API_URL?.replace(/\/$/, "") ||
     "https://u2.monobank.com.ua"
   );
-}
-
-export function getChastPartsCounts(): number[] {
-  const raw = process.env.MONO_CHAST_PARTS || "3,6,10";
-  const parts = raw
-    .split(",")
-    .map((value) => Number(value.trim()))
-    .filter((value) => Number.isFinite(value) && value >= 1);
-  return parts.length > 0 ? parts : [3, 6, 10];
 }
 
 export function isChastConfigured(): boolean {
@@ -175,6 +168,12 @@ export async function createChastOrder(
   }
 
   const clientPhone = normalizePhoneForChast(request.clientPhone);
+  const partsCount = Math.round(request.partsCount);
+  const allowedParts = getAvailableInstallmentParts();
+  if (!allowedParts.includes(partsCount)) {
+    throw new Error("CHAST_INVALID_PARTS");
+  }
+
   const today = new Date().toISOString().slice(0, 10);
   const products = request.products.map((product) => ({
     name: product.name.slice(0, 500),
@@ -194,7 +193,7 @@ export async function createChastOrder(
     available_programs: [
       {
         type: "payment_installments",
-        available_parts_count: getChastPartsCounts(),
+        available_parts_count: [partsCount],
       },
     ],
     products,
@@ -334,6 +333,16 @@ export function buildChastFriendlyError(
       return "Please enter a valid Ukrainian phone number in +380XXXXXXXXX format.";
     }
     return "Вкажіть коректний український номер телефону у форматі +380XXXXXXXXX.";
+  }
+
+  if (message === "CHAST_INVALID_PARTS") {
+    if (lang === "de") {
+      return "Bitte wählen Sie eine gültige Anzahl von Raten.";
+    }
+    if (lang === "en") {
+      return "Please select a valid number of installments.";
+    }
+    return "Оберіть коректну кількість платежів.";
   }
 
   if (message === "CHAST_MIN_AMOUNT") {

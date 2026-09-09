@@ -15,6 +15,9 @@ import FormField, { validators } from "@/components/shared/FormField";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { trackFbq, trackFbqPurchase } from "@/lib/fbq";
 import BasketCrossSell from "@/components/basket/BasketCrossSell";
+import { getAvailableInstallmentParts } from "@/lib/chastConfig";
+
+const INSTALLMENT_PARTS_OPTIONS = getAvailableInstallmentParts();
 
 const COUNTRY_OPTIONS = [
   { code: "UA", uk: "Україна", en: "Ukraine", de: "Ukraine" },
@@ -103,6 +106,9 @@ export default function FinalCard() {
   const [paymentType, setPaymentType] = useState<
     "" | "full" | "prepay" | "installments"
   >("full");
+  const [installmentPartsCount, setInstallmentPartsCount] = useState<number>(
+    INSTALLMENT_PARTS_OPTIONS[0] ?? 3
+  );
   const [giftCertificateInput, setGiftCertificateInput] = useState("");
   const [appliedCertificateCode, setAppliedCertificateCode] = useState<string | null>(null);
   const [certificateDiscount, setCertificateDiscount] = useState(0);
@@ -283,6 +289,15 @@ export default function FinalCard() {
 
     const fullAmount = getCartTotal();
 
+    if (
+      paymentType === "installments" &&
+      !INSTALLMENT_PARTS_OPTIONS.includes(installmentPartsCount)
+    ) {
+      setError(messages.checkout.errorGeneric);
+      setLoading(false);
+      return;
+    }
+
     try {
       const resolveCountryLabel = (code: string): string => {
         const found = COUNTRY_OPTIONS.find((c) => c.code === code);
@@ -316,6 +331,8 @@ export default function FinalCard() {
         locale,
         items: apiItems,
         gift_certificate_code: appliedCertificateCode,
+        installment_parts_count:
+          paymentType === "installments" ? installmentPartsCount : undefined,
       };
 
       // Надсилаємо дані замовлення
@@ -399,12 +416,90 @@ export default function FinalCard() {
       typeof window !== "undefined" &&
       localStorage.getItem("paymentSuccess") === "true";
     const paymentSuccess = paymentSuccessFromQuery || paymentSuccessFromStorage;
+    const paymentFailed = searchParams.get("payment") === "failed";
+    const paymentPending = searchParams.get("payment") === "pending";
+    const pendingInvoiceId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("currentInvoiceId")
+        : null;
 
-    if (items.length === 0 && storedOrder && !paymentSuccess) {
+    if (
+      items.length === 0 &&
+      storedOrder &&
+      !paymentSuccess &&
+      !paymentFailed &&
+      !paymentPending &&
+      !pendingInvoiceId
+    ) {
       localStorage.removeItem("submittedOrder");
       setSubmittedOrder(null);
     }
-  }, [items.length, searchParams]);
+
+    if (paymentFailed) {
+      setError(messages.checkout.paymentFailedInstallments);
+      localStorage.removeItem("currentInvoiceId");
+    }
+
+    if (paymentPending) {
+      setSuccess(messages.checkout.paymentPendingInstallments);
+    }
+  }, [items.length, searchParams, messages.checkout.paymentFailedInstallments, messages.checkout.paymentPendingInstallments]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (searchParams.get("payment") === "success") return;
+    if (localStorage.getItem("paymentSuccess") === "true") return;
+
+    const invoiceId =
+      searchParams.get("invoiceId") || localStorage.getItem("currentInvoiceId");
+    if (!invoiceId) return;
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 200;
+
+    const pollPaymentStatus = async () => {
+      if (cancelled || attempts >= maxAttempts) return;
+      attempts += 1;
+
+      try {
+        const response = await fetch(`/api/orders/status/${invoiceId}`);
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        if (response.ok && data.payment_status === "paid") {
+          const url = new URL(window.location.href);
+          url.pathname = withLocalePath("/final");
+          url.search = `?payment=success&invoiceId=${encodeURIComponent(invoiceId)}`;
+          window.location.replace(url.toString());
+          return;
+        }
+
+        if (response.ok && data.payment_status === "canceled") {
+          setError(messages.checkout.paymentFailedInstallments);
+          localStorage.removeItem("currentInvoiceId");
+          return;
+        }
+      } catch (pollError) {
+        console.error("[FinalCard] Installments status poll failed:", pollError);
+      }
+
+      if (!cancelled && attempts < maxAttempts) {
+        window.setTimeout(pollPaymentStatus, 3000);
+      }
+    };
+
+    pollPaymentStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    searchParams,
+    withLocalePath,
+    messages.checkout.paymentFailedInstallments,
+  ]);
 
   // Purchase + UI після оплати: спочатку fbq Purchase, потім replaceState (інакше зміна searchParams
   // обриває fetch через cleanup попереднього ефекту — подія не відправлялась).
@@ -1480,6 +1575,58 @@ export default function FinalCard() {
                     })}
                 </div>
               </fieldset>
+
+              {paymentType === "installments" && (
+                <div
+                  className={`mt-4 rounded-lg border px-3 py-3 sm:px-4 sm:py-4 ${
+                    isDark
+                      ? "border-stone-600 bg-white/5"
+                      : "border-stone-300 bg-stone-50"
+                  }`}
+                >
+                  <p className="mb-3 text-sm font-medium sm:text-base">
+                    {messages.checkout.installmentsPartsLabel}
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {INSTALLMENT_PARTS_OPTIONS.map((parts) => {
+                      const monthly = (
+                        Math.max(0, getCartTotal() - certificateDiscount) / parts
+                      ).toFixed(2);
+                      const checked = installmentPartsCount === parts;
+
+                      return (
+                        <label
+                          key={parts}
+                          className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+                            checked
+                              ? isDark
+                                ? "border-white bg-white/10"
+                                : "border-[#072a6b] bg-[#eef7ff]"
+                              : isDark
+                                ? "border-stone-600 hover:border-stone-400"
+                                : "border-stone-300 hover:border-stone-500"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="installmentPartsCount"
+                            value={parts}
+                            checked={checked}
+                            onChange={() => setInstallmentPartsCount(parts)}
+                            className="h-4 w-4 shrink-0 accent-[#072a6b]"
+                          />
+                          <span className="text-sm sm:text-base">
+                            {messages.checkout.installmentsPartsOption(
+                              parts,
+                              monthly
+                            )}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <button
                 className={`${

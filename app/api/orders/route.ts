@@ -11,6 +11,7 @@ import {
   isChastConfigured,
 } from "@/lib/monoChast";
 import { getPublicUrl } from "@/lib/mono";
+import { isValidInstallmentPartsCount } from "@/lib/chastConfig";
 
 type IncomingOrderItem = {
   product_id?: number | string;
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
       currency,
       locale,
       gift_certificate_code,
+      installment_parts_count,
     } = body;
 
     requestLocale = typeof locale === "string" ? locale : null;
@@ -526,6 +528,16 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const partsCount = Number(installment_parts_count);
+      if (!Number.isFinite(partsCount) || !isValidInstallmentPartsCount(partsCount)) {
+        return NextResponse.json(
+          {
+            error: buildChastFriendlyError(new Error("CHAST_INVALID_PARTS"), requestLocale),
+          },
+          { status: 400 }
+        );
+      }
+
       const chastPublicUrl = getPublicUrl().replace(/\/$/, "");
       const chastProducts = normalizedItems.map((item) => ({
         name: item.color
@@ -545,6 +557,7 @@ export async function POST(req: NextRequest) {
           totalSum: payableBeforePrepay,
           products: chastProducts,
           resultCallback: `${chastPublicUrl}/api/mono-chast-callback`,
+          partsCount,
         });
         chastOrderId = chastResult.orderId;
       } catch (chastError) {
