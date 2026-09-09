@@ -49,4 +49,12 @@ ADMIN_PASS="?"
 BOT_TOKEN="?"
 CHAT_ID="?"
 NEXT_PUBLIC_MONO_TOKEN="?"
+MONO_CHAST_STORE_ID="?"
+MONO_CHAST_SECRET="?"
+# Sandbox: https://u2-demo-ext.mono.st4g3.com
+# Stage: https://u2-ext.mono.st4g3.com
+# Production default: https://u2.monobank.com.ua
+MONO_CHAST_API_URL="?"
+# Optional, default: 3,6,10
+MONO_CHAST_PARTS="3,6,10"
 NEXT_PUBLIC_NOVA_POSHTA_API_KEY="?"

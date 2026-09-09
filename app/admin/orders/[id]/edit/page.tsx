@@ -1,12 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ComponentCard from "@/components/admin/ComponentCard";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import Label from "@/components/admin/form/Label";
 import Input from "@/components/admin/form/input/InputField";
 import Select from "@/components/admin/form/Select";
+
+type ChastStatus = {
+  applicable: boolean;
+  invoiceId?: string;
+  state?: string;
+  orderSubState?: string;
+  message?: string | null;
+  canConfirm: boolean;
+  isConfirmed: boolean;
+};
+
+function formatChastSubState(subState?: string): string {
+  const labels: Record<string, string> = {
+    WAITING_FOR_CLIENT: "Очікує підтвердження клієнтом у Monobank",
+    WAITING_FOR_STORE_CONFIRM: "Клієнт підтвердив — потрібно підтвердити відправку",
+    ACTIVE: "Відправку підтверджено, ПЧ активна",
+    DONE: "ПЧ повністю погашена",
+    RETURNED: "Товар повернено",
+    REJECTED_BY_CLIENT: "Клієнт відхилив оплату частинами",
+    CLIENT_NOT_FOUND: "Клієнта не знайдено в Monobank",
+    EXCEEDED_SUM_LIMIT: "Перевищено ліміт клієнта",
+    EXISTS_OTHER_OPEN_ORDER: "У клієнта є інша незавершена заявка",
+    NOT_ENOUGH_MONEY_FOR_INIT_DEBIT: "Недостатньо коштів для першого платежу",
+    CLIENT_PUSH_TIMEOUT: "Клієнт не відповів у застосунку",
+    FAIL: "Помилка обробки заявки",
+  };
+
+  if (!subState) return "Невідомий статус";
+  return labels[subState] ?? subState;
+}
 
 export default function EditOrderPage() {
   const params = useParams();
@@ -28,10 +58,40 @@ export default function EditOrderPage() {
     post_office: "",
     status: "",
     payment_type: "",
+    payment_status: "",
     currency: "UAH",
     locale: "",
     items: [],
   });
+  const [chastStatus, setChastStatus] = useState<ChastStatus | null>(null);
+  const [chastLoading, setChastLoading] = useState(false);
+  const [chastConfirming, setChastConfirming] = useState(false);
+  const [chastError, setChastError] = useState<string | null>(null);
+  const [chastSuccess, setChastSuccess] = useState<string | null>(null);
+
+  const loadChastStatus = useCallback(async () => {
+    if (!orderId) return;
+
+    setChastLoading(true);
+    setChastError(null);
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}/chast`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setChastError(data.error || "Не вдалося завантажити статус Monobank.");
+        return;
+      }
+
+      setChastStatus(data);
+    } catch (err) {
+      console.error("Failed to fetch Chast status", err);
+      setChastError("Не вдалося завантажити статус Monobank.");
+    } finally {
+      setChastLoading(false);
+    }
+  }, [orderId]);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -48,17 +108,52 @@ export default function EditOrderPage() {
           post_office: data.post_office || "",
           status: data.status || "",
           payment_type: data.payment_type || "",
+          payment_status: data.payment_status || "",
           currency: data.currency === "EUR" ? "EUR" : "UAH",
           locale: data.locale || "",
           items: data.items || [],
         });
+
+        if (data.payment_type === "installments") {
+          await loadChastStatus();
+        } else {
+          setChastStatus(null);
+        }
       } catch (err) {
         console.error("Failed to fetch order", err);
       }
     }
 
     if (orderId) fetchOrder();
-  }, [orderId]);
+  }, [orderId, loadChastStatus]);
+
+  const handleConfirmChast = async () => {
+    if (!orderId) return;
+
+    setChastConfirming(true);
+    setChastError(null);
+    setChastSuccess(null);
+
+    try {
+      const res = await fetch(`/api/orders/${orderId}/chast`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setChastError(data.error || "Не вдалося підтвердити відправку в Monobank.");
+        return;
+      }
+
+      setChastStatus(data.info);
+      setChastSuccess("Відправку підтверджено в Monobank. Покупка частинами активована.");
+    } catch (err) {
+      console.error("Failed to confirm Chast shipment", err);
+      setChastError("Не вдалося підтвердити відправку в Monobank.");
+    } finally {
+      setChastConfirming(false);
+    }
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -219,6 +314,96 @@ export default function EditOrderPage() {
           </div>
         </ComponentCard>
       </div>
+
+      {formData.payment_type === "installments" && (
+        <div className="px-4">
+          <ComponentCard title="Monobank — покупка частинами">
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Після відправки товару натисніть кнопку нижче, щоб підтвердити
+                видачу в Monobank. Це активує договір покупки частинами.
+              </p>
+
+              {chastLoading ? (
+                <p className="text-sm text-gray-500">Завантаження статусу...</p>
+              ) : chastStatus?.applicable ? (
+                <div className="space-y-3">
+                  {chastStatus.invoiceId && (
+                    <div>
+                      <Label>ID заявки Monobank</Label>
+                      <Input type="text" value={chastStatus.invoiceId} disabled />
+                    </div>
+                  )}
+
+                  <div>
+                    <Label>Статус Monobank</Label>
+                    <Input
+                      type="text"
+                      value={formatChastSubState(chastStatus.orderSubState)}
+                      disabled
+                    />
+                  </div>
+
+                  {chastStatus.message && (
+                    <p className="text-sm text-gray-500">{chastStatus.message}</p>
+                  )}
+
+                  {chastStatus.isConfirmed && (
+                    <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">
+                      Відправку в Monobank уже підтверджено.
+                    </p>
+                  )}
+
+                  {chastStatus.canConfirm && formData.payment_status === "paid" && (
+                    <button
+                      type="button"
+                      onClick={handleConfirmChast}
+                      disabled={chastConfirming}
+                      className="rounded-lg bg-[#072a6b] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0a3585] disabled:opacity-60"
+                    >
+                      {chastConfirming
+                        ? "Підтверджуємо..."
+                        : "Підтвердити відправку в Monobank"}
+                    </button>
+                  )}
+
+                  {chastStatus.canConfirm && formData.payment_status !== "paid" && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      Клієнт ще не підтвердив оплату частинами в застосунку
+                      Monobank.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Статус Monobank недоступний для цього замовлення.
+                </p>
+              )}
+
+              {chastError && (
+                <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                  {chastError}
+                </p>
+              )}
+
+              {chastSuccess && (
+                <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300">
+                  {chastSuccess}
+                </p>
+              )}
+
+              <button
+                type="button"
+                onClick={loadChastStatus}
+                disabled={chastLoading}
+                className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-60"
+              >
+                Оновити статус
+              </button>
+            </div>
+          </ComponentCard>
+        </div>
+      )}
 
       {/* Order Items Table */}
       <div className="px-4">

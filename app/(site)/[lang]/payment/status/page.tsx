@@ -35,6 +35,7 @@ function PaymentStatusContent() {
     searchParams.get("invoiceId") || searchParams.get("invoice_id");
   const paymentRefFromQuery = searchParams.get("ref");
   const isCertificateReturn = searchParams.get("type") === "certificate";
+  const isInstallmentsReturn = searchParams.get("type") === "installments";
 
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [resolveDone, setResolveDone] = useState(false);
@@ -235,7 +236,9 @@ function PaymentStatusContent() {
           {messages.checkout.paymentStatusTitle}
         </h1>
         <p className="text-base md:text-lg opacity-70">
-          {messages.checkout.paymentStatusDescription}
+          {isInstallmentsReturn
+            ? messages.checkout.paymentStatusInstallmentsDescription
+            : messages.checkout.paymentStatusDescription}
         </p>
       </div>
     </div>

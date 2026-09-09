@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sqlGetOrderByInvoiceId } from "@/lib/sql";
 import { processPaidOrderNotifications } from "@/lib/postPayment";
+import { syncChastOrderStatus } from "@/lib/chastOrderProcessing";
 
 type RouteParams = {
   params: Promise<{
@@ -19,10 +20,31 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const order = await sqlGetOrderByInvoiceId(invoiceId);
+    const initialOrder = await sqlGetOrderByInvoiceId(invoiceId);
 
-    if (!order) {
+    if (!initialOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    let order = initialOrder;
+
+    if (
+      order.payment_type === "installments" &&
+      order.payment_status === "pending"
+    ) {
+      try {
+        await syncChastOrderStatus(invoiceId);
+        const refreshedOrder = await sqlGetOrderByInvoiceId(invoiceId);
+        if (!refreshedOrder) {
+          return NextResponse.json({ error: "Order not found" }, { status: 404 });
+        }
+        order = refreshedOrder;
+      } catch (syncError) {
+        console.error(
+          "[GET /api/orders/status] Chast sync failed:",
+          syncError
+        );
+      }
     }
 
     if (order.payment_status === "paid" && !order.email_sent_at) {
@@ -39,6 +61,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({
       invoiceId,
       payment_status: order.payment_status,
+      payment_type: order.payment_type,
       order_id: order.id,
       locale: order.locale ?? null,
       delivery_method: order.delivery_method,

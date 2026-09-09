@@ -158,8 +158,10 @@ type Messages = {
     postalCodePlaceholder: string;
     internationalInfo: string;
     orderCreatedRedirecting: string;
+    orderCreatedInstallments: string;
     paymentStatusTitle: string;
     paymentStatusDescription: string;
+    paymentStatusInstallmentsDescription: string;
     errorRequiredFields: string;
     errorFullName: string;
     errorCartEmpty: string;
@@ -532,8 +534,12 @@ export const messages: MessagesMap = {
         "✅ Оплата успішна! Ваше замовлення прийнято до обробки. Ми надішлемо вам SMS з номером відправлення після комплектування замовлення.",
       orderCreatedRedirecting:
         "Замовлення успішно створено! Переходимо до оплати...",
+      orderCreatedInstallments:
+        "Заявку створено! Відкрийте застосунок Monobank і підтвердіть покупку частинами.",
       paymentStatusTitle: "Перевірка статусу оплати...",
       paymentStatusDescription: "Будь ласка, зачекайте",
+      paymentStatusInstallmentsDescription:
+        "Підтвердіть оплату в застосунку Monobank. Сторінка оновиться автоматично після підтвердження.",
       giftCertificateLabel: "Подарунковий сертифікат",
       giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
       giftCertificateApply: "Застосувати",
@@ -950,8 +956,12 @@ export const messages: MessagesMap = {
         "✅ Zahlung erfolgreich! Ihre Bestellung wurde angenommen. Wir senden Ihnen eine SMS mit der Sendungsnummer, sobald die Bestellung verpackt ist.",
       orderCreatedRedirecting:
         "Die Bestellung wurde erfolgreich erstellt! Wir leiten Sie nun zur Bezahlung weiter...",
+      orderCreatedInstallments:
+        "Antrag erstellt! Öffnen Sie die Monobank-App und bestätigen Sie die Ratenzahlung.",
       paymentStatusTitle: "Zahlungsstatus wird geprüft...",
       paymentStatusDescription: "Bitte warten",
+      paymentStatusInstallmentsDescription:
+        "Bestätigen Sie die Zahlung in der Monobank-App. Diese Seite aktualisiert sich automatisch nach der Bestätigung.",
       giftCertificateLabel: "Geschenkgutschein",
       giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
       giftCertificateApply: "Anwenden",
@@ -1366,8 +1376,12 @@ export const messages: MessagesMap = {
         "✅ Payment successful! Your order has been received. We will send you an SMS with the tracking number once the order is packed.",
       orderCreatedRedirecting:
         "Order successfully created! Redirecting you to payment...",
+      orderCreatedInstallments:
+        "Request created! Open the Monobank app and confirm purchase in parts.",
       paymentStatusTitle: "Checking payment status...",
       paymentStatusDescription: "Please wait",
+      paymentStatusInstallmentsDescription:
+        "Confirm the payment in the Monobank app. This page will update automatically after confirmation.",
       giftCertificateLabel: "Gift certificate",
       giftCertificatePlaceholder: "CHARS-XXXX-XXXX",
       giftCertificateApply: "Apply",

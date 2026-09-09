@@ -35,6 +35,11 @@ export function getGiftCertificateErrorMessage(
       de: "Gutscheine können nur bei vollständiger Zahlung verwendet werden.",
       en: "Gift certificates can only be used with full payment.",
     },
+    CERT_WITH_INSTALLMENTS: {
+      uk: "Сертифікат можна застосувати лише при повній оплаті.",
+      de: "Gutscheine können nur bei vollständiger Zahlung verwendet werden.",
+      en: "Gift certificates can only be used with full payment.",
+    },
   };
 
   return messages[code]?.[lang] ?? messages.CERT_NOT_FOUND[lang];

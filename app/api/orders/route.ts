@@ -5,6 +5,12 @@ import { normalizeGiftCertificateCode } from "@/lib/giftCertificateCode";
 import { getGiftCertificateErrorMessage } from "@/lib/giftCertificateErrors";
 import { processPaidOrderNotifications } from "@/lib/postPayment";
 import { sendOrderTelegramNotification } from "@/lib/orderTelegram";
+import {
+  buildChastFriendlyError,
+  createChastOrder,
+  isChastConfigured,
+} from "@/lib/monoChast";
+import { getPublicUrl } from "@/lib/mono";
 
 type IncomingOrderItem = {
   product_id?: number | string;
@@ -193,11 +199,13 @@ export async function POST(req: NextRequest) {
   let appliedCertificateCode: string | null = null;
 
   if (gift_certificate_code && String(gift_certificate_code).trim()) {
-    if (payment_type === "prepay") {
+    if (payment_type === "prepay" || payment_type === "installments") {
+      const certErrorCode =
+        payment_type === "installments" ? "CERT_WITH_INSTALLMENTS" : "CERT_WITH_PREPAY";
       return NextResponse.json(
         {
           error: getGiftCertificateErrorMessage(
-            "CERT_WITH_PREPAY",
+            certErrorCode,
             requestLocale
           ),
         },
@@ -490,6 +498,98 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         invoiceUrl: approveUrl,
         invoiceId: paypalOrderId,
+      });
+    }
+
+    // ==========================
+    // Monobank Покупка частинами
+    // ==========================
+    if (payment_type === "installments") {
+      if (orderCurrency !== "UAH") {
+        return NextResponse.json(
+          {
+            error:
+              requestLocale === "en"
+                ? "Installments are available only for orders in UAH."
+                : requestLocale === "de"
+                  ? "Ratenzahlung ist nur für Bestellungen in UAH verfügbar."
+                  : "Покупка частинами доступна лише для замовлень у гривні.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!isChastConfigured()) {
+        return NextResponse.json(
+          { error: buildChastFriendlyError(new Error("CHAST_CONFIG_MISSING"), requestLocale) },
+          { status: 500 }
+        );
+      }
+
+      const chastPublicUrl = getPublicUrl().replace(/\/$/, "");
+      const chastProducts = normalizedItems.map((item) => ({
+        name: item.color
+          ? `${item.product_name} (${item.color})`
+          : item.product_name,
+        count: item.quantity,
+        sum: Math.round(item.price * item.quantity * 100) / 100,
+      }));
+
+      console.log("[POST /api/orders] Creating Chast order for:", reference);
+
+      let chastOrderId: string;
+      try {
+        const chastResult = await createChastOrder({
+          storeOrderId: reference,
+          clientPhone: phone_number,
+          totalSum: payableBeforePrepay,
+          products: chastProducts,
+          resultCallback: `${chastPublicUrl}/api/mono-chast-callback`,
+        });
+        chastOrderId = chastResult.orderId;
+      } catch (chastError) {
+        console.error("[POST /api/orders] Chast order error:", chastError);
+        return NextResponse.json(
+          {
+            error: buildChastFriendlyError(chastError, requestLocale),
+            details:
+              chastError instanceof Error ? chastError.message : "Unknown error",
+          },
+          { status: 500 }
+        );
+      }
+
+      await sqlPostOrder({
+        customer_name,
+        phone_number,
+        email,
+        delivery_method,
+        city,
+        post_office,
+        comment,
+        payment_type,
+        invoice_id: chastOrderId,
+        payment_reference: reference,
+        payment_status: "pending",
+        currency: orderCurrency,
+        locale: orderLocale,
+        gift_certificate_code: appliedCertificateCode,
+        certificate_discount: certificateDiscount,
+        items: orderItemsPayload,
+      });
+
+      const statusUrl = `${chastPublicUrl}${localePath}/payment/status?invoiceId=${encodeURIComponent(chastOrderId)}&type=installments`;
+
+      console.log("[POST /api/orders] Chast order created:", {
+        chastOrderId,
+        statusUrl,
+      });
+
+      return NextResponse.json({
+        installmentsFlow: true,
+        invoiceId: chastOrderId,
+        invoiceUrl: statusUrl,
+        paymentRef: reference,
       });
     }
 

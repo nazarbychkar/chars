@@ -340,16 +340,13 @@ export default function FinalCard() {
           return;
         }
 
-        const { invoiceUrl, invoiceId } = data;
+        const { invoiceUrl, invoiceId, installmentsFlow } = data;
 
-        if (!invoiceUrl) {
+        if (!invoiceUrl || !invoiceId) {
           console.error("[FinalCard] No invoice URL received!");
           setError(messages.checkout.errorNoInvoice);
           return;
         }
-
-
-        // Meta Pixel кастомні події (Purchase) вимкнені
 
         localStorage.setItem(
           "submittedOrder",
@@ -369,18 +366,19 @@ export default function FinalCard() {
           })
         );
 
-        // Clear any old invoiceId and payment success flag before storing the new one
         localStorage.removeItem("currentInvoiceId");
         localStorage.removeItem("paymentSuccess");
-        // Store invoiceId separately for payment status check
         localStorage.setItem("currentInvoiceId", invoiceId);
 
-        setSuccess(messages.checkout.orderCreatedRedirecting);
-        // Don't clear basket here - only clear after successful payment
-        // Перехід на сторінку оплати через 2 сек
+        setSuccess(
+          installmentsFlow
+            ? messages.checkout.orderCreatedInstallments
+            : messages.checkout.orderCreatedRedirecting
+        );
+
         setTimeout(() => {
           window.location.href = invoiceUrl;
-        }, 2000);
+        }, installmentsFlow ? 1500 : 2000);
       }
     } catch (error) {
       console.error("[FinalCard] Network error:", error);
