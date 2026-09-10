@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { sqlGetProduct } from "@/lib/sql";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getFirstProductImage } from "@/lib/getFirstProductImage";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import BreadcrumbsSchema from "@/components/shared/BreadcrumbsSchema";
 import { ProductPageSkeleton } from "@/components/shared/Skeleton";
@@ -16,6 +15,8 @@ import type { Locale } from "@/lib/i18n/config";
 import {
   OG_LOCALE,
   getSiteUrl,
+  getOgImages,
+  getOgImageUrl,
   pageAlternates,
   parseLangParam,
   seoCopy,
@@ -113,12 +114,6 @@ export async function generateMetadata({
       : 0;
     const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
 
-    const media = product.media || [];
-    const imageUrl = getFirstProductImage(media);
-    const fullImageUrl = imageUrl
-      ? `${baseUrl}/api/images/${imageUrl}`
-      : `${baseUrl}/images/light-theme/chars-logo-header-light.png`;
-
     return {
       title: `${productName} | CHARS`,
       description: productDescription,
@@ -130,20 +125,13 @@ export async function generateMetadata({
         url: `${baseUrl}/${lang}/product/${slug}`,
         siteName: "CHARS",
         locale: OG_LOCALE[lang],
-        images: [
-          {
-            url: fullImageUrl,
-            width: 1200,
-            height: 630,
-            alt: productName,
-          },
-        ],
+        images: getOgImages(copy.ogImageAlt, baseUrl),
       },
       twitter: {
         card: "summary_large_image",
         title: `${productName} | CHARS`,
         description: productDescription,
-        images: [fullImageUrl],
+        images: [getOgImageUrl(baseUrl)],
       },
       other: {
         "product:price:amount": Number(finalPrice).toFixed(2),

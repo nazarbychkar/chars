@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import {
   OG_LOCALE,
   getSiteUrl,
+  getOgImages,
+  getOgImageUrl,
   pageAlternates,
   parseLangParam,
   seoCopy,
@@ -57,20 +59,13 @@ export async function generateMetadata({
       url: `${baseUrl}/${lang}`,
       siteName: "CHARS",
       locale: OG_LOCALE[lang],
-      images: [
-        {
-          url: `${baseUrl}/images/IMG_5887.JPG`,
-          width: 1200,
-          height: 630,
-          alt: copy.ogImageAlt,
-        },
-      ],
+      images: getOgImages(copy.ogImageAlt, baseUrl),
     },
     twitter: {
       card: "summary_large_image",
       title: copy.siteTitle,
       description: copy.homeDescription,
-      images: [`${baseUrl}/images/IMG_5887.JPG`],
+      images: [getOgImageUrl(baseUrl)],
     },
   };
 }

@@ -7,6 +7,8 @@ import { CatalogSkeleton } from "@/components/shared/Skeleton";
 import {
   OG_LOCALE,
   getSiteUrl,
+  getOgImages,
+  getOgImageUrl,
   pageAlternates,
   parseLangParam,
   seoCopy,
@@ -60,20 +62,13 @@ export async function generateMetadata({
       url: `${baseUrl}/${lang}${path}`,
       siteName: "CHARS",
       locale: OG_LOCALE[lang],
-      images: [
-        {
-          url: `${baseUrl}/images/light-theme/chars-logo-header-light.png`,
-          width: 1200,
-          height: 630,
-          alt: copy.ogImageAlt,
-        },
-      ],
+      images: getOgImages(copy.ogImageAlt, baseUrl),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [`${baseUrl}/images/light-theme/chars-logo-header-light.png`],
+      images: [getOgImageUrl(baseUrl)],
     },
   };
 }

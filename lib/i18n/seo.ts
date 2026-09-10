@@ -13,6 +13,26 @@ export function getSiteUrl(): string {
   );
 }
 
+/** Default Open Graph / Twitter preview image for all site links */
+export const OG_IMAGE_PATH = "/images/og-preview.jpg";
+export const OG_IMAGE_WIDTH = 1280;
+export const OG_IMAGE_HEIGHT = 1600;
+
+export function getOgImageUrl(baseUrl = getSiteUrl()): string {
+  return `${baseUrl}${OG_IMAGE_PATH}`;
+}
+
+export function getOgImages(alt: string, baseUrl = getSiteUrl()) {
+  return [
+    {
+      url: getOgImageUrl(baseUrl),
+      width: OG_IMAGE_WIDTH,
+      height: OG_IMAGE_HEIGHT,
+      alt,
+    },
+  ];
+}
+
 export const HTML_LANG: Record<Locale, string> = {
   uk: "uk",
   de: "de",
