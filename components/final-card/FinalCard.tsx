@@ -152,6 +152,16 @@ export default function FinalCard() {
     }
   }, [isUkraineShipping, deliveryMethod, paymentType]);
 
+  // Prepay / installments are UAH-only
+  useEffect(() => {
+    if (
+      effectiveBasketCurrency === "EUR" &&
+      (paymentType === "prepay" || paymentType === "installments")
+    ) {
+      setPaymentType("full");
+    }
+  }, [effectiveBasketCurrency, paymentType]);
+
   const getCartTotal = () =>
     items.reduce((total, item) => {
       const rawItemPrice =
@@ -256,7 +266,10 @@ export default function FinalCard() {
       return;
     }
 
-    const isEuro = effectiveBasketCurrency === "EUR";
+    const isEuro =
+      paymentType !== "prepay" &&
+      paymentType !== "installments" &&
+      effectiveBasketCurrency === "EUR";
     const getItemPrice = (item: (typeof items)[0]) =>
       isEuro && item.price_eur != null ? item.price_eur : item.price;
 
@@ -1487,7 +1500,10 @@ export default function FinalCard() {
                         iconAlt: "prepay",
                         iconWidth: 36,
                         hint: null,
-                        show: isUkraineShipping && !appliedCertificateCode,
+                        show:
+                          isUkraineShipping &&
+                          effectiveBasketCurrency === "UAH" &&
+                          !appliedCertificateCode,
                         disabled: false,
                       },
                       {

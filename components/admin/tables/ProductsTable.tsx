@@ -53,6 +53,7 @@ export default function ProductsTable() {
   const searchQuery = searchParams.get("q") || "";
   const pageFromUrl = Math.max(1, Number(searchParams.get("page") || 1) || 1);
   const productsPerPage = 10;
+  const [searchInput, setSearchInput] = useState(searchQuery);
 
   const updateListParams = useCallback(
     (next: { page?: number; q?: string }) => {
@@ -72,8 +73,21 @@ export default function ProductsTable() {
     [pathname, router, searchParams, pageFromUrl, searchQuery]
   );
 
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (searchInput === searchQuery) return;
+      updateListParams({ q: searchInput, page: 1 });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput, searchQuery, updateListParams]);
+
   const filteredProducts = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchInput.trim().toLowerCase();
     if (!q) return products;
     return products.filter((p) => {
       return (
@@ -82,7 +96,7 @@ export default function ProductsTable() {
         String(p.id).includes(q)
       );
     });
-  }, [products, searchQuery]);
+  }, [products, searchInput]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredProducts.length / productsPerPage)),
@@ -109,7 +123,7 @@ export default function ProductsTable() {
   const editHref = (productId: number) => {
     const params = new URLSearchParams();
     if (currentPage > 1) params.set("returnPage", String(currentPage));
-    if (searchQuery.trim()) params.set("returnQ", searchQuery.trim());
+    if (searchInput.trim()) params.set("returnQ", searchInput.trim());
     const qs = params.toString();
     return qs
       ? `/admin/products/${productId}/edit?${qs}`
@@ -198,12 +212,13 @@ export default function ProductsTable() {
         </h2>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              updateListParams({ q: e.target.value, page: 1 });
-            }}
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Пошук за назвою, ID або категорією"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/40 sm:w-72"
           />
           <div className="flex gap-2">
@@ -321,7 +336,7 @@ export default function ProductsTable() {
                     colSpan={12}
                     className="text-center py-6 text-gray-500 dark:text-gray-400"
                   >
-                    {searchQuery
+                    {searchInput
                       ? "За вашим запитом товарів не знайдено."
                       : "Продуктів не знайдено."}
                   </TableCell>
@@ -435,7 +450,7 @@ export default function ProductsTable() {
           </p>
         ) : filteredProducts.length === 0 ? (
           <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-            {searchQuery
+            {searchInput
               ? "За вашим запитом товарів не знайдено."
               : "Продуктів не знайдено."}
           </p>

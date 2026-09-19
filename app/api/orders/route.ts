@@ -195,7 +195,10 @@ export async function POST(req: NextRequest) {
     );
 
   const isEuroSelected = currency === "EUR";
-  const orderCurrency: "UAH" | "EUR" = isEuroSelected ? "EUR" : "UAH";
+  // Prepay is always 300 UAH — never charge 300 EUR
+  const isPrepay = payment_type === "prepay";
+  const orderCurrency: "UAH" | "EUR" =
+    isPrepay ? "UAH" : isEuroSelected ? "EUR" : "UAH";
 
   let certificateDiscount = 0;
   let appliedCertificateCode: string | null = null;
@@ -237,14 +240,14 @@ export async function POST(req: NextRequest) {
   }
 
   const payableBeforePrepay = Math.max(0, fullAmount - certificateDiscount);
-  const amountToPay =
-    payment_type === "prepay" ? 300 : payableBeforePrepay;
+  const amountToPay = isPrepay ? 300 : payableBeforePrepay;
 
   const IS_DEV =
     process.env.DEV === "True" ||
     process.env.DEV === "true" ||
     process.env.DEV === "1";
-  const isEuroForMono = !IS_DEV && isEuroSelected;
+  // Prepay must always go through Monobank as UAH (980)
+  const isEuroForMono = !IS_DEV && orderCurrency === "EUR";
   const amountInMinorUnits = Math.round(amountToPay * 100);
 
   const orderLocale = typeof locale === "string" ? locale : null;
