@@ -15,6 +15,7 @@
     "lint:fix": "eslint --fix",
     "migrate": "node scripts/migrate.mjs",
     "migrate:nav": "node scripts/migrate-nav-structure.mjs",
+    "backfill:translate": "npx ts-node --transpile-only -P scripts/tsconfig.json -r ./scripts/load-env.cjs scripts/backfill-localizations.ts",
     "check-vitals": "echo 'Run lighthouse audit after deployment'"
   },
   "dependencies": {

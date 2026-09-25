@@ -15,6 +15,11 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { buildProductSlug } from "@/lib/slug";
 import { trackFbq } from "@/lib/fbq";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import {
+  useAutoLocalizedText,
+  useColorDisplayName,
+} from "@/lib/useAutoLocalizedText";
+import ColorSwatch from "@/components/product/ColorSwatch";
 
 // Add custom styles for smooth transitions
 const swiperStyles = `
@@ -122,33 +127,39 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   useBodyScrollLock(showSizeGuide);
 
-  const displayName =
-    locale === "en"
-      ? product.name_en || product.name
-      : locale === "de"
-      ? product.name_de || product.name
-      : product.name;
+  const displayName = useAutoLocalizedText(
+    locale,
+    product.name,
+    product.name_en,
+    product.name_de
+  );
 
-  const descriptionText =
-    locale === "en"
-      ? product.description_en || product.description
-      : locale === "de"
-      ? product.description_de || product.description
-      : product.description;
+  const descriptionText = useAutoLocalizedText(
+    locale,
+    product.description,
+    product.description_en,
+    product.description_de
+  );
 
-  const fabricText =
-    locale === "en"
-      ? product.fabric_composition_en || product.fabric_composition
-      : locale === "de"
-      ? product.fabric_composition_de || product.fabric_composition
-      : product.fabric_composition;
+  const fabricText = useAutoLocalizedText(
+    locale,
+    product.fabric_composition,
+    product.fabric_composition_en,
+    product.fabric_composition_de
+  );
 
-  const liningText =
-    locale === "en"
-      ? product.lining_description_en || product.lining_description
-      : locale === "de"
-      ? product.lining_description_de || product.lining_description
-      : product.lining_description;
+  const liningText = useAutoLocalizedText(
+    locale,
+    product.lining_description,
+    product.lining_description_en,
+    product.lining_description_de
+  );
+
+  const selectedColorDisplay = useColorDisplayName(
+    selectedColor,
+    locale,
+    messages.catalog.colorNames
+  );
 
   // Auto-select first color if available
   useEffect(() => {
@@ -682,58 +693,29 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               
               <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 {/* Current product colors */}
-                {product.colors && product.colors.length > 0 && 
-                  product.colors.map((c, idx) => {
-                    const isActive = selectedColor === c.label;
-                    const colorDisplayName =
-                      messages.catalog.colorNames[c.label] || c.label;
-                    return (
-                      <button
-                        key={`current-${c.label}-${idx}`}
-                        type="button"
-                        onClick={() => setSelectedColor(c.label)}
-                        className={`relative w-10 h-10 md:w-11 md:h-11 rounded-full border transition-all duration-200 ${
-                          isActive
-                            ? "border-black dark:border-white scale-100"
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500"
-                        }`}
-                        aria-label={messages.product.viewColorAria(colorDisplayName)}
-                        title={colorDisplayName}
-                        style={{ 
-                          backgroundColor: c.hex || "#ffffff",
-                        }}
-                      >
-                        {isActive && (
-                          <div className="absolute inset-0 rounded-full border-2 border-black dark:border-white"></div>
-                        )}
-                      </button>
-                    );
-                  })
-                }
+                {product.colors && product.colors.length > 0 &&
+                  product.colors.map((c, idx) => (
+                    <ColorSwatch
+                      key={`current-${c.label}-${idx}`}
+                      label={c.label}
+                      hex={c.hex}
+                      isActive={selectedColor === c.label}
+                      onSelect={() => setSelectedColor(c.label)}
+                    />
+                  ))}
 
-                {/* Related products colors */}
                 {relatedProducts.map((relatedProduct) => {
                   if (!relatedProduct.first_color) return null;
-                  
                   const color = relatedProduct.first_color;
-                  const relatedColorDisplayName =
-                    messages.catalog.colorNames[color.label] || color.label;
-                  
                   return (
-                    <button
+                    <ColorSwatch
                       key={`related-${relatedProduct.id}`}
-                      type="button"
-                      onClick={() => handleColorVariantChange(relatedProduct.id)}
+                      label={color.label}
+                      hex={color.hex}
+                      isActive={false}
+                      variant="related"
                       disabled={isLoading}
-                      className={`relative w-10 h-10 md:w-11 md:h-11 rounded-full border border-gray-300 dark:border-gray-600 transition-all duration-200 hover:border-gray-500 dark:hover:border-gray-400 cursor-pointer ${
-                        isLoading ? 'opacity-50 cursor-wait' : ''
-                      }`}
-                      aria-label={messages.product.viewColorAria(relatedColorDisplayName)}
-                      title={relatedColorDisplayName}
-                      style={{ 
-                        backgroundColor: color.hex || "#ffffff",
-                        opacity: 0.7
-                      }}
+                      onSelect={() => handleColorVariantChange(relatedProduct.id)}
                     />
                   );
                 })}
@@ -741,7 +723,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
               
               {selectedColor && (
                 <div className="text-sm font-['Inter'] text-gray-700 dark:text-gray-300 font-light tracking-wide">
-                  {messages.catalog.colorNames[selectedColor] || selectedColor}
+                  {selectedColorDisplay}
                 </div>
               )}
             </div>
