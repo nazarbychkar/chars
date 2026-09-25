@@ -14,6 +14,7 @@ import SidebarSearch from "./SidebarSearch";
 import SidebarMenu from "./SidebarMenu";
 import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import SeasonList from "@/components/collections/SeasonList";
 
 interface Category {
   id: number;
@@ -68,11 +69,13 @@ export default function Header() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const catalogTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const collectionsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const catalogRef = useRef<HTMLDivElement | null>(null);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isCurrencyMenuOpen, setIsCurrencyMenuOpen] = useState(false);
-  useBodyScrollLock(catalogOpen);
+  useBodyScrollLock(catalogOpen || collectionsOpen);
 
   const getCategoryLabel = (category: Category) => {
     if (locale === "en") return category.name_en || category.name;
@@ -123,17 +126,32 @@ export default function Header() {
   useEffect(() => {
     return () => {
       if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+      if (collectionsTimeout.current) clearTimeout(collectionsTimeout.current);
     };
   }, []);
 
   const openCatalog = () => {
     if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+    if (collectionsTimeout.current) clearTimeout(collectionsTimeout.current);
+    setCollectionsOpen(false);
     setCatalogOpen(true);
   };
 
   const closeCatalogSoon = () => {
     if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
     catalogTimeout.current = setTimeout(() => setCatalogOpen(false), 180);
+  };
+
+  const openCollections = () => {
+    if (collectionsTimeout.current) clearTimeout(collectionsTimeout.current);
+    if (catalogTimeout.current) clearTimeout(catalogTimeout.current);
+    setCatalogOpen(false);
+    setCollectionsOpen(true);
+  };
+
+  const closeCollectionsSoon = () => {
+    if (collectionsTimeout.current) clearTimeout(collectionsTimeout.current);
+    collectionsTimeout.current = setTimeout(() => setCollectionsOpen(false), 180);
   };
 
   const navLinkClass = isTransparent
@@ -183,12 +201,64 @@ export default function Header() {
               aria-label="Main"
               ref={catalogRef}
             >
-              <Link
-                href={`/${locale}/collections`}
-                className={navLinkClass}
+              <div
+                className="relative"
+                onMouseEnter={openCollections}
+                onMouseLeave={closeCollectionsSoon}
               >
-                {messages.header.collections}
-              </Link>
+                <button
+                  type="button"
+                  className={`${navLinkClass} inline-flex items-center gap-1.5 cursor-pointer`}
+                  aria-expanded={collectionsOpen}
+                  aria-haspopup="true"
+                  onClick={() => {
+                    setCatalogOpen(false);
+                    setCollectionsOpen((v) => !v);
+                  }}
+                >
+                  {messages.header.collections}
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 24 24"
+                    className={`w-3.5 h-3.5 transition-transform ${
+                      collectionsOpen ? "rotate-180" : ""
+                    }`}
+                  >
+                    <path
+                      d="M6 9l6 6 6-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                <div
+                  className={`absolute left-0 top-full pt-3 z-50 transition-all duration-200 ${
+                    collectionsOpen
+                      ? "opacity-100 pointer-events-auto translate-y-0"
+                      : "opacity-0 pointer-events-none -translate-y-1"
+                  }`}
+                  onMouseEnter={openCollections}
+                  onMouseLeave={closeCollectionsSoon}
+                >
+                  <div
+                    className={`rounded-sm border shadow-lg py-5 px-6 ${
+                      isDark
+                        ? "bg-[#1e1e1e] border-stone-700"
+                        : "bg-white border-stone-200"
+                    }`}
+                  >
+                    <SeasonList
+                      variant="header"
+                      isDark={isDark}
+                      onItemClick={() => setCollectionsOpen(false)}
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div
                 className="relative"
@@ -611,12 +681,15 @@ export default function Header() {
       </header>
 
       {/* Dim overlay when catalog open */}
-      {catalogOpen && (
+      {(catalogOpen || collectionsOpen) && (
         <button
           type="button"
-          aria-label="Close catalog"
+          aria-label="Close menu"
           className="hidden lg:block fixed inset-0 top-20 z-40 bg-black/20 cursor-default"
-          onClick={() => setCatalogOpen(false)}
+          onClick={() => {
+            setCatalogOpen(false);
+            setCollectionsOpen(false);
+          }}
         />
       )}
 

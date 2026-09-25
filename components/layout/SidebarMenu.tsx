@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Locale } from "@/lib/i18n/config";
 import { useBasket } from "@/lib/BasketProvider";
 import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
-import { SEASON_CARDS } from "@/lib/seasons";
+import SeasonList from "@/components/collections/SeasonList";
 
 interface SidebarMenuProps {
   isOpen: boolean;
@@ -89,14 +89,6 @@ export default function SidebarMenu({
     fetchCategories();
   }, []);
 
-  const seasonLabel = (value: string) => {
-    if (value === "Літо") return messages.header.seasonSummer;
-    if (value === "Осінь") return messages.header.seasonAutumn;
-    if (value === "Зима") return messages.header.seasonWinter;
-    if (value === "Весна") return messages.header.seasonSpring;
-    return value;
-  };
-
   return (
     <div className="relative z-50">
       {isOpen && (
@@ -133,44 +125,29 @@ export default function SidebarMenu({
             <>
               <div className="flex flex-col">
                 <div className="flex justify-between items-center">
-                  <Link
-                    href={withLocalePath("/collections")}
-                    className="hover:text-[#072a6b]"
-                    onClick={() => setIsOpen(false)}
+                  <button
+                    type="button"
+                    className="text-left hover:opacity-80 dark:hover:text-white"
+                    onClick={() => setCollectionsOpen((prev) => !prev)}
+                    aria-expanded={collectionsOpen}
                   >
                     {messages.header.collections}
-                  </Link>
+                  </button>
                   <button
+                    type="button"
                     className="ml-2 text-xl sm:text-2xl font-bold"
                     onClick={() => setCollectionsOpen((prev) => !prev)}
                     aria-expanded={collectionsOpen}
+                    aria-label={messages.header.collections}
                   >
                     {collectionsOpen ? "−" : "+"}
                   </button>
                 </div>
                 {collectionsOpen && (
-                  <div className="grid grid-cols-2 gap-3 pl-0 mt-3 mb-2">
-                    {SEASON_CARDS.map((item) => (
-                      <Link
-                        key={item.value}
-                        href={withLocalePath(
-                          `/catalog?season=${encodeURIComponent(item.value)}`
-                        )}
-                        onClick={() => setIsOpen(false)}
-                        className="h-[90px] rounded overflow-hidden relative text-white text-base sm:text-lg font-bold text-center flex items-center justify-center"
-                        style={{
-                          backgroundImage: `url(${item.image})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-black/30" />
-                        <span className="relative z-10">
-                          {seasonLabel(item.value)}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
+                  <SeasonList
+                    variant="menu"
+                    onItemClick={() => setIsOpen(false)}
+                  />
                 )}
               </div>
 

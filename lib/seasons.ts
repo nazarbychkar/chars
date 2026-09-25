@@ -1,31 +1,36 @@
 export type SeasonValue = "Літо" | "Осінь" | "Зима" | "Весна";
 
-export type SeasonCard = {
-  value: SeasonValue;
-  image: string;
-  /** Compact image for menus */
-  imageThumb?: string;
+/** Order: актуальний сезон зверху (Літо → … → Весна) */
+export const SEASON_VALUES: SeasonValue[] = [
+  "Літо",
+  "Осінь",
+  "Зима",
+  "Весна",
+];
+
+export type SeasonLabels = {
+  seasonSummer: string;
+  seasonAutumn: string;
+  seasonWinter: string;
+  seasonSpring: string;
 };
 
-/** Order: актуал сезон зверху (Літо → … → Весна) */
-export const SEASON_CARDS: SeasonCard[] = [
-  {
-    value: "Літо",
-    image: "/images/summer2.jpg",
-    imageThumb: "/images/summer.png",
-  },
-  {
-    value: "Осінь",
-    image: "/images/autumn2.jpg",
-  },
-  {
-    value: "Зима",
-    image: "/images/winter2.jpg",
-    imageThumb: "/images/winter.png",
-  },
-  {
-    value: "Весна",
-    image: "/images/spring2.jpg",
-    imageThumb: "/images/spring.png",
-  },
-];
+export function getSeasonLabel(
+  value: SeasonValue,
+  labels: SeasonLabels
+): string {
+  switch (value) {
+    case "Літо":
+      return labels.seasonSummer;
+    case "Осінь":
+      return labels.seasonAutumn;
+    case "Зима":
+      return labels.seasonWinter;
+    case "Весна":
+      return labels.seasonSpring;
+  }
+}
+
+export function seasonCatalogHref(value: SeasonValue): string {
+  return `/catalog?season=${encodeURIComponent(value)}`;
+}
