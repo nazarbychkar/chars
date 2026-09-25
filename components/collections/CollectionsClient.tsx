@@ -41,7 +41,8 @@ export default function CollectionsClient() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
+      <div className="mx-auto w-full max-w-3xl md:max-w-4xl">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:gap-4">
         {SEASON_CARDS.map((season) => {
           const label = seasonLabel(season.value, messages);
           const href = withLocalePath(
@@ -52,22 +53,22 @@ export default function CollectionsClient() {
             <Link
               key={season.value}
               href={href}
-              className="group relative aspect-[4/5] sm:aspect-[5/4] md:aspect-[16/10] overflow-hidden"
+              className="group relative aspect-[3/4] sm:aspect-[5/6] md:aspect-[4/5] overflow-hidden rounded-sm"
             >
               <Image
                 src={season.image}
                 alt={label}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 900px"
+                sizes="(max-width: 768px) 45vw, 320px"
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                 priority={season.value === "Літо"}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10 transition-opacity duration-500 group-hover:from-black/75" />
-              <div className="absolute inset-0 flex flex-col justify-end p-5 md:p-8">
-                <h2 className="font-display text-white text-3xl md:text-4xl font-medium tracking-[0.02em] mb-2">
+              <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-4 md:p-5">
+                <h2 className="font-display text-white text-lg sm:text-xl md:text-2xl font-medium tracking-[0.02em] mb-1">
                   {label}
                 </h2>
-                <span className="text-white/85 text-sm md:text-base tracking-[0.16em] uppercase inline-flex items-center gap-2">
+                <span className="text-white/85 text-[10px] sm:text-xs md:text-sm tracking-[0.12em] uppercase inline-flex items-center gap-1.5">
                   {messages.collections.viewCollection}
                   <span
                     aria-hidden
@@ -80,6 +81,7 @@ export default function CollectionsClient() {
             </Link>
           );
         })}
+        </div>
       </div>
     </section>
   );

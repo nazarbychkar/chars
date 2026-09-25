@@ -72,7 +72,9 @@ export default function SidebarFilter({
 
       <div
         className={`fixed top-0 right-0 h-full w-full sm:w-4/5 sm:max-w-md ${
-          isDark ? "bg-stone-900" : "bg-[#eef7ff]"
+          isDark
+            ? "bg-stone-900 text-stone-100 border-stone-800"
+            : "bg-[#eef7ff] text-[#072a6b]"
         } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } overflow-y-auto`}
@@ -84,7 +86,7 @@ export default function SidebarFilter({
               {messages.catalog.sidebarTitle}
             </div>
             <button
-              className="text-2xl sm:text-3xl hover:text-[#072a6b]"
+              className="text-2xl sm:text-3xl hover:opacity-70 dark:hover:text-white"
               onClick={() => setIsOpen(false)}
             >
               ×
@@ -92,7 +94,7 @@ export default function SidebarFilter({
           </div>
 
           {/* Accordion: Sorting */}
-          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+          <div className="w-full border-b border-stone-300/50 dark:border-stone-700 px-2 sm:px-4 py-3 hover:bg-gray-200 dark:hover:bg-stone-800 transition">
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(1)}
@@ -108,24 +110,30 @@ export default function SidebarFilter({
             {openAccordion === 1 && (
               <div className="pl-4 mt-2 space-y-2">
                 <button
-                  className={`block text-left w-full hover:text-[#072a6b] text-base sm:text-lg ${
-                    sortOrder === "newest" ? "font-semibold text-[#072a6b]" : ""
+                  className={`block text-left w-full hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
+                    sortOrder === "newest"
+                      ? "font-semibold text-[#072a6b] dark:text-[#eef7ff]"
+                      : ""
                   }`}
                   onClick={() => setSortOrder("newest")}
                 >
                   Спочатку новіші
                 </button>
                 <button
-                  className={`block text-left w-full hover:text-[#072a6b] text-base sm:text-lg ${
-                    sortOrder === "asc" ? "font-semibold text-[#072a6b]" : ""
+                  className={`block text-left w-full hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
+                    sortOrder === "asc"
+                      ? "font-semibold text-[#072a6b] dark:text-[#eef7ff]"
+                      : ""
                   }`}
                   onClick={() => setSortOrder("asc")}
                 >
                   {messages.catalog.sortAscLabel}
                 </button>
                 <button
-                  className={`block text-left w-full hover:text-[#072a6b] text-base sm:text-lg ${
-                    sortOrder === "desc" ? "font-semibold text-[#072a6b]" : ""
+                  className={`block text-left w-full hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
+                    sortOrder === "desc"
+                      ? "font-semibold text-[#072a6b] dark:text-[#eef7ff]"
+                      : ""
                   }`}
                   onClick={() => setSortOrder("desc")}
                 >
@@ -136,7 +144,7 @@ export default function SidebarFilter({
           </div>
 
           {/* Accordion: Size */}
-          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+          <div className="w-full border-b border-stone-300/50 dark:border-stone-700 px-2 sm:px-4 py-3 hover:bg-gray-200 dark:hover:bg-stone-800 transition">
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(2)}
@@ -170,7 +178,7 @@ export default function SidebarFilter({
           </div>
 
           {/* Accordion: Color */}
-          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+          <div className="w-full border-b border-stone-300/50 dark:border-stone-700 px-2 sm:px-4 py-3 hover:bg-gray-200 dark:hover:bg-stone-800 transition">
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(3)}
@@ -206,7 +214,7 @@ export default function SidebarFilter({
           </div>
 
           {/* Accordion: Price */}
-          <div className="w-full border-b px-2 sm:px-4 py-3 hover:bg-gray-200 transition">
+          <div className="w-full border-b border-stone-300/50 dark:border-stone-700 px-2 sm:px-4 py-3 hover:bg-gray-200 dark:hover:bg-stone-800 transition">
             <div
               className="flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(4)}

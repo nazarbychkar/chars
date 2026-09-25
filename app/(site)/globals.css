@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Site theme toggle uses .dark-theme on <html>/<body>, not prefers-color-scheme */
+@custom-variant dark (&:where(.dark-theme, .dark-theme *));
+
 :root {
   /* Brand palette (sRGB) */
   --brand-primary: #072a6b;
@@ -25,9 +28,19 @@
   --font-display: var(--font-cormorant), "Cormorant Garamond", ui-serif, serif;
 }
 
-body {
+html.light-theme,
+body.light-theme {
   background-color: var(--background-color-light);
   color: var(--text-color-light);
+}
+
+html.dark-theme,
+body.dark-theme {
+  background-color: var(--background-color-dark);
+  color: var(--text-color-dark);
+}
+
+body {
   font-family: var(--font-sans);
   font-weight: 400;
   letter-spacing: 0.01em;
@@ -36,11 +49,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.dark-theme {
-  background-color: var(--background-color-dark);
-  color: var(--text-color-dark);
-  font-family: var(--font-sans);
-  font-weight: 400;
+/* Hardcoded brand blue text is unreadable on dark surfaces */
+.dark-theme .text-\[\#072a6b\] {
+  color: var(--brand-soft) !important;
+}
+
+.dark-theme .text-\[\#072a6b\]\/70 {
+  color: color-mix(in srgb, var(--brand-soft) 70%, transparent) !important;
+}
+
+.dark-theme .hover\:text-\[\#072a6b\]:hover {
+  color: var(--brand-white) !important;
+}
+
+.dark-theme .border-\[\#072a6b\]\/35,
+.dark-theme .border-\[\#072a6b\]\/40 {
+  border-color: color-mix(in srgb, var(--brand-soft) 40%, transparent) !important;
 }
 
 * {

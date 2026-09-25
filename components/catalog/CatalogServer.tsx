@@ -85,6 +85,18 @@ export default async function CatalogServer(props: CatalogServerProps) {
     getColors(),
   ]);
 
-  return <CatalogClient initialProducts={products} colors={colors} />;
+  const filterKey = [
+    props.category ?? "",
+    props.season ?? "",
+    props.subcategory ?? "",
+  ].join("|");
+
+  return (
+    <CatalogClient
+      key={filterKey || "all"}
+      initialProducts={products}
+      colors={colors}
+    />
+  );
 }
 

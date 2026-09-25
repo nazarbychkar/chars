@@ -128,6 +128,13 @@ export default function CatalogClient({
   }, [sortedProducts.length]);
 
   useEffect(() => {
+    setVisibleCount(12);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("catalogVisibleCount");
+    }
+  }, [category, season, subcategory]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function fetchLabels() {

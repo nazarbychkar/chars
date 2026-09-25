@@ -29,33 +29,17 @@ const AppContext = createContext<ContextType>({
 });
 
 import { ReactNode } from "react";
+import { applySiteTheme, readStoredTheme } from "@/lib/siteTheme";
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => readStoredTheme() === "dark");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isBasketOpen, setIsBasketOpen] = useState(false);
   const [isSeasonOpen, setIsSeasonOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
-    // Get saved theme from localStorage
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      setIsDark(savedTheme === "dark");
-    }
-  }, []);
-
-  useEffect(() => {
-    // Update body class and save to localStorage
-    if (isDark) {
-      document.body.classList.add("dark-theme");
-      document.body.classList.remove("light-theme");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.body.classList.add("light-theme");
-      document.body.classList.remove("dark-theme");
-      localStorage.setItem("theme", "light");
-    }
+    applySiteTheme(isDark ? "dark" : "light");
   }, [isDark]);
 
   const isOverlayOpen =

@@ -12,6 +12,7 @@ import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
+import { resolveProductLocalesFromUa } from "@/lib/adminProductTranslate";
 
 const multiOptions = [
   { value: "ONESIZE", text: "ONESIZE", selected: false },
@@ -110,146 +111,15 @@ function EditProductPageContent() {
   const [customColorHex, setCustomColorHex] = useState("#000000");
   const [colors, setColors] = useState<{ label: string; hex?: string }[]>([]);
   const [sizeStocks, setSizeStocks] = useState<Record<string, number>>({});
-  const [showNameLocales, setShowNameLocales] = useState(false);
-  const [showDescriptionLocales, setShowDescriptionLocales] = useState(false);
-  const [showLiningLocales, setShowLiningLocales] = useState(false);
-  const [showFabricLocales, setShowFabricLocales] = useState(false);
   const [allProducts, setAllProducts] = useState<ProductOption[]>([]);
   const [recommendedProductIds, setRecommendedProductIds] = useState<number[]>(
     []
   );
   const [recommendSearch, setRecommendSearch] = useState("");
-  const [isTranslatingName, setIsTranslatingName] = useState(false);
-  const [isTranslatingDescription, setIsTranslatingDescription] = useState(false);
-  const [isTranslatingFabric, setIsTranslatingFabric] = useState(false);
-  const [isTranslatingLining, setIsTranslatingLining] = useState(false);
 
   type AvailabilityStatus = "available" | "sold_out" | "coming_soon";
   const [availabilityStatus, setAvailabilityStatus] =
     useState<AvailabilityStatus>("available");
-
-  // -------- Simple free translators (Google + MyMemory) --------
-  const translateWithGoogleFree = async (
-    text: string,
-    targetLang: "uk" | "en" | "de",
-    sourceLang: "uk" | "en" | "de" = "uk"
-  ): Promise<string> => {
-    if (!text || !text.trim()) return "";
-
-    const langMap: Record<string, string> = {
-      uk: "uk",
-      en: "en",
-      de: "de",
-    };
-
-    const source = langMap[sourceLang] ?? "uk";
-    const target = langMap[targetLang] ?? "en";
-
-    if (source === target) return text;
-
-    try {
-      const params = new URLSearchParams({
-        client: "gtx",
-        sl: source,
-        tl: target,
-        dt: "t",
-        q: text,
-      });
-
-      const res = await fetch(
-        `https://translate.googleapis.com/translate_a/single?${params.toString()}`
-      );
-      if (!res.ok) return text;
-      const data = await res.json();
-      if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
-        const translated = (data[0] as unknown[])
-          .map((item) => (Array.isArray(item) ? item[0] : ""))
-          .join("");
-        return (translated || "").trim();
-      }
-    } catch (e) {
-      console.warn("Translation error (google):", e);
-    }
-
-    return text;
-  };
-
-  const translateWithMyMemory = async (
-    text: string,
-    targetLang: "uk" | "en" | "de",
-    sourceLang: "uk" | "en" | "de" = "uk"
-  ): Promise<string> => {
-    if (!text || !text.trim()) return "";
-
-    const langMap: Record<string, string> = {
-      uk: "uk-UA",
-      en: "en-US",
-      de: "de-DE",
-    };
-
-    const source = langMap[sourceLang] ?? "uk-UA";
-    const target = langMap[targetLang] ?? "en-US";
-
-    if (source === target) return text;
-
-    try {
-      const params = new URLSearchParams({
-        q: text,
-        langpair: `${source}|${target}`,
-      });
-      const res = await fetch(
-        `https://api.mymemory.translated.net/get?${params.toString()}`
-      );
-      if (!res.ok) return text;
-      const data = await res.json();
-      if (data?.responseStatus === 200) {
-        const translated = data?.responseData?.translatedText;
-        if (
-          translated &&
-          typeof translated === "string" &&
-          translated.toLowerCase() !== text.toLowerCase()
-        ) {
-          return translated.trim();
-        }
-      }
-    } catch (e) {
-      console.warn("Translation error (mymemory):", e);
-    }
-
-    return text;
-  };
-
-  const translateTextAllLangs = async (
-    text: string,
-    sourceLang: "uk" | "en" | "de" = "uk"
-  ): Promise<{ uk: string; en: string; de: string }> => {
-    if (!text || !text.trim()) {
-      return { uk: "", en: "", de: "" };
-    }
-
-    const baseText = text.trim();
-
-    const textUk =
-      sourceLang === "uk"
-        ? baseText
-        : await translateWithGoogleFree(baseText, "uk", sourceLang);
-
-    let textEn = await translateWithGoogleFree(baseText, "en", sourceLang);
-    let textDe = await translateWithGoogleFree(baseText, "de", sourceLang);
-
-    if (!textEn || textEn === baseText) {
-      textEn = await translateWithMyMemory(baseText, "en", sourceLang);
-    }
-    if (!textDe || textDe === baseText) {
-      textDe = await translateWithMyMemory(baseText, "de", sourceLang);
-    }
-
-    return {
-      uk: textUk || baseText,
-      en: textEn || baseText,
-      de: textDe || baseText,
-    };
-  };
 
   useEffect(() => {
     async function fetchData() {
@@ -451,6 +321,14 @@ function EditProductPageContent() {
     setError(null);
 
     try {
+      const locales = await resolveProductLocalesFromUa({
+        name: formData.name,
+        description: formData.description,
+        fabricComposition: formData.fabricComposition,
+        liningDescription: formData.liningDescription,
+        hasLining: formData.hasLining,
+      });
+
       const filesToUpload = mediaFiles
         .map((m) => m.file)
         .filter((f): f is File => f instanceof File);
@@ -504,11 +382,11 @@ function EditProductPageContent() {
         },
         body: JSON.stringify({
           name: formData.name,
-          name_en: formData.nameEn || null,
-          name_de: formData.nameDe || null,
+          name_en: locales.nameEn || null,
+          name_de: locales.nameDe || null,
           description: formData.description,
-          description_en: formData.descriptionEn || null,
-          description_de: formData.descriptionDe || null,
+          description_en: locales.descriptionEn || null,
+          description_de: locales.descriptionDe || null,
           price: Number(formData.price),
           price_eur: formData.priceEur ? Number(formData.priceEur) : null,
           old_price: formData.oldPrice ? Number(formData.oldPrice) : null,
@@ -526,12 +404,12 @@ function EditProductPageContent() {
           category_id: formData.categoryId,
           subcategory_id: formData.subcategoryId,
           fabric_composition: formData.fabricComposition,
-          fabric_composition_en: formData.fabricCompositionEn || null,
-          fabric_composition_de: formData.fabricCompositionDe || null,
+          fabric_composition_en: locales.fabricCompositionEn || null,
+          fabric_composition_de: locales.fabricCompositionDe || null,
           has_lining: formData.hasLining,
           lining_description: formData.liningDescription,
-          lining_description_en: formData.liningDescriptionEn || null,
-          lining_description_de: formData.liningDescriptionDe || null,
+          lining_description_en: locales.liningDescriptionEn || null,
+          lining_description_de: locales.liningDescriptionDe || null,
           availability_status: availabilityStatus,
           recommended_product_ids: recommendedProductIds,
         }),
@@ -566,60 +444,29 @@ function EditProductPageContent() {
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                 />
-                <button
-                  type="button"
-                  className="mt-2 mb-4 text-xs text-blue-600 hover:underline"
-                  onClick={() => setShowNameLocales((v) => !v)}
-                >
-                  {showNameLocales ? "Сховати локалізації назви" : "Додати локалізацію назви"}
-                </button>
-                {showNameLocales && (
-                  <button
-                    type="button"
-                    className="mb-4 text-xs text-purple-600 hover:underline"
-                    disabled={isTranslatingName}
-                    onClick={async () => {
-                      if (!formData.name?.trim()) return;
-                      try {
-                        setIsTranslatingName(true);
-                        const res = await translateTextAllLangs(
-                          formData.name,
-                          "uk"
-                        );
-                        handleChange("nameEn", res.en);
-                        handleChange("nameDe", res.de);
-                      } finally {
-                        setIsTranslatingName(false);
-                      }
-                    }}
-                  >
-                    {isTranslatingName
-                      ? "Переклад назви..."
-                      : "Автоматично перекласти назву EN/DE"}
-                  </button>
-                )}
-                {showNameLocales && (
-                  <div className="mb-4 space-y-2">
-                    <div>
-                      <Label>Назва (EN)</Label>
-                      <Input
-                        type="text"
-                        value={formData.nameEn}
-                        onChange={(e) => handleChange("nameEn", e.target.value)}
-                        placeholder="Product name in English"
-                      />
-                    </div>
-                    <div>
-                      <Label>Назва (DE)</Label>
-                      <Input
-                        type="text"
-                        value={formData.nameDe}
-                        onChange={(e) => handleChange("nameDe", e.target.value)}
-                        placeholder="Produktname auf Deutsch"
-                      />
-                    </div>
+                <p className="mt-1 mb-3 text-xs text-gray-500">
+                  EN/DE переклад оновлюється автоматично при збереженні
+                </p>
+                <div className="mb-4 space-y-2">
+                  <div>
+                    <Label>Назва (EN)</Label>
+                    <Input
+                      type="text"
+                      value={formData.nameEn}
+                      onChange={(e) => handleChange("nameEn", e.target.value)}
+                      placeholder="Заповниться автоматично"
+                    />
                   </div>
-                )}
+                  <div>
+                    <Label>Назва (DE)</Label>
+                    <Input
+                      type="text"
+                      value={formData.nameDe}
+                      onChange={(e) => handleChange("nameDe", e.target.value)}
+                      placeholder="Wird automatisch ausgefüllt"
+                    />
+                  </div>
+                </div>
 
                 {/* Опис + локалізації */}
                 <Label>Опис (UA)</Label>
@@ -628,64 +475,30 @@ function EditProductPageContent() {
                   onChange={(value) => handleChange("description", value)}
                   rows={6}
                 />
-                <button
-                  type="button"
-                  className="mt-2 mb-4 text-xs text-blue-600 hover:underline"
-                  onClick={() => setShowDescriptionLocales((v) => !v)}
-                >
-                  {showDescriptionLocales
-                    ? "Сховати локалізації опису"
-                    : "Додати локалізацію опису"}
-                </button>
-                {showDescriptionLocales && (
-                  <div className="mb-4 space-y-2">
-                    <button
-                      type="button"
-                      className="mb-2 text-xs text-purple-600 hover:underline"
-                      disabled={isTranslatingDescription}
-                      onClick={async () => {
-                        if (!formData.description?.trim()) return;
-                        try {
-                          setIsTranslatingDescription(true);
-                          const res = await translateTextAllLangs(
-                            formData.description,
-                            "uk"
-                          );
-                          handleChange("descriptionEn", res.en);
-                          handleChange("descriptionDe", res.de);
-                        } finally {
-                          setIsTranslatingDescription(false);
-                        }
-                      }}
-                    >
-                      {isTranslatingDescription
-                        ? "Переклад опису..."
-                        : "Автоматично перекласти опис EN/DE"}
-                    </button>
-                    <div>
-                      <Label>Опис (EN)</Label>
-                      <TextArea
-                        value={formData.descriptionEn}
-                        onChange={(value) =>
-                          handleChange("descriptionEn", value)
-                        }
-                        rows={4}
-                        placeholder="Product description in English"
-                      />
-                    </div>
-                    <div>
-                      <Label>Опис (DE)</Label>
-                      <TextArea
-                        value={formData.descriptionDe}
-                        onChange={(value) =>
-                          handleChange("descriptionDe", value)
-                        }
-                        rows={4}
-                        placeholder="Produktbeschreibung auf Deutsch"
-                      />
-                    </div>
+                <div className="mb-4 mt-3 space-y-2">
+                  <div>
+                    <Label>Опис (EN)</Label>
+                    <TextArea
+                      value={formData.descriptionEn}
+                      onChange={(value) =>
+                        handleChange("descriptionEn", value)
+                      }
+                      rows={4}
+                      placeholder="Заповниться автоматично"
+                    />
                   </div>
-                )}
+                  <div>
+                    <Label>Опис (DE)</Label>
+                    <TextArea
+                      value={formData.descriptionDe}
+                      onChange={(value) =>
+                        handleChange("descriptionDe", value)
+                      }
+                      rows={4}
+                      placeholder="Wird automatisch ausgefüllt"
+                    />
+                  </div>
+                </div>
 
                 {/* Ціни: два стовпчики UAH / EUR */}
                 <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -965,64 +778,30 @@ function EditProductPageContent() {
                       rows={3}
                       placeholder="Наприклад: 80% бавовна, 20% поліестер"
                     />
-                    <button
-                      type="button"
-                      className="mt-1 text-xs text-blue-600 hover:underline"
-                      onClick={() => setShowFabricLocales((v) => !v)}
-                    >
-                      {showFabricLocales
-                        ? "Сховати локалізації складу тканини"
-                        : "Додати локалізацію складу тканини"}
-                    </button>
-                    {showFabricLocales && (
-                      <div className="mt-2 space-y-2">
-                        <button
-                          type="button"
-                          className="mb-2 text-xs text-purple-600 hover:underline"
-                          disabled={isTranslatingFabric}
-                          onClick={async () => {
-                            if (!formData.fabricComposition?.trim()) return;
-                            try {
-                              setIsTranslatingFabric(true);
-                              const res = await translateTextAllLangs(
-                                formData.fabricComposition,
-                                "uk"
-                              );
-                              handleChange("fabricCompositionEn", res.en);
-                              handleChange("fabricCompositionDe", res.de);
-                            } finally {
-                              setIsTranslatingFabric(false);
-                            }
-                          }}
-                        >
-                          {isTranslatingFabric
-                            ? "Переклад складу тканини..."
-                            : "Автоматично перекласти склад тканини EN/DE"}
-                        </button>
-                        <div>
-                          <Label>Склад тканини (EN)</Label>
-                          <TextArea
-                            value={formData.fabricCompositionEn}
-                            onChange={(value) =>
-                              handleChange("fabricCompositionEn", value)
-                            }
-                            rows={2}
-                            placeholder="Fabric composition in English"
-                          />
-                        </div>
-                        <div>
-                          <Label>Склад тканини (DE)</Label>
-                          <TextArea
-                            value={formData.fabricCompositionDe}
-                            onChange={(value) =>
-                              handleChange("fabricCompositionDe", value)
-                            }
-                            rows={2}
-                            placeholder="Stoffzusammensetzung auf Deutsch"
-                          />
-                        </div>
+                    <div className="mt-2 space-y-2">
+                      <div>
+                        <Label>Склад тканини (EN)</Label>
+                        <TextArea
+                          value={formData.fabricCompositionEn}
+                          onChange={(value) =>
+                            handleChange("fabricCompositionEn", value)
+                          }
+                          rows={2}
+                          placeholder="Заповниться автоматично"
+                        />
                       </div>
-                    )}
+                      <div>
+                        <Label>Склад тканини (DE)</Label>
+                        <TextArea
+                          value={formData.fabricCompositionDe}
+                          onChange={(value) =>
+                            handleChange("fabricCompositionDe", value)
+                          }
+                          rows={2}
+                          placeholder="Wird automatisch ausgefüllt"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <Label className="mb-0">Підкладка?</Label>
@@ -1045,66 +824,30 @@ function EditProductPageContent() {
                           placeholder="Опис підкладки товару"
                         />
                       </div>
-                      <button
-                        type="button"
-                        className="mt-1 text-xs text-blue-600 hover:underline"
-                        onClick={() =>
-                          setShowLiningLocales((v) => !v)
-                        }
-                      >
-                        {showLiningLocales
-                          ? "Сховати локалізації підкладки"
-                          : "Додати локалізацію підкладки"}
-                      </button>
-                      {showLiningLocales && (
-                        <div className="space-y-2">
-                          <button
-                            type="button"
-                            className="mb-2 text-xs text-purple-600 hover:underline"
-                            disabled={isTranslatingLining}
-                            onClick={async () => {
-                              if (!formData.liningDescription?.trim()) return;
-                              try {
-                                setIsTranslatingLining(true);
-                                const res = await translateTextAllLangs(
-                                  formData.liningDescription,
-                                  "uk"
-                                );
-                                handleChange("liningDescriptionEn", res.en);
-                                handleChange("liningDescriptionDe", res.de);
-                              } finally {
-                                setIsTranslatingLining(false);
-                              }
-                            }}
-                          >
-                            {isTranslatingLining
-                              ? "Переклад підкладки..."
-                              : "Автоматично перекласти підкладку EN/DE"}
-                          </button>
-                          <div>
-                            <Label>Опис підкладки (EN)</Label>
-                            <TextArea
-                              value={formData.liningDescriptionEn}
-                              onChange={(value) =>
-                                handleChange("liningDescriptionEn", value)
-                              }
-                              rows={2}
-                              placeholder="Lining description in English"
-                            />
-                          </div>
-                          <div>
-                            <Label>Опис підкладки (DE)</Label>
-                            <TextArea
-                              value={formData.liningDescriptionDe}
-                              onChange={(value) =>
-                                handleChange("liningDescriptionDe", value)
-                              }
-                              rows={2}
-                              placeholder="Futterbeschreibung auf Deutsch"
-                            />
-                          </div>
+                      <div className="space-y-2">
+                        <div>
+                          <Label>Опис підкладки (EN)</Label>
+                          <TextArea
+                            value={formData.liningDescriptionEn}
+                            onChange={(value) =>
+                              handleChange("liningDescriptionEn", value)
+                            }
+                            rows={2}
+                            placeholder="Заповниться автоматично"
+                          />
                         </div>
-                      )}
+                        <div>
+                          <Label>Опис підкладки (DE)</Label>
+                          <TextArea
+                            value={formData.liningDescriptionDe}
+                            onChange={(value) =>
+                              handleChange("liningDescriptionDe", value)
+                            }
+                            rows={2}
+                            placeholder="Wird automatisch ausgefüllt"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

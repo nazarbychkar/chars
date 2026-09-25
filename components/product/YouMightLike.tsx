@@ -173,7 +173,7 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
             href={withLocalePath("/catalog")}
             className="absolute bg-white inline-flex justify-center items-center gap-2 px-6 py-3 left-1/2 transform -translate-x-1/2 bottom-30 w-max sm:w-96 h-auto sm:h-20"
           >
-            <div className="text-center justify-center text-black text-lg sm:text-3xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
+            <div className="text-center justify-center text-inherit text-lg sm:text-3xl font-normal font-['Inter'] uppercase leading-none tracking-tight">
               {messages.product.moreProductsLabel}
             </div>
           </Link>

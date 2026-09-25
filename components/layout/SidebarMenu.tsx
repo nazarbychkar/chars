@@ -108,7 +108,9 @@ export default function SidebarMenu({
 
       <div
         className={`fixed top-0 left-0 h-full w-full sm:w-4/5 sm:max-w-md ${
-          isDark ? "bg-stone-900" : "bg-[#eef7ff]"
+          isDark
+            ? "bg-stone-900 text-stone-100"
+            : "bg-[#eef7ff] text-[#072a6b]"
         } shadow-md z-40 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } overflow-y-auto`}
@@ -151,7 +153,9 @@ export default function SidebarMenu({
                     {SEASON_CARDS.map((item) => (
                       <Link
                         key={item.value}
-                        href={withLocalePath("/collections")}
+                        href={withLocalePath(
+                          `/catalog?season=${encodeURIComponent(item.value)}`
+                        )}
                         onClick={() => setIsOpen(false)}
                         className="h-[90px] rounded overflow-hidden relative text-white text-base sm:text-lg font-bold text-center flex items-center justify-center"
                         style={{

@@ -15,6 +15,7 @@ import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { HTML_LANG, getSiteUrl } from "@/lib/i18n/seo";
 import type { Locale } from "@/lib/i18n/config";
 import { Manrope, Cormorant_Garamond } from "next/font/google";
+import { SITE_THEME_BOOT_SCRIPT } from "@/lib/siteTheme";
 
 const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
@@ -47,9 +48,13 @@ export default function SiteHtmlShell({
   return (
     <html
       lang={HTML_LANG[lang]}
-      className={`${manrope.variable} ${cormorant.variable} ${manrope.className}`}
+      className={`${manrope.variable} ${cormorant.variable} ${manrope.className} light-theme`}
+      suppressHydrationWarning
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: SITE_THEME_BOOT_SCRIPT }}
+        />
         <meta name="format-detection" content="telephone=no" />
         <link
           rel="icon"
@@ -174,7 +179,12 @@ export default function SiteHtmlShell({
           }}
         />
       </head>
-      <body>
+      <body className="light-theme" suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=document.documentElement.classList.contains("dark-theme");var b=document.body;if(b){b.classList.add(d?"dark-theme":"light-theme");b.classList.remove(d?"light-theme":"dark-theme");}}catch(e){}})();`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
