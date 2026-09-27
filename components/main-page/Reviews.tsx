@@ -13,7 +13,7 @@ export default function Reviews() {
     <section
       id="reviews"
       className={`scroll-mt-5 site-shell site-px relative ${
-        isDark ? "bg-[#141414]" : "bg-[#eef7ff]"
+        isDark ? "surface-muted-dark" : "surface-soft"
       } py-12 md:py-20`}
     >
       {/* Content section */}
@@ -33,7 +33,9 @@ export default function Reviews() {
           ))}
           <Link
             href="https://www.instagram.com/chars.wear/"
-            className="underline italic hover:text-blue-600 transition-colors"
+            className={`underline italic transition-colors duration-200 ${
+              isDark ? "hover:text-white" : "hover:text-[#051f52]"
+            }`}
           >
             Instagram
           </Link>

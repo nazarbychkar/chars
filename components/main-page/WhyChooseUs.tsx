@@ -76,9 +76,9 @@ export default function WhyChooseUs() {
   return (
     <section
       // h-[2659px]
-      className={`site-shell relative ${
-        isDark ? "" : "bg-[#eef7ff]"
-      } overflow-hidden`}
+      className={`site-shell relative overflow-hidden ${
+        isDark ? "text-white" : "surface-soft"
+      }`}
     >
       <div className="site-px flex flex-col lg:flex-row lg:justify-between items-start lg:items-center gap-3 py-10">
         <div className="font-display text-3xl lg:text-5xl font-medium tracking-[0.03em]">

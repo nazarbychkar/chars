@@ -110,30 +110,30 @@ export default function SidebarFilter({
             {openAccordion === 1 && (
               <div className="pl-4 mt-2 space-y-2">
                 <button
-                  className={`block text-left w-full hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
+                  className={`block text-left w-full transition-colors duration-200 hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
                     sortOrder === "newest"
                       ? "font-semibold text-[#072a6b] dark:text-[#eef7ff]"
-                      : ""
+                      : "opacity-90"
                   }`}
                   onClick={() => setSortOrder("newest")}
                 >
                   Спочатку новіші
                 </button>
                 <button
-                  className={`block text-left w-full hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
+                  className={`block text-left w-full transition-colors duration-200 hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
                     sortOrder === "asc"
                       ? "font-semibold text-[#072a6b] dark:text-[#eef7ff]"
-                      : ""
+                      : "opacity-90"
                   }`}
                   onClick={() => setSortOrder("asc")}
                 >
                   {messages.catalog.sortAscLabel}
                 </button>
                 <button
-                  className={`block text-left w-full hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
+                  className={`block text-left w-full transition-colors duration-200 hover:opacity-80 dark:hover:text-white text-base sm:text-lg ${
                     sortOrder === "desc"
                       ? "font-semibold text-[#072a6b] dark:text-[#eef7ff]"
-                      : ""
+                      : "opacity-90"
                   }`}
                   onClick={() => setSortOrder("desc")}
                 >

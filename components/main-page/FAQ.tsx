@@ -17,7 +17,7 @@ export default function FAQ() {
     <section
       id="payment-and-delivery"
       className={`scroll-mt-20 site-shell ${
-        isDark ? "bg-[#1e1e1e]" : "bg-[#eef7ff]"
+        isDark ? "surface-dark" : "surface-soft"
       } py-10 lg:py-20`}
     >
       <div className="site-px flex flex-col lg:flex-row justify-between gap-10">

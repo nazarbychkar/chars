@@ -213,7 +213,11 @@ export default function CatalogClient({
 
   return (
     <>
-      <section className="site-shell site-px pt-5 mt-10 mb-20">
+      <section
+        className={`site-shell site-px pt-5 mt-10 mb-20 ${
+          isDark ? "text-white" : "text-[#072a6b]"
+        }`}
+      >
         {/* Top Controls */}
         <div className="flex justify-between items-center text-xl sm:text-2xl md:text-3xl mb-6">
           <div className="flex items-center gap-3">
@@ -339,10 +343,10 @@ export default function CatalogClient({
                   return next;
                 })
               }
-              className={`cursor-pointer px-6 py-3 text-sm font-medium uppercase tracking-[0.14em] ${
+              className={`cursor-pointer px-6 py-3 text-sm font-medium uppercase tracking-[0.14em] border transition-colors duration-200 ${
                 isDark
-                  ? "bg-[#eef7ff] text-[#072a6b]"
-                  : "bg-[#072a6b] text-white"
+                  ? "bg-[#eef7ff] text-[#072a6b] border-[#eef7ff] hover:bg-white hover:border-white"
+                  : "bg-[#072a6b] text-white border-[#072a6b] hover:bg-[#051f52] hover:border-[#051f52]"
               }`}
             >
               {messages.catalog.showMoreLabel}

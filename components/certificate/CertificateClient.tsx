@@ -124,7 +124,11 @@ export default function CertificateClient() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 md:gap-5 w-full lg:w-1/2">
+        <div
+          className={`flex flex-col gap-4 md:gap-5 w-full lg:w-1/2 ${
+            isDark ? "text-white" : "text-[#072a6b]"
+          }`}
+        >
           <div
             className={`text-base md:text-lg font-normal font-['Helvetica'] leading-relaxed tracking-wide ${
               isDark ? "text-[#eef7ff]/90" : "text-[#072a6b]"

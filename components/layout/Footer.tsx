@@ -11,7 +11,11 @@ export default function Footer() {
   const { locale, messages } = useI18n();
 
   return (
-    <footer className="site-shell site-px lg:mt-20 mt-12 mb-10 h-auto relative overflow-hidden flex flex-col justify-between">
+    <footer
+      className={`site-shell site-px lg:mt-20 mt-12 mb-10 h-auto relative overflow-hidden flex flex-col justify-between ${
+        isDark ? "text-white" : "text-[#072a6b]"
+      }`}
+    >
       <div className="flex w-full flex-col items-center my-10 lg:my-14 border-b border-opacity-20 pb-10 lg:pb-14">
         <Link
           href={locale === "uk" ? "/uk" : `/${locale}`}
@@ -60,7 +64,7 @@ export default function Footer() {
             <Link
               href="https://maps.app.goo.gl/jJS3JdddMq6njJvb8?g_st=it"
               target="_blank"
-              className="w-48 h-8 md:w-56 md:h-11 text-sm md:text-xl flex justify-start my-3 transition-all duration-300 hover:text-[#072a6b]"
+              className="w-48 h-8 md:w-56 md:h-11 text-sm md:text-xl flex justify-start my-3 transition-colors duration-200 hover:opacity-80"
             >
               {messages.footer.showroomAddressLabel}
               <br />
@@ -78,7 +82,7 @@ export default function Footer() {
             </div>
             <Link
               href="mailto:Charsukrainianbrand@gmail.com"
-              className="w-48 h-5 items-center md:w-56 md:h-5 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:text-[#072a6b]"
+              className="w-48 h-5 items-center md:w-56 md:h-5 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:opacity-80"
             >
               Charsukrainianbrand <br /> @gmail.com
             </Link>
@@ -97,7 +101,7 @@ export default function Footer() {
             <Link
               href="https://www.instagram.com/chars.wear/"
               target="_blank"
-              className="w-28 h-8 md:w-32 md:h-11 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:text-[#072a6b]"
+              className="w-28 h-8 md:w-32 md:h-11 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:opacity-80"
             >
               Instagram
             </Link>
@@ -114,7 +118,7 @@ export default function Footer() {
             <Link
               href="https://www.facebook.com/profile.php?id=61554965091065"
               target="_blank"
-              className="w-28 h-5 md:w-32 md:h-5 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:text-[#072a6b]"
+              className="w-28 h-5 md:w-32 md:h-5 text-sm md:text-xl flex justify-start my-auto transition-all duration-300 hover:opacity-80"
             >
               Facebook
             </Link>
@@ -147,25 +151,25 @@ export default function Footer() {
           </h3>
           <Link
             href={`/${locale}/#about`}
-            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-[#072a6b]"
+            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:opacity-80"
           >
             {messages.footer.navigationAbout}
           </Link>
           <Link
             href={`/${locale}/#payment-and-delivery`}
-            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-[#072a6b]"
+            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:opacity-80"
           >
             {messages.footer.navigationPaymentAndDelivery}
           </Link>
           <Link
             href={`/${locale}/#reviews`}
-            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-[#072a6b]"
+            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:opacity-80"
           >
             {messages.footer.navigationReviews}
           </Link>
           <Link
             href={`/${locale}/#contacts`}
-            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:text-[#072a6b]"
+            className="text-sm md:text-lg transition-all duration-300 hover:translate-x-1 inline-block w-fit hover:opacity-80"
           >
             {messages.footer.navigationContacts}
           </Link>
@@ -239,25 +243,25 @@ export default function Footer() {
           <div className="flex justify-around gap-4 md:gap-6">
             <Link
               href={`/${locale}/#about`}
-              className="text-sm md:text-lg hover:text-[#072a6b]"
+              className="text-sm md:text-lg hover:opacity-80"
             >
               {messages.footer.navigationAbout}
             </Link>
             <Link
               href={`/${locale}/#payment-and-delivery`}
-              className="text-sm md:text-lg hover:text-[#072a6b]"
+              className="text-sm md:text-lg hover:opacity-80"
             >
               {messages.footer.navigationPaymentAndDelivery}
             </Link>
             <Link
               href={`/${locale}/#reviews`}
-              className="text-sm md:text-lg hover:text-[#072a6b]"
+              className="text-sm md:text-lg hover:opacity-80"
             >
               {messages.footer.navigationReviews}
             </Link>
             <Link
               href={`/${locale}/#contacts`}
-              className="text-sm md:text-lg hover:text-[#072a6b]"
+              className="text-sm md:text-lg hover:opacity-80"
             >
               {messages.footer.navigationContacts}
             </Link>
@@ -381,7 +385,7 @@ export default function Footer() {
           className={`px-6 py-3 rounded-full border-2 transition-all duration-300 text-sm md:text-base tracking-wide hover:scale-105 ${
             isDark
               ? "border-white/20 text-white/70 hover:border-white/40 hover:text-white hover:bg-white/5"
-              : "border-black/20 text-[#072a6b]/70 hover:border-black/40 hover:text-[#072a6b] hover:bg-black/5"
+              : "border-black/20 text-[#072a6b]/70 hover:border-black/40 hover:opacity-80 hover:bg-black/5"
           }`}
         >
           {messages.footer.devCredit}
@@ -394,7 +398,7 @@ export default function Footer() {
           className={`px-6 py-3 rounded-full border-2 transition-all duration-300 text-sm md:text-base tracking-wide hover:scale-105 ${
             isDark
               ? "border-white/20 text-white/70 hover:border-white/40 hover:text-white hover:bg-white/5"
-              : "border-black/20 text-[#072a6b]/70 hover:border-black/40 hover:text-[#072a6b] hover:bg-black/5"
+              : "border-black/20 text-[#072a6b]/70 hover:border-black/40 hover:opacity-80 hover:bg-black/5"
           }`}
         >
           {messages.footer.designCredit}

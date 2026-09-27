@@ -111,7 +111,8 @@ export default function SidebarMenu({
           <div className="flex justify-between items-center mb-4">
             <h2>{messages.header.menuLabel}</h2>
             <button
-              className="text-2xl sm:text-3xl cursor-pointer hover:text-[#072a6b]"
+              type="button"
+              className="text-2xl sm:text-3xl cursor-pointer transition-opacity hover:opacity-70"
               onClick={() => setIsOpen(false)}
             >
               ×
@@ -160,7 +161,7 @@ export default function SidebarMenu({
                           buildCategorySlug(cat.name)
                         )}`
                       )}
-                      className="hover:text-[#072a6b]"
+                      className="site-nav-link"
                       onClick={() => setIsOpen(false)}
                     >
                       {getCategoryLabel(cat)}
@@ -190,7 +191,7 @@ export default function SidebarMenu({
                               buildSubcategorySlug(sub.name)
                             )}`
                           )}
-                          className="hover:text-[#072a6b]"
+                          className="site-nav-link text-lg sm:text-xl opacity-90"
                           onClick={() => setIsOpen(false)}
                         >
                           {getSubcategoryLabel(sub)}
@@ -205,7 +206,7 @@ export default function SidebarMenu({
 
           <Link
             href={withLocalePath("/certificate")}
-            className="hover:text-[#072a6b]"
+            className="site-nav-link"
             onClick={() => setIsOpen(false)}
           >
             {messages.header.certificates}

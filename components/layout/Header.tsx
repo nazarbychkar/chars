@@ -156,7 +156,9 @@ export default function Header() {
 
   const navLinkClass = isTransparent
     ? "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors text-white hover:text-white/75"
-    : "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors hover:text-[#072a6b]";
+    : isDark
+      ? "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors text-white hover:text-white/80"
+      : "whitespace-nowrap px-1 py-2 text-sm font-medium uppercase tracking-[0.12em] transition-colors text-[#072a6b] hover:text-[#051f52]";
 
   const headerSurface = isTransparent
     ? "bg-transparent text-white"
@@ -247,8 +249,8 @@ export default function Header() {
                   <div
                     className={`rounded-sm border shadow-lg py-5 px-6 ${
                       isDark
-                        ? "bg-[#1e1e1e] border-stone-700"
-                        : "bg-white border-stone-200"
+                        ? "bg-[#1e1e1e] border-stone-700 text-stone-100"
+                        : "bg-white border-stone-200 text-[#072a6b]"
                     }`}
                   >
                     <SeasonList
@@ -304,8 +306,8 @@ export default function Header() {
                   <div
                     className={`border-t shadow-lg ${
                       isDark
-                        ? "bg-[#1e1e1e] border-stone-700"
-                        : "bg-white border-stone-200"
+                        ? "bg-[#1e1e1e] border-stone-700 text-stone-100"
+                        : "bg-white border-stone-200 text-[#072a6b]"
                     }`}
                   >
                     <div className="max-w-[1920px] mx-auto site-px py-8 xl:py-10">
@@ -316,7 +318,11 @@ export default function Header() {
                               href={`/${locale}/catalog?category=${encodeURIComponent(
                                 buildCategorySlug(category.name)
                               )}`}
-                              className="block text-sm font-semibold uppercase tracking-[0.14em] mb-3 hover:text-[#072a6b] transition-colors"
+                              className={`block text-sm font-semibold uppercase tracking-[0.14em] mb-3 transition-colors duration-200 ${
+                                isDark
+                                  ? "text-white hover:text-[#eef7ff]"
+                                  : "text-[#072a6b] hover:text-[#051f52]"
+                              }`}
                               onClick={() => setCatalogOpen(false)}
                             >
                               {getCategoryLabel(category)}
@@ -328,10 +334,10 @@ export default function Header() {
                                     href={`/${locale}/catalog?subcategory=${encodeURIComponent(
                                       buildSubcategorySlug(sub.name)
                                     )}`}
-                                    className={`text-[15px] font-normal leading-snug transition-colors hover:text-[#072a6b] ${
+                                    className={`text-[15px] font-normal leading-snug transition-colors duration-200 ${
                                       isDark
-                                        ? "text-stone-300"
-                                        : "text-stone-600"
+                                        ? "text-stone-300 hover:text-white"
+                                        : "text-stone-700 hover:text-[#072a6b]"
                                     }`}
                                     onClick={() => setCatalogOpen(false)}
                                   >
@@ -346,7 +352,11 @@ export default function Header() {
                                     href={`/${locale}/catalog?category=${encodeURIComponent(
                                       buildCategorySlug(category.name)
                                     )}`}
-                                    className="text-sm text-[#072a6b]"
+                                    className={`text-sm transition-colors duration-200 ${
+                                      isDark
+                                        ? "text-stone-300 hover:text-white"
+                                        : "text-[#072a6b] hover:text-[#051f52]"
+                                    }`}
                                     onClick={() => setCatalogOpen(false)}
                                   >
                                     {messages.header.viewAllCategory}
@@ -394,7 +404,7 @@ export default function Header() {
                   </svg>
                 </button>
                 {isCurrencyMenuOpen && (
-                  <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 min-w-[140px]">
+                  <div className="site-popover absolute right-0 mt-2 border shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 min-w-[140px]">
                     <button
                       type="button"
                       onClick={() => {
@@ -467,7 +477,7 @@ export default function Header() {
                   </svg>
                 </button>
                 {isLangMenuOpen && (
-                  <div className="absolute right-0 mt-2 bg-white border border-stone-200 shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 min-w-[140px]">
+                  <div className="site-popover absolute right-0 mt-2 border shadow-xl rounded-xl py-2 px-2 flex flex-col text-sm z-50 min-w-[140px]">
                     {["uk", "de", "en"].map((lng) => (
                       <button
                         key={lng}

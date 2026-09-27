@@ -67,6 +67,46 @@ body {
   border-color: color-mix(in srgb, var(--brand-soft) 40%, transparent) !important;
 }
 
+/* Sections / panels: explicit fg so header hero colors don't leak in */
+.surface-soft {
+  background-color: var(--brand-soft);
+  color: var(--brand-primary);
+}
+
+.surface-dark {
+  background-color: #1e1e1e;
+  color: var(--text-color-dark);
+}
+
+.surface-muted-dark {
+  background-color: #141414;
+  color: var(--text-color-dark);
+}
+
+.site-popover {
+  background-color: var(--brand-white);
+  color: #1c1917;
+  border-color: #e7e5e4;
+}
+
+.dark-theme .site-popover {
+  background-color: #1e1e1e;
+  color: #f5f5f4;
+  border-color: #44403c;
+}
+
+.site-nav-link {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.light-theme .site-nav-link:hover {
+  color: #051f52;
+}
+
+.dark-theme .site-nav-link:hover {
+  color: #ffffff;
+}
+
 * {
   font-family: inherit;
 }
