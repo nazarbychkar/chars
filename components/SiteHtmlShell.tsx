@@ -51,6 +51,8 @@ export default function SiteHtmlShell({
       className={`${manrope.variable} ${cormorant.variable} ${manrope.className} light-theme`}
       suppressHydrationWarning
     >
+      {/* Root layout shell: theme boot script must run before first paint */}
+      {/* eslint-disable-next-line @next/next/no-head-element */}
       <head>
         <script
           dangerouslySetInnerHTML={{ __html: SITE_THEME_BOOT_SCRIPT }}

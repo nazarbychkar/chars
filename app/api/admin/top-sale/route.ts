@@ -28,12 +28,15 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const items = Array.isArray(body?.items) ? body.items : [];
-    const parsed = items
-      .map((row: { id?: unknown; top_sale_priority?: unknown }) => ({
+    type OrderRow = { id: number; top_sale_priority: number };
+    const parsed: OrderRow[] = items
+      .map((row: { id?: unknown; top_sale_priority?: unknown }): OrderRow => ({
         id: Number(row.id),
         top_sale_priority: Number(row.top_sale_priority ?? 0),
       }))
-      .filter((row) => Number.isInteger(row.id) && row.id > 0);
+      .filter(
+        (row: OrderRow) => Number.isInteger(row.id) && row.id > 0
+      );
 
     await sqlUpdateTopSalePriorities(parsed);
     return NextResponse.json({ ok: true });

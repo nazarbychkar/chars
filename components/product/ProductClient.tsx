@@ -374,8 +374,6 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   // - "available" → можна купити
   // - "sold_out" → не можна купити
   // - "coming_soon" → показуємо як "немає в наявності" у статусі, але можна додати в кошик (pre-order)
-  const manuallyUnavailable = availabilityStatus === "sold_out";
-
   const outOfStock = sizes.length === 0;
 
   const cartButtonLabel =
