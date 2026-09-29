@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { RecommendProductThumb } from "@/components/admin/RecommendProductThumb";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
 import ComponentCard from "@/components/admin/ComponentCard";
@@ -52,7 +53,9 @@ export default function FormElements() {
   // const [images, setImages] = useState<File[]>([]);
 
   const [topSale, setTopSale] = useState(false);
+  const [topSalePriority, setTopSalePriority] = useState("0");
   const [limitedEdition, setLimitedEdition] = useState(false);
+  const [extraCategoryIds, setExtraCategoryIds] = useState<string[]>([]);
 
   const [color, setColor] = useState("");
   const [colors, setColors] = useState<{ label: string; hex?: string }[]>([]);
@@ -272,6 +275,8 @@ export default function FormElements() {
           colors,
           sizes: sizesWithStock,
           top_sale: topSale,
+          top_sale_priority: Number(topSalePriority || 0),
+          extra_category_ids: extraCategoryIds.map((id) => Number(id)),
           limited_edition: limitedEdition,
           season: season.length === 0 ? null : season,
           category_id: categoryId,
@@ -506,7 +511,13 @@ export default function FormElements() {
                   <Label>Категорія</Label>
                   <select
                     value={categoryId ?? ""}
-                    onChange={(e) => setCategoryId(Number(e.target.value))}
+                    onChange={(e) => {
+                      const nextId = Number(e.target.value);
+                      setCategoryId(nextId);
+                      setExtraCategoryIds((prev) =>
+                        prev.filter((id) => id !== String(nextId))
+                      );
+                    }}
                     className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
                   >
                     <option value="">Виберіть категорію</option>
@@ -534,6 +545,26 @@ export default function FormElements() {
                     </select>
                   </div>
                 )}
+
+                <div>
+                  <Label>Додаткові категорії</Label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Наприклад категорія Sale — товар також залишиться в основній
+                    категорії.
+                  </p>
+                  <MultiSelect
+                    label="Додаткові категорії"
+                    options={categories
+                      .filter((cat) => cat.id !== categoryId)
+                      .map((cat) => ({
+                        value: String(cat.id),
+                        text: cat.name,
+                        selected: extraCategoryIds.includes(String(cat.id)),
+                      }))}
+                    defaultSelected={extraCategoryIds}
+                    onChange={setExtraCategoryIds}
+                  />
+                </div>
 
                 <div>
                   <MultiSelect
@@ -706,6 +737,22 @@ export default function FormElements() {
                     label="Top Sale"
                   />
                 </div>
+                {topSale && (
+                  <div className="space-y-2">
+                    <Label>Позиція в «Топ продаж» (більше = вище)</Label>
+                    <Input
+                      type="number"
+                      value={topSalePriority}
+                      onChange={(e) => setTopSalePriority(e.target.value)}
+                    />
+                    <Link
+                      href="/admin/products/top-sale"
+                      className="text-sm text-brand-500 hover:underline inline-block"
+                    >
+                      Керувати порядком усіх топ-товарів →
+                    </Link>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <Label className="mb-0">Лімітована серія?</Label>
                   <ToggleSwitch

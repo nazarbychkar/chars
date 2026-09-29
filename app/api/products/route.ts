@@ -5,6 +5,7 @@ import {
   sqlGetAllProductsUncached,
   sqlPostProduct,
 } from "@/lib/sql";
+import { parseExtraCategoryIds } from "@/lib/parseExtraCategoryIds";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -106,6 +107,8 @@ export async function POST(req: Request) {
         color,
         category_id = null,
         subcategory_id = null,
+        extra_category_ids = [],
+        top_sale_priority = 0,
         fabric_composition = "",
         has_lining = false,
         lining_description = "",
@@ -145,6 +148,11 @@ export async function POST(req: Request) {
         color,
         category_id,
         subcategory_id,
+        extra_category_ids: parseExtraCategoryIds(
+          extra_category_ids,
+          category_id != null ? Number(category_id) : null
+        ),
+        top_sale_priority: Number(top_sale_priority) || 0,
         fabric_composition,
         has_lining,
         lining_description,

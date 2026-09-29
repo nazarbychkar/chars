@@ -125,42 +125,50 @@ export default function LimitedEdition() {
           </div>
         </div>
 
-        {/* Mobile layout: Two stacked sliders — left-aligned */}
+        {/* Mobile — один слайдер (як у Топ продаж) */}
         <div className="sm:hidden -mr-4 lg:-mr-8 xl:-mr-12">
-          {[0, 1].map((slider) => (
-            <Swiper
-              key={slider}
-              spaceBetween={12}
-              slidesPerView={1.35}
-              centeredSlides={false}
-              grabCursor={true}
-              initialSlide={0}
-              slidesOffsetAfter={16}
-              breakpoints={{
-                320: { slidesPerView: 1.25, spaceBetween: 10 },
-                480: { slidesPerView: 1.4, spaceBetween: 12 },
-              }}
-            >
-              {products.map((product, i) => {
-                const displayName = getDisplayName(product, locale);
-                const basePrice = getBasePrice(product, isEuro);
-                const currencySymbol = isEuro ? "€" : "₴";
+          <Swiper
+            spaceBetween={12}
+            slidesPerView={1.35}
+            centeredSlides={false}
+            grabCursor
+            slidesOffsetAfter={16}
+            breakpoints={{
+              320: { slidesPerView: 1.25, spaceBetween: 10 },
+              480: { slidesPerView: 1.4, spaceBetween: 12 },
+            }}
+          >
+            {products.map((product, i) => {
+              const displayName = getDisplayName(product, locale);
+              const basePrice = getBasePrice(product, isEuro);
+              const currencySymbol = isEuro ? "€" : "₴";
+              const slideKey =
+                product.id !== -1 ? product.id : `template-${i}`;
 
-                return (
-                  <SwiperSlide
-                    key={`${slider}-${product.id !== -1 ? product.id : `template-${i}`}`}
+              return (
+                <SwiperSlide key={slideKey}>
+                  <Link
+                    href={withLocalePath(
+                      `/product/${
+                        product.id === -1
+                          ? product.id
+                          : buildProductSlug(product.name, product.id)
+                      }`
+                    )}
+                    className="w-full group space-y-5"
                   >
-                    <Link
-                      href={withLocalePath(
-                        `/product/${
-                          product.id === -1
-                            ? product.id
-                            : buildProductSlug(product.name, product.id)
-                        }`
-                      )}
-                      className="w-full group space-y-5"
-                    >
-                      <div className="relative w-full h-[500px]">
+                    <div className="relative w-full h-[500px]">
+                      {product.first_media?.type === "video" ? (
+                        <video
+                          src={`/api/images/${product.first_media.url}`}
+                          className="object-cover group-hover:brightness-90 transition duration-300 w-full h-full"
+                          loop
+                          muted
+                          playsInline
+                          autoPlay
+                          preload="metadata"
+                        />
+                      ) : (
                         <Image
                           className="object-cover group-hover:brightness-90 transition duration-300"
                           src={getProductImageSrc(
@@ -170,27 +178,28 @@ export default function LimitedEdition() {
                           alt={displayName}
                           fill
                           sizes="90vw"
+                          priority={i === 0}
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-left text-xl font-normal capitalize leading-normal">
+                        {displayName}
+                      </div>
+                      <div className="mt-1 text-left text-xl font-normal leading-none">
+                        <ProductPrice
+                          basePrice={basePrice}
+                          currencySymbol={currencySymbol}
+                          discountPercentage={product.discount_percentage}
+                          align="left"
                         />
                       </div>
-                      <div>
-                        <div className="text-left text-xl font-normal capitalize leading-normal">
-                          {displayName}
-                        </div>
-                        <div className="mt-1 text-left text-xl font-normal leading-none">
-                          <ProductPrice
-                            basePrice={basePrice}
-                            currencySymbol={currencySymbol}
-                            discountPercentage={product.discount_percentage}
-                            align="left"
-                          />
-                        </div>
-                      </div>
-                    </Link>
-                  </SwiperSlide>
-                );
-              })}
-            </Swiper>
-          ))}
+                    </div>
+                  </Link>
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
         </div>
 
         {/* Desktop layout */}

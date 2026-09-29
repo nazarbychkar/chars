@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { sqlGetProduct, sqlPutProduct, sqlDeleteProduct } from "@/lib/sql";
+import { parseExtraCategoryIds } from "@/lib/parseExtraCategoryIds";
 
 // =========================
 // GET /api/products/[id]
@@ -113,6 +114,14 @@ export async function PUT(
       ? Number(body.discount_percentage)
       : null;
     const priority = body.priority ? Number(body.priority) : 0;
+    const topSalePriority =
+      body.top_sale_priority !== undefined && body.top_sale_priority !== null
+        ? Number(body.top_sale_priority)
+        : 0;
+    const extraCategoryIds = parseExtraCategoryIds(
+      body.extra_category_ids,
+      categoryId
+    );
     const hasLining = body.has_lining === true;
     const liningDescription = body.lining_description || ""; // Add this line to handle it
     const availabilityStatus =
@@ -138,6 +147,8 @@ export async function PUT(
       discount_percentage: discountPercentage,
       priority,
       top_sale: topSale,
+      top_sale_priority: Number.isFinite(topSalePriority) ? topSalePriority : 0,
+      extra_category_ids: extraCategoryIds,
       limited_edition: limitedEdition,
       season,
       availability_status: availabilityStatus,

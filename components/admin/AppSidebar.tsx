@@ -29,10 +29,10 @@ const navItems: NavItem[] = [
   {
     name: "Товари",
     icon: <TableIcon />,
-    // subItems: [
-    //   { name: "Products Tables", path: "/admin/products", pro: false },
-    // ],
-    path: "/admin/products",
+    subItems: [
+      { name: "Усі товари", path: "/admin/products", pro: false },
+      { name: "Топ продаж", path: "/admin/products/top-sale", pro: false },
+    ],
   },
   {
     name: "Категорії",

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { RecommendProductThumb } from "@/components/admin/RecommendProductThumb";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -74,6 +75,7 @@ function EditProductPageContent() {
     oldPrice: "",
     discountPercentage: "",
     priority: "0",
+    topSalePriority: "0",
     sizes: [] as string[],
     media: [] as { type: string; url: string }[],
     topSale: false,
@@ -97,6 +99,7 @@ function EditProductPageContent() {
   const [loadingData, setLoadingData] = useState(true);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [extraCategoryIds, setExtraCategoryIds] = useState<string[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<
     { id: number; name: string }[]
   >([]);
@@ -146,6 +149,7 @@ function EditProductPageContent() {
           oldPrice: String(productData.old_price || ""),
           discountPercentage: String(productData.discount_percentage || ""),
           priority: String(productData.priority || 0),
+          topSalePriority: String(productData.top_sale_priority ?? 0),
           sizes: productData.sizes.map((s: { size: string }) => s.size),
           media: productData.media,
           topSale: productData.top_sale,
@@ -162,6 +166,11 @@ function EditProductPageContent() {
           liningDescriptionEn: productData.lining_description_en || "",
           liningDescriptionDe: productData.lining_description_de || "",
         });
+        setExtraCategoryIds(
+          Array.isArray(productData.extra_category_ids)
+            ? productData.extra_category_ids.map((id: number) => String(id))
+            : []
+        );
         setRecommendedProductIds(
           Array.isArray(productData.recommended_product_ids)
             ? productData.recommended_product_ids
@@ -394,6 +403,8 @@ function EditProductPageContent() {
             ? Number(formData.discountPercentage)
             : null,
           priority: Number(formData.priority),
+          top_sale_priority: Number(formData.topSalePriority || 0),
+          extra_category_ids: extraCategoryIds.map((id) => Number(id)),
           sizes: formData.sizes.map((s) => ({ size: s, stock: sizeStocks[s] ?? 0 })),
           media: updatedMedia,
           top_sale: formData.topSale,
@@ -641,6 +652,9 @@ function EditProductPageContent() {
                     const selectedCategoryId = Number(e.target.value);
                     handleChange("categoryId", selectedCategoryId);
                     handleChange("subcategoryId", null); // ✅ Reset subcategory
+                    setExtraCategoryIds((prev) =>
+                      prev.filter((id) => id !== String(selectedCategoryId))
+                    );
                   }}
                   className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
                 >
@@ -675,6 +689,24 @@ function EditProductPageContent() {
                     </select>
                   </>
                 )}
+
+                <Label>Додаткові категорії</Label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Товар залишається в основній категорії та додатково зʼявиться в
+                  обраних (наприклад Sale).
+                </p>
+                <MultiSelect
+                  label="Додаткові категорії"
+                  options={categoryOptions
+                    .filter((cat) => cat.id !== formData.categoryId)
+                    .map((cat) => ({
+                      value: String(cat.id),
+                      text: cat.name,
+                      selected: extraCategoryIds.includes(String(cat.id)),
+                    }))}
+                  defaultSelected={extraCategoryIds}
+                  onChange={(values: string[]) => setExtraCategoryIds(values)}
+                />
 
                 <Label>Cезон</Label>
                 <MultiSelect
@@ -860,6 +892,24 @@ function EditProductPageContent() {
                     label="Top Sale"
                   />
                 </div>
+                {formData.topSale && (
+                  <div className="mt-2 space-y-2">
+                    <Label>Позиція в «Топ продаж» (більше = вище)</Label>
+                    <Input
+                      type="number"
+                      value={formData.topSalePriority}
+                      onChange={(e) =>
+                        handleChange("topSalePriority", e.target.value)
+                      }
+                    />
+                    <Link
+                      href="/admin/products/top-sale"
+                      className="text-sm text-brand-500 hover:underline inline-block"
+                    >
+                      Керувати порядком усіх топ-товарів →
+                    </Link>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between mt-4">
                   <Label className="mb-0">Лімітована серія?</Label>
