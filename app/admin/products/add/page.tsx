@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { RecommendProductThumb } from "@/components/admin/RecommendProductThumb";
 import PageBreadcrumb from "@/components/admin/PageBreadCrumb";
@@ -321,7 +320,9 @@ export default function FormElements() {
       setPriceEur("");
       setOldPrice("");
       setDiscountPercentage("");
-      setPriority("0");
+      setCategoryPriorities({});
+      setExtraCategoryIds([]);
+      setTopSalePriority("0");
       setColor("");
       setColors([]);
       setSizes([]);

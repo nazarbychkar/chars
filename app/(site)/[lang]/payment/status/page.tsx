@@ -27,9 +27,7 @@ function PaymentStatusContent() {
   const router = useRouter();
   const { isDark } = useAppContext();
   const { messages, withLocalePath } = useI18n();
-  const [status, setStatus] = useState<"loading" | "checking" | "error">(
-    "loading"
-  );
+  const [, setStatus] = useState<"loading" | "checking" | "error">("loading");
 
   const invoiceIdFromQuery =
     searchParams.get("invoiceId") || searchParams.get("invoice_id");
