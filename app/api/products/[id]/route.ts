@@ -3,6 +3,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sqlGetProduct, sqlPutProduct, sqlDeleteProduct } from "@/lib/sql";
 import { parseExtraCategoryIds } from "@/lib/parseExtraCategoryIds";
+import {
+  buildCategoryPrioritiesForSave,
+  parseCategoryPrioritiesFromDb,
+} from "@/lib/categoryPriorities";
 
 // =========================
 // GET /api/products/[id]
@@ -113,7 +117,7 @@ export async function PUT(
     const discountPercentage = body.discount_percentage
       ? Number(body.discount_percentage)
       : null;
-    const priority = body.priority ? Number(body.priority) : 0;
+    const legacyPriority = body.priority ? Number(body.priority) : 0;
     const topSalePriority =
       body.top_sale_priority !== undefined && body.top_sale_priority !== null
         ? Number(body.top_sale_priority)
@@ -121,6 +125,15 @@ export async function PUT(
     const extraCategoryIds = parseExtraCategoryIds(
       body.extra_category_ids,
       categoryId
+    );
+    const categoryPrioritiesInput = parseCategoryPrioritiesFromDb(
+      body.category_priorities
+    );
+    const { category_priorities, priority } = buildCategoryPrioritiesForSave(
+      categoryPrioritiesInput,
+      categoryId,
+      extraCategoryIds,
+      legacyPriority
     );
     const hasLining = body.has_lining === true;
     const liningDescription = body.lining_description || ""; // Add this line to handle it
@@ -149,6 +162,7 @@ export async function PUT(
       top_sale: topSale,
       top_sale_priority: Number.isFinite(topSalePriority) ? topSalePriority : 0,
       extra_category_ids: extraCategoryIds,
+      category_priorities,
       limited_edition: limitedEdition,
       season,
       availability_status: availabilityStatus,

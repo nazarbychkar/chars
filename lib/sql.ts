@@ -74,6 +74,7 @@ export async function ensureProductPlacementColumns(): Promise<void> {
   try {
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS extra_category_ids INTEGER[] DEFAULT '{}'`;
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS top_sale_priority INTEGER DEFAULT 0`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS category_priorities JSONB DEFAULT '{}'`;
     productPlacementColumnsEnsured = true;
   } catch (err) {
     console.error(
@@ -250,6 +251,7 @@ export async function sqlGetProduct(id: number) {
       p.top_sale,
       p.top_sale_priority,
       p.extra_category_ids,
+      p.category_priorities,
       p.limited_edition,
       p.season,
       p.availability_status,
@@ -416,7 +418,15 @@ export async function sqlGetProductsByCategory(categoryName: string) {
     ) m ON true
     WHERE p.category_id = ${categoryId}
        OR ${categoryId} = ANY(COALESCE(p.extra_category_ids, ARRAY[]::INTEGER[]))
-    ORDER BY p.priority DESC NULLS LAST, p.created_at DESC;
+    ORDER BY
+      COALESCE(
+        (p.category_priorities ->> ${String(categoryId)})::integer,
+        CASE
+          WHEN p.category_id = ${categoryId} THEN COALESCE(p.priority, 0)
+          ELSE 0
+        END
+      ) DESC,
+      p.created_at DESC;
   `;
 }
 
@@ -655,6 +665,7 @@ export async function sqlPostProduct(product: {
   top_sale?: boolean;
   top_sale_priority?: number;
   extra_category_ids?: number[];
+  category_priorities?: Record<string, number>;
   limited_edition?: boolean;
   season?: string[];
   color?: string;
@@ -677,12 +688,13 @@ export async function sqlPostProduct(product: {
   const extraCategoryIds = product.extra_category_ids?.length
     ? product.extra_category_ids
     : [];
+  const categoryPriorities = product.category_priorities ?? {};
   const inserted = await sql`
     INSERT INTO products (
       name, name_en, name_de,
       description, description_en, description_de,
       price, price_eur, old_price, discount_percentage, priority,
-      top_sale, top_sale_priority, extra_category_ids,
+      top_sale, top_sale_priority, extra_category_ids, category_priorities,
       limited_edition, season, color,
       category_id, subcategory_id,
       fabric_composition, fabric_composition_en, fabric_composition_de,
@@ -705,6 +717,7 @@ export async function sqlPostProduct(product: {
       ${product.top_sale || false},
       ${product.top_sale_priority ?? 0},
       ${extraCategoryIds},
+      ${JSON.stringify(categoryPriorities)}::jsonb,
       ${product.limited_edition || false},
       ${product.season || null},
       ${product.color || null},
@@ -771,6 +784,7 @@ export async function sqlPutProduct(
     top_sale?: boolean;
     top_sale_priority?: number;
     extra_category_ids?: number[];
+    category_priorities?: Record<string, number>;
     limited_edition?: boolean;
     season?: string[] | string;
     availability_status?: string | null;
@@ -794,6 +808,7 @@ export async function sqlPutProduct(
   const extraCategoryIds = update.extra_category_ids?.length
     ? update.extra_category_ids
     : [];
+  const categoryPriorities = update.category_priorities ?? {};
   // Step 1: Update main product fields
   // Convert season to array format for PostgreSQL array type
   // PostgreSQL expects array type, so we pass array directly (postgres.js handles conversion)
@@ -824,6 +839,7 @@ export async function sqlPutProduct(
       top_sale = ${update.top_sale || false},
       top_sale_priority = ${Number(update.top_sale_priority ?? 0)},
       extra_category_ids = ${extraCategoryIds},
+      category_priorities = ${JSON.stringify(categoryPriorities)}::jsonb,
       limited_edition = ${update.limited_edition || false},
       season = ${seasonValue},
       availability_status = ${update.availability_status || 'available'},

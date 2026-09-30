@@ -13,6 +13,7 @@ import Input from "@/components/admin/form/input/InputField";
 import TextArea from "@/components/admin/form/input/TextArea";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
 import { resolveProductLocalesFromUa } from "@/lib/adminProductTranslate";
+import CategoryPlacementPriorities from "@/components/admin/CategoryPlacementPriorities";
 
 const seasonOptions = ["Весна", "Літо", "Осінь", "Зима"];
 
@@ -47,7 +48,9 @@ export default function FormElements() {
   const [priceEur, setPriceEur] = useState("");
   const [oldPrice, setOldPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
-  const [priority, setPriority] = useState("0");
+  const [categoryPriorities, setCategoryPriorities] = useState<
+    Record<string, string>
+  >({});
   const [sizes, setSizes] = useState<string[]>([]);
   const [sizeStocks, setSizeStocks] = useState<Record<string, number>>({});
   // const [images, setImages] = useState<File[]>([]);
@@ -270,7 +273,15 @@ export default function FormElements() {
           discount_percentage: discountPercentage
             ? Number(discountPercentage)
             : null,
-          priority: Number(priority || 0),
+          priority: Number(
+            categoryPriorities[String(categoryId ?? "")] ?? 0
+          ),
+          category_priorities: Object.fromEntries(
+            Object.entries(categoryPriorities).map(([key, value]) => [
+              key,
+              Math.max(0, Number(value) || 0),
+            ])
+          ),
           color,
           colors,
           sizes: sizesWithStock,
@@ -449,15 +460,6 @@ export default function FormElements() {
                   />
                 </div>
                 <div>
-                  <Label>Пріоритет показу</Label>
-                  <Input
-                    type="number"
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    placeholder="0 - звичайний, 1 - високий"
-                  />
-                </div>
-                <div>
                   <MultiSelect
                     label="Розміри"
                     options={multiOptions}
@@ -517,6 +519,15 @@ export default function FormElements() {
                       setExtraCategoryIds((prev) =>
                         prev.filter((id) => id !== String(nextId))
                       );
+                      setCategoryPriorities((prev) => {
+                        const key = String(nextId);
+                        const next: Record<string, string> = {};
+                        next[key] = prev[key] ?? "0";
+                        for (const id of extraCategoryIds) {
+                          if (id !== key) next[id] = prev[id] ?? "0";
+                        }
+                        return next;
+                      });
                     }}
                     className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
                   >
@@ -562,9 +573,35 @@ export default function FormElements() {
                         selected: extraCategoryIds.includes(String(cat.id)),
                       }))}
                     defaultSelected={extraCategoryIds}
-                    onChange={setExtraCategoryIds}
+                    onChange={(values) => {
+                      setExtraCategoryIds(values);
+                      setCategoryPriorities((prev) => {
+                        const next: Record<string, string> = {};
+                        if (categoryId) {
+                          const mainKey = String(categoryId);
+                          next[mainKey] = prev[mainKey] ?? "0";
+                        }
+                        for (const id of values) {
+                          next[id] = prev[id] ?? "0";
+                        }
+                        return next;
+                      });
+                    }}
                   />
                 </div>
+
+                <CategoryPlacementPriorities
+                  categories={categories}
+                  primaryCategoryId={categoryId}
+                  extraCategoryIds={extraCategoryIds}
+                  priorities={categoryPriorities}
+                  onChangePriority={(categoryIdKey, value) =>
+                    setCategoryPriorities((prev) => ({
+                      ...prev,
+                      [categoryIdKey]: value,
+                    }))
+                  }
+                />
 
                 <div>
                   <MultiSelect

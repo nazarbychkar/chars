@@ -14,6 +14,11 @@ import TextArea from "@/components/admin/form/input/TextArea";
 import DropzoneComponent from "@/components/admin/form/form-elements/DropZone";
 import ToggleSwitch from "@/components/admin/form/ToggleSwitch";
 import { resolveProductLocalesFromUa } from "@/lib/adminProductTranslate";
+import CategoryPlacementPriorities from "@/components/admin/CategoryPlacementPriorities";
+import {
+  categoryPrioritiesToFormState,
+  parseCategoryPrioritiesFromDb,
+} from "@/lib/categoryPriorities";
 
 const multiOptions = [
   { value: "ONESIZE", text: "ONESIZE", selected: false },
@@ -100,6 +105,9 @@ function EditProductPageContent() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [extraCategoryIds, setExtraCategoryIds] = useState<string[]>([]);
+  const [categoryPriorities, setCategoryPriorities] = useState<
+    Record<string, string>
+  >({});
   const [categoryOptions, setCategoryOptions] = useState<
     { id: number; name: string }[]
   >([]);
@@ -166,10 +174,17 @@ function EditProductPageContent() {
           liningDescriptionEn: productData.lining_description_en || "",
           liningDescriptionDe: productData.lining_description_de || "",
         });
-        setExtraCategoryIds(
-          Array.isArray(productData.extra_category_ids)
-            ? productData.extra_category_ids.map((id: number) => String(id))
-            : []
+        const loadedExtraIds = Array.isArray(productData.extra_category_ids)
+          ? productData.extra_category_ids.map((id: number) => String(id))
+          : [];
+        setExtraCategoryIds(loadedExtraIds);
+        setCategoryPriorities(
+          categoryPrioritiesToFormState(
+            parseCategoryPrioritiesFromDb(productData.category_priorities),
+            productData.category_id ?? null,
+            loadedExtraIds,
+            Number(productData.priority || 0)
+          )
         );
         setRecommendedProductIds(
           Array.isArray(productData.recommended_product_ids)
@@ -402,7 +417,17 @@ function EditProductPageContent() {
           discount_percentage: formData.discountPercentage
             ? Number(formData.discountPercentage)
             : null,
-          priority: Number(formData.priority),
+          priority: Number(
+            categoryPriorities[String(formData.categoryId ?? "")] ??
+              formData.priority ??
+              0
+          ),
+          category_priorities: Object.fromEntries(
+            Object.entries(categoryPriorities).map(([key, value]) => [
+              key,
+              Math.max(0, Number(value) || 0),
+            ])
+          ),
           top_sale_priority: Number(formData.topSalePriority || 0),
           extra_category_ids: extraCategoryIds.map((id) => Number(id)),
           sizes: formData.sizes.map((s) => ({ size: s, stock: sizeStocks[s] ?? 0 })),
@@ -590,14 +615,6 @@ function EditProductPageContent() {
                   </div>
                 </div>
 
-                <Label>Пріоритет показу</Label>
-                <Input
-                  type="number"
-                  value={formData.priority}
-                  onChange={(e) => handleChange("priority", e.target.value)}
-                  placeholder="0 - звичайний, 1 - високий"
-                />
-
                 <Label>Розміри</Label>
                 <MultiSelect
                   label="Розміри"
@@ -655,6 +672,15 @@ function EditProductPageContent() {
                     setExtraCategoryIds((prev) =>
                       prev.filter((id) => id !== String(selectedCategoryId))
                     );
+                    setCategoryPriorities((prev) => {
+                      const key = String(selectedCategoryId);
+                      const next: Record<string, string> = {};
+                      next[key] = prev[key] ?? formData.priority ?? "0";
+                      for (const id of extraCategoryIds) {
+                        if (id !== key) next[id] = prev[id] ?? "0";
+                      }
+                      return next;
+                    });
                   }}
                   className="w-full border rounded px-3 py-2 text-sm dark:bg-gray-800 dark:text-white"
                 >
@@ -705,7 +731,33 @@ function EditProductPageContent() {
                       selected: extraCategoryIds.includes(String(cat.id)),
                     }))}
                   defaultSelected={extraCategoryIds}
-                  onChange={(values: string[]) => setExtraCategoryIds(values)}
+                  onChange={(values: string[]) => {
+                    setExtraCategoryIds(values);
+                    setCategoryPriorities((prev) => {
+                      const next: Record<string, string> = {};
+                      if (formData.categoryId) {
+                        const mainKey = String(formData.categoryId);
+                        next[mainKey] = prev[mainKey] ?? formData.priority ?? "0";
+                      }
+                      for (const id of values) {
+                        next[id] = prev[id] ?? "0";
+                      }
+                      return next;
+                    });
+                  }}
+                />
+
+                <CategoryPlacementPriorities
+                  categories={categoryOptions}
+                  primaryCategoryId={formData.categoryId}
+                  extraCategoryIds={extraCategoryIds}
+                  priorities={categoryPriorities}
+                  onChangePriority={(categoryId, value) =>
+                    setCategoryPriorities((prev) => ({
+                      ...prev,
+                      [categoryId]: value,
+                    }))
+                  }
                 />
 
                 <Label>Cезон</Label>

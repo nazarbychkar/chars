@@ -6,6 +6,10 @@ import {
   sqlPostProduct,
 } from "@/lib/sql";
 import { parseExtraCategoryIds } from "@/lib/parseExtraCategoryIds";
+import {
+  buildCategoryPrioritiesForSave,
+  parseCategoryPrioritiesFromDb,
+} from "@/lib/categoryPriorities";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -108,6 +112,7 @@ export async function POST(req: Request) {
         category_id = null,
         subcategory_id = null,
         extra_category_ids = [],
+        category_priorities = {},
         top_sale_priority = 0,
         fabric_composition = "",
         has_lining = false,
@@ -123,6 +128,18 @@ export async function POST(req: Request) {
         );
       }
 
+      const parsedExtraIds = parseExtraCategoryIds(
+        extra_category_ids,
+        category_id != null ? Number(category_id) : null
+      );
+      const { category_priorities: normalizedPriorities, priority: normalizedPriority } =
+        buildCategoryPrioritiesForSave(
+          parseCategoryPrioritiesFromDb(category_priorities),
+          category_id != null ? Number(category_id) : null,
+          parsedExtraIds,
+          Number(priority) || 0
+        );
+
       const product = await sqlPostProduct({
         name,
         name_en,
@@ -134,7 +151,7 @@ export async function POST(req: Request) {
         price_eur: typeof price_eur === "number" ? price_eur : null,
         old_price,
         discount_percentage,
-        priority,
+        priority: normalizedPriority,
         sizes: Array.isArray(sizes)
           ? (sizes as (string | { size: string; stock?: number | string })[]).map((s) =>
               typeof s === "string" ? { size: s, stock: 0 } : { size: s.size, stock: Number(s.stock ?? 0) }
@@ -148,10 +165,8 @@ export async function POST(req: Request) {
         color,
         category_id,
         subcategory_id,
-        extra_category_ids: parseExtraCategoryIds(
-          extra_category_ids,
-          category_id != null ? Number(category_id) : null
-        ),
+        extra_category_ids: parsedExtraIds,
+        category_priorities: normalizedPriorities,
         top_sale_priority: Number(top_sale_priority) || 0,
         fabric_composition,
         has_lining,
