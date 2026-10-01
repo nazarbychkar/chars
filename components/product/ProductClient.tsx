@@ -703,8 +703,11 @@ export default function ProductClient({ product: initialProduct }: ProductClient
                   ))}
 
                 {relatedProducts.map((relatedProduct) => {
-                  if (!relatedProduct.first_color) return null;
-                  const color = relatedProduct.first_color;
+                  const nameWords = relatedProduct.name.trim().split(/\s+/);
+                  const color = relatedProduct.first_color ?? {
+                    label: nameWords[nameWords.length - 1] ?? relatedProduct.name,
+                    hex: null as string | null,
+                  };
                   return (
                     <ColorSwatch
                       key={`related-${relatedProduct.id}`}
