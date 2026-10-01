@@ -2,7 +2,13 @@ import { Pool, PoolClient } from "pg";
 import { unlink } from "fs/promises";
 import path from "path";
 import { unstable_cache } from "next/cache";
-import { getColorVariantGroupKey } from "@/lib/colorVariantGroup";
+import {
+  getColorVariantGroupKey,
+  getFirstNameToken,
+  mergeRelatedColorRows,
+  normalizeDescriptionForVariantGroup,
+  type RelatedColorRow,
+} from "@/lib/colorVariantGroup";
 
 // Create a PostgreSQL connection pool with optimized settings
 // Optimized for 2GB VPS: max 5 connections (20 was too high and caused memory issues)
@@ -327,8 +333,76 @@ export async function sqlGetProduct(id: number) {
 }
 
 // =========================
-// Related color variants (see lib/colorVariantGroup.ts)
+// Related color variants (description first, then name — lib/colorVariantGroup.ts)
 // =========================
+export async function sqlGetRelatedColorVariants(
+  name: string,
+  description?: string | null
+) {
+  const lists: RelatedColorRow[][] = [];
+
+  lists.push(
+    (await sqlGetRelatedColorsByName(name)) as RelatedColorRow[]
+  );
+
+  const descKey = normalizeDescriptionForVariantGroup(description);
+  if (descKey) {
+    lists.push(
+      (await sql`
+          SELECT
+            p.id,
+            p.name,
+            COALESCE(
+              (
+                SELECT JSONB_BUILD_OBJECT('label', pc.label, 'hex', pc.hex)
+                FROM product_colors pc
+                WHERE pc.product_id = p.id
+                ORDER BY pc.id
+                LIMIT 1
+              ),
+              CASE
+                WHEN p.color IS NOT NULL THEN JSONB_BUILD_OBJECT('label', p.color, 'hex', NULL)
+                ELSE NULL
+              END
+            ) AS first_color
+          FROM products p
+          WHERE regexp_replace(trim(COALESCE(p.description, '')), '\\s+', ' ', 'g') = ${descKey}
+          ORDER BY p.id;
+        `) as RelatedColorRow[]
+    );
+  }
+
+  const firstToken = getFirstNameToken(name);
+  if (firstToken) {
+    lists.push(
+      (await sql`
+          SELECT
+            p.id,
+            p.name,
+            COALESCE(
+              (
+                SELECT JSONB_BUILD_OBJECT('label', pc.label, 'hex', pc.hex)
+                FROM product_colors pc
+                WHERE pc.product_id = p.id
+                ORDER BY pc.id
+                LIMIT 1
+              ),
+              CASE
+                WHEN p.color IS NOT NULL THEN JSONB_BUILD_OBJECT('label', p.color, 'hex', NULL)
+                ELSE NULL
+              END
+            ) AS first_color
+          FROM products p
+          WHERE split_part(trim(p.name), ' ', 1) = ${firstToken}
+            AND cardinality(string_to_array(trim(p.name), ' ')) >= 2
+          ORDER BY p.id;
+        `) as RelatedColorRow[]
+    );
+  }
+
+  return mergeRelatedColorRows(...lists);
+}
+
 export async function sqlGetRelatedColorsByName(name: string) {
   const { mode, key } = getColorVariantGroupKey(name);
 

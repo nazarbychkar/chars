@@ -398,6 +398,11 @@ export default function FormElements() {
                 {/* Опис + локалізації */}
                 <div>
                   <Label>Опис (UA)</Label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Для кількох кольорів однієї моделі —{" "}
+                    <strong>однаковий</strong> опис у всіх варіантів (назва може
+                    бути різною).
+                  </p>
                   <TextArea
                     value={description}
                     onChange={setDescription}

@@ -97,7 +97,9 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const quantity = 1;
   const { isDark } = useAppContext();
-  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [colorVariantProducts, setColorVariantProducts] = useState<
+    RelatedProduct[]
+  >([]);
   const [product, setProduct] = useState(initialProduct);
   const [isLoading, setIsLoading] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -161,6 +163,20 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     messages.catalog.colorNames
   );
 
+  const currentVariantColorLabel =
+    colorVariantProducts.length > 1
+      ? colorVariantProducts.find((v) => v.id === product.id)?.first_color
+          ?.label ??
+        product.colors?.[0]?.label ??
+        null
+      : selectedColor;
+
+  const variantColorDisplay = useColorDisplayName(
+    currentVariantColorLabel,
+    locale,
+    messages.catalog.colorNames
+  );
+
   // Auto-select first color if available
   useEffect(() => {
     if (product?.colors && product.colors.length > 0 && !selectedColor) {
@@ -194,13 +210,11 @@ export default function ProductClient({ product: initialProduct }: ProductClient
     async function fetchRelatedProducts() {
       try {
         const response = await fetch(
-          `/api/products/related-colors?name=${encodeURIComponent(product.name)}`
+          `/api/products/related-colors?productId=${product.id}`
         );
         if (response.ok) {
           const data: RelatedProduct[] = await response.json();
-          // Filter out current product
-          const filtered = data.filter((p) => p.id !== product.id);
-          setRelatedProducts(filtered);
+          setColorVariantProducts(data);
         } else {
           // Silently fail - related products are optional
           console.warn("Could not fetch related products:", response.statusText);
@@ -211,10 +225,10 @@ export default function ProductClient({ product: initialProduct }: ProductClient
       }
     }
     
-    if (product?.name) {
+    if (product?.id) {
       fetchRelatedProducts();
     }
-  }, [product.name, product.id]);
+  }, [product.id]);
 
   // Handle color variant change
   const handleColorVariantChange = async (productId: number) => {
@@ -683,48 +697,57 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           )}
 
           {/* Color Picker */}
-          {(product.colors && product.colors.length > 0) || relatedProducts.length > 0 ? (
+          {colorVariantProducts.length > 1 ||
+          (product.colors && product.colors.length > 0) ? (
             <div className="flex flex-col gap-2">
               <div className="text-sm md:text-base font-['Inter'] uppercase tracking-tight">
                 {messages.product.colorLabel}
               </div>
-              
-              <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                {/* Current product colors */}
-                {product.colors && product.colors.length > 0 &&
-                  product.colors.map((c, idx) => (
-                    <ColorSwatch
-                      key={`current-${c.label}-${idx}`}
-                      label={c.label}
-                      hex={c.hex}
-                      isActive={selectedColor === c.label}
-                      onSelect={() => setSelectedColor(c.label)}
-                    />
-                  ))}
 
-                {relatedProducts.map((relatedProduct) => {
-                  const nameWords = relatedProduct.name.trim().split(/\s+/);
-                  const color = relatedProduct.first_color ?? {
-                    label: nameWords[nameWords.length - 1] ?? relatedProduct.name,
-                    hex: null as string | null,
-                  };
-                  return (
-                    <ColorSwatch
-                      key={`related-${relatedProduct.id}`}
-                      label={color.label}
-                      hex={color.hex}
-                      isActive={false}
-                      variant="related"
-                      disabled={isLoading}
-                      onSelect={() => handleColorVariantChange(relatedProduct.id)}
-                    />
-                  );
-                })}
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                {colorVariantProducts.length > 1
+                  ? colorVariantProducts.map((variant) => {
+                      const isCurrent = variant.id === product.id;
+                      const nameWords = variant.name.trim().split(/\s+/);
+                      const color = variant.first_color ?? {
+                        label:
+                          nameWords[nameWords.length - 1] ?? variant.name,
+                        hex: null as string | null,
+                      };
+                      return (
+                        <ColorSwatch
+                          key={`variant-${variant.id}`}
+                          label={color.label}
+                          hex={color.hex}
+                          isActive={isCurrent}
+                          variant={isCurrent ? "current" : "related"}
+                          disabled={isLoading && !isCurrent}
+                          onSelect={() => {
+                            if (!isCurrent) {
+                              handleColorVariantChange(variant.id);
+                            }
+                          }}
+                        />
+                      );
+                    })
+                  : product.colors?.map((c, idx) => (
+                      <ColorSwatch
+                        key={`current-${c.label}-${idx}`}
+                        label={c.label}
+                        hex={c.hex}
+                        isActive={selectedColor === c.label}
+                        onSelect={() => setSelectedColor(c.label)}
+                      />
+                    ))}
               </div>
-              
-              {selectedColor && (
+
+              {(colorVariantProducts.length > 1
+                ? currentVariantColorLabel
+                : selectedColor) && (
                 <div className="text-sm font-['Inter'] text-gray-700 dark:text-gray-300 font-light tracking-wide">
-                  {selectedColorDisplay}
+                  {colorVariantProducts.length > 1
+                    ? variantColorDisplay
+                    : selectedColorDisplay}
                 </div>
               )}
             </div>

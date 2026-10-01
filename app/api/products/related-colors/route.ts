@@ -1,17 +1,53 @@
 import { NextResponse } from "next/server";
-import { sqlGetRelatedColorsByName } from "@/lib/sql"; // adjust import to match your folder structure
+import {
+  sqlGetProduct,
+  sqlGetRelatedColorVariants,
+  sqlGetRelatedColorsByName,
+} from "@/lib/sql";
 
-// =========================
-// GET /api/products/related-colors?name=SomeName
-// =========================
+// GET /api/products/related-colors?productId=123
+// or legacy GET ?name=...
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const productIdParam = searchParams.get("productId");
     const name = searchParams.get("name");
+
+    if (productIdParam) {
+      const productId = Number(productIdParam);
+      if (!Number.isInteger(productId) || productId <= 0) {
+        return NextResponse.json(
+          { error: "Invalid productId" },
+          { status: 400 }
+        );
+      }
+
+      const rows = await sqlGetProduct(productId);
+      const product = rows[0] as
+        | { name?: string; description?: string | null }
+        | undefined;
+      if (!product?.name) {
+        return NextResponse.json(
+          { error: "Product not found" },
+          { status: 404 }
+        );
+      }
+
+      const related = await sqlGetRelatedColorVariants(
+        product.name,
+        product.description
+      );
+      return NextResponse.json(related, {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Content-Type": "application/json",
+        },
+      });
+    }
 
     if (!name) {
       return NextResponse.json(
-        { error: "Missing 'name' query parameter" },
+        { error: "Missing 'productId' or 'name' query parameter" },
         { status: 400 }
       );
     }

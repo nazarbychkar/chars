@@ -506,6 +506,12 @@ function EditProductPageContent() {
 
                 {/* Опис + локалізації */}
                 <Label>Опис (UA)</Label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Для кількох кольорів однієї моделі вставляйте{" "}
+                  <strong>той самий</strong> опис у всіх варіантів — на сайті
+                  зʼявляться свотчі кольорів. Назва товару може відрізнятись
+                  (колір у назві).
+                </p>
                 <TextArea
                   value={formData.description}
                   onChange={(value) => handleChange("description", value)}
