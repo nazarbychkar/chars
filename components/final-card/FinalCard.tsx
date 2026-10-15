@@ -92,8 +92,13 @@ export default function FinalCard() {
     const value = items.reduce(
       (sum, item) =>
         sum +
-        (resolveItemPrice(effectiveBasketCurrency, item.price, item.price_eur, item.price_usd) * item.quantity
-          : item.price * item.quantity),
+        resolveItemPrice(
+          effectiveBasketCurrency,
+          item.price,
+          item.price_eur,
+          item.price_usd
+        ) *
+          item.quantity,
       0
     );
     const numItems = items.reduce((s, i) => s + i.quantity, 0);
