@@ -88,7 +88,9 @@ function PaymentSuccessContent() {
           0
         ) ?? 0;
       const currency =
-        order.currency === "EUR" || order.currency === "UAH"
+        order.currency === "EUR" ||
+        order.currency === "UAH" ||
+        order.currency === "USD"
           ? order.currency
           : "UAH";
 
@@ -121,7 +123,10 @@ function PaymentSuccessContent() {
   }
 
   const isCertificate = order.delivery_method === "certificate";
-  const orderCurrency = order.currency === "EUR" ? "EUR" : "UAH";
+  const orderCurrency =
+    order.currency === "EUR" || order.currency === "USD"
+      ? order.currency
+      : "UAH";
   const certificateItem = order.items?.[0];
   const certificateAmount = certificateItem
     ? Number(certificateItem.price)
@@ -236,7 +241,11 @@ function PaymentSuccessContent() {
                     {item.color &&
                       ` (${messages.catalog.colorNames[item.color] || item.color})`}{" "}
                     — Розмір: {item.size} × {item.quantity} — {item.price}
-                    {orderCurrency === "EUR" ? "€" : "₴"}
+                    {orderCurrency === "EUR"
+                      ? "€"
+                      : orderCurrency === "USD"
+                        ? "$"
+                        : "₴"}
                   </li>
                 ))}
               </ul>

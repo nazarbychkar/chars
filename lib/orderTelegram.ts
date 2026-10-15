@@ -10,11 +10,13 @@ const DELIVERY_LABELS: Record<string, string> = {
 };
 
 function currencySymbol(currency: string | null | undefined): string {
-  return currency === "EUR" ? "€" : "₴";
+  if (currency === "EUR") return "€";
+  if (currency === "USD") return "$";
+  return "₴";
 }
 
 function formatMoney(amount: number, currency: string | null | undefined): string {
-  const decimals = currency === "EUR" ? 2 : 2;
+  const decimals = currency === "UAH" ? 0 : 2;
   return `${Number(amount).toFixed(decimals)} ${currencySymbol(currency)}`;
 }
 
@@ -57,17 +59,18 @@ function paidAmountForDisplay(
   const fromOrder = paidAmountFromOrder(order);
   if (amountMinorUnits == null) return fromOrder;
 
-  const expectedCcy = order.currency === "EUR" ? 978 : 980;
+  const expectedCcy =
+    order.currency === "EUR" ? 978 : order.currency === "USD" ? 840 : 980;
   if (amountCcy != null && amountCcy !== expectedCcy) {
     return fromOrder;
   }
 
   const fromWebhook = amountMinorUnits / 100;
 
-  // No ccy from webhook: if EUR order but amount looks like UAH (~fx rate), trust order.
+  // No ccy from webhook: if foreign-currency order but amount looks like UAH (~fx rate), trust order.
   if (
     amountCcy == null &&
-    order.currency === "EUR" &&
+    (order.currency === "EUR" || order.currency === "USD") &&
     fromOrder > 0 &&
     fromWebhook / fromOrder > 10
   ) {
@@ -96,7 +99,8 @@ export async function sendCertificatePurchaseTelegram(
   const adminOrderUrl = `${PUBLIC_URL}/admin/orders/${order.id}/edit`;
   const adminCertsUrl = `${PUBLIC_URL}/admin/certificates`;
   const symbolCurrency = cert.currency;
-  const expectedCcy = cert.currency === "EUR" ? 978 : 980;
+  const expectedCcy =
+    cert.currency === "EUR" ? 978 : cert.currency === "USD" ? 840 : 980;
   const paidAmount =
     amountMinorUnits != null &&
     (amountCcy == null || amountCcy === expectedCcy)
@@ -161,7 +165,10 @@ export async function sendOrderTelegramNotification(
     "https://charsua.com";
 
   const adminOrderUrl = `${PUBLIC_URL}/admin/orders/${order.id}/edit`;
-  const currency = order.currency === "EUR" ? "EUR" : "UAH";
+  const currency =
+    order.currency === "EUR" || order.currency === "USD"
+      ? order.currency
+      : "UAH";
 
   const isCertificate = order.delivery_method === "certificate";
   const items = Array.isArray(order.items) ? order.items : [];

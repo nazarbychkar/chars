@@ -7,7 +7,7 @@ import { getCertificatePngPublicUrl } from "@/lib/certificateFileNames";
 
 interface CertificatePreviewProps {
   tier: CertificateTier;
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
 }
 
 export default function CertificatePreview({

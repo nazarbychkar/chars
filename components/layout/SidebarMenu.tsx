@@ -240,6 +240,18 @@ export default function SidebarMenu({
                 >
                   € EUR
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency("USD")}
+                  className={`px-3 py-1.5 rounded-full border text-xs tracking-wide ${
+                    effectiveCurrency === "USD"
+                      ? "bg-[#072a6b] text-white border-[#072a6b]"
+                      : "bg-white border-stone-300 text-stone-900"
+                  }`}
+                  aria-pressed={effectiveCurrency === "USD"}
+                >
+                  $ USD
+                </button>
               </div>
             </div>
 

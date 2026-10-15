@@ -73,6 +73,7 @@ export const sql = Object.assign(
 let recommendedProductIdsColumnEnsured = false;
 let availabilityStatusColumnEnsured = false;
 let productPlacementColumnsEnsured = false;
+let priceUsdColumnEnsured = false;
 
 /** extra_category_ids + top_sale_priority for Sale / top-sale ordering */
 export async function ensureProductPlacementColumns(): Promise<void> {
@@ -88,6 +89,18 @@ export async function ensureProductPlacementColumns(): Promise<void> {
       "[sql] ensureProductPlacementColumns failed:",
       err
     );
+    throw err;
+  }
+}
+
+export async function ensurePriceUsdColumn(): Promise<void> {
+  if (priceUsdColumnEnsured) return;
+  if (process.env.DISABLE_AUTO_PRICE_USD_COLUMN === "1") return;
+  try {
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_usd NUMERIC`;
+    priceUsdColumnEnsured = true;
+  } catch (err) {
+    console.error("[sql] ensurePriceUsdColumn failed:", err);
     throw err;
   }
 }
@@ -135,6 +148,7 @@ export async function ensureAvailabilityStatusColumn(): Promise<void> {
 // OPTIMIZED: Added Next.js cache wrapper for server-side caching (revalidate every 5 minutes)
 async function _sqlGetAllProducts() {
   await ensureAvailabilityStatusColumn();
+  await ensurePriceUsdColumn();
   return await sql`
     SELECT
       p.id,
@@ -146,6 +160,7 @@ async function _sqlGetAllProducts() {
       p.description_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -191,6 +206,7 @@ export async function sqlGetAllProductsForFacebookFeedUncached() {
       p.description_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -241,6 +257,7 @@ export const sqlGetAllProducts = unstable_cache(
 export async function sqlGetProduct(id: number) {
   await ensureAvailabilityStatusColumn();
   await ensureProductPlacementColumns();
+  await ensurePriceUsdColumn();
   const rows = await sql`
     SELECT
       p.id,
@@ -252,6 +269,7 @@ export async function sqlGetProduct(id: number) {
       p.description_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.priority,
@@ -500,6 +518,7 @@ export async function sqlGetProductsByCategory(categoryName: string) {
       p.name_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -540,6 +559,7 @@ export async function sqlGetProductsBySubcategoryName(name: string) {
       p.name_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -574,6 +594,7 @@ export async function sqlGetProductsBySeason(season: string) {
       p.name_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -607,6 +628,7 @@ export async function sqlGetTopSaleProducts() {
       p.name_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -649,6 +671,7 @@ export async function sqlGetLimitedEditionProducts() {
       p.name_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -682,6 +705,7 @@ export async function sqlGetProductsByIdsOrdered(ids: number[]) {
       p.name_de,
       p.price,
       p.price_eur,
+      p.price_usd,
       p.old_price,
       p.discount_percentage,
       p.top_sale,
@@ -760,6 +784,7 @@ export async function sqlPostProduct(product: {
   description_de?: string | null;
   price: number;
   price_eur?: number | null;
+  price_usd?: number | null;
   old_price?: number | null;
   discount_percentage?: number | null;
   priority?: number;
@@ -786,6 +811,7 @@ export async function sqlPostProduct(product: {
   await ensureRecommendedProductIdsColumn();
   await ensureAvailabilityStatusColumn();
   await ensureProductPlacementColumns();
+  await ensurePriceUsdColumn();
   const extraCategoryIds = product.extra_category_ids?.length
     ? product.extra_category_ids
     : [];
@@ -794,7 +820,7 @@ export async function sqlPostProduct(product: {
     INSERT INTO products (
       name, name_en, name_de,
       description, description_en, description_de,
-      price, price_eur, old_price, discount_percentage, priority,
+      price, price_eur, price_usd, old_price, discount_percentage, priority,
       top_sale, top_sale_priority, extra_category_ids, category_priorities,
       limited_edition, season, color,
       category_id, subcategory_id,
@@ -812,6 +838,7 @@ export async function sqlPostProduct(product: {
       ${product.description_de || null},
       ${product.price},
       ${product.price_eur ?? null},
+      ${product.price_usd ?? null},
       ${product.old_price || null},
       ${product.discount_percentage || null},
       ${product.priority || 0},
@@ -879,6 +906,7 @@ export async function sqlPutProduct(
     description_en?: string | null;
     description_de?: string | null;
     price_eur?: number | null;
+    price_usd?: number | null;
     old_price?: number | null;
     discount_percentage?: number | null;
     priority?: number;
@@ -906,6 +934,7 @@ export async function sqlPutProduct(
   await ensureRecommendedProductIdsColumn();
   await ensureAvailabilityStatusColumn();
   await ensureProductPlacementColumns();
+  await ensurePriceUsdColumn();
   const extraCategoryIds = update.extra_category_ids?.length
     ? update.extra_category_ids
     : [];
@@ -928,6 +957,11 @@ export async function sqlPutProduct(
       price_eur = ${
         update.price_eur !== undefined && update.price_eur !== null
           ? Number(update.price_eur)
+          : null
+      },
+      price_usd = ${
+        update.price_usd !== undefined && update.price_usd !== null
+          ? Number(update.price_usd)
           : null
       },
       name_en = ${update.name_en || null},
@@ -1088,7 +1122,7 @@ type OrderInput = {
   invoice_id: string;
   payment_reference?: string | null;
   payment_status: "pending" | "paid" | "canceled";
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   locale?: string | null;
   gift_certificate_code?: string | null;
   certificate_discount?: number;
@@ -1109,7 +1143,7 @@ type CertificateOrderInput = {
   invoice_id: string;
   payment_reference: string;
   payment_status: "pending" | "paid" | "canceled";
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   locale?: string | null;
   tier_uah: number;
   items: {
@@ -1663,7 +1697,7 @@ export type GiftCertificateRow = {
   tier_eur: number;
   initial_balance: string | number;
   remaining_balance: string | number;
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   status: string;
   recipient_email: string | null;
   recipient_name: string | null;
@@ -1782,7 +1816,7 @@ export async function sqlGetGiftCertificateByPurchaseOrderId(
 export async function sqlCalculateGiftCertificateDiscount(
   code: string,
   orderTotal: number,
-  currency: "UAH" | "EUR"
+  currency: "UAH" | "EUR" | "USD"
 ): Promise<{ discount: number; certificate: GiftCertificateRow }> {
   const certificate = await sqlGetGiftCertificateByCode(code);
   if (!certificate) {
@@ -1815,7 +1849,7 @@ export async function sqlCreateGiftCertificateForOrder(input: {
   purchaseOrderId: number;
   tierUah: number;
   tierEur: number;
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   initialBalance: number;
   recipientName: string;
   recipientEmail: string;

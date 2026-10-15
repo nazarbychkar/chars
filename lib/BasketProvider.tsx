@@ -8,6 +8,11 @@ import React, {
   ReactNode,
 } from "react";
 import { trackFbq } from "@/lib/fbq";
+import {
+  isSiteCurrency,
+  resolveItemPrice,
+  type SiteCurrency,
+} from "@/lib/currency";
 
 interface BasketItem {
   id: number;
@@ -16,7 +21,9 @@ interface BasketItem {
   price: number;
   /** Price in EUR (from product.price_eur), so cart/checkout can show selected currency */
   price_eur?: number | null;
-  currency?: "UAH" | "EUR";
+  /** Price in USD (from product.price_usd) */
+  price_usd?: number | null;
+  currency?: SiteCurrency;
   size: string;
   quantity: number;
   imageUrl: string;
@@ -25,7 +32,7 @@ interface BasketItem {
   stock?: number; // Available stock for this size
 }
 
-export type BasketCurrency = "UAH" | "EUR";
+export type BasketCurrency = SiteCurrency;
 
 interface BasketContextType {
   items: BasketItem[];
@@ -55,7 +62,7 @@ export function BasketProvider({ children }: { children: ReactNode }) {
         setItems(JSON.parse(saved));
       }
       const savedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY);
-      if (savedCurrency === "UAH" || savedCurrency === "EUR") {
+      if (isSiteCurrency(savedCurrency)) {
         setCurrencyState(savedCurrency);
       } else if (typeof window !== "undefined") {
         // First visit: choose default currency based on locale in URL
@@ -99,11 +106,15 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   function addItem(newItem: BasketItem, onError?: (message: string) => void): boolean {
     const trackAddToCart = () => {
-      const value =
-        currency === "EUR" && newItem.price_eur != null
-          ? newItem.price_eur * newItem.quantity
-          : newItem.price * newItem.quantity;
-      const curr = currency === "EUR" ? "EUR" : "UAH";
+      const curr: SiteCurrency =
+        currency && isSiteCurrency(currency) ? currency : "UAH";
+      const unit = resolveItemPrice(
+        curr,
+        newItem.price,
+        newItem.price_eur,
+        newItem.price_usd
+      );
+      const value = unit * newItem.quantity;
       trackFbq("AddToCart", {
         content_ids: [String(newItem.id)],
         content_name: newItem.name,

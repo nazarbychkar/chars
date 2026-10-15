@@ -195,10 +195,16 @@ export async function POST(req: NextRequest) {
     );
 
   const isEuroSelected = currency === "EUR";
-  // Prepay is always 300 UAH — never charge 300 EUR
+  const isUsdSelected = currency === "USD";
+  // Prepay is always 300 UAH — never charge 300 EUR/USD
   const isPrepay = payment_type === "prepay";
-  const orderCurrency: "UAH" | "EUR" =
-    isPrepay ? "UAH" : isEuroSelected ? "EUR" : "UAH";
+  const orderCurrency: "UAH" | "EUR" | "USD" = isPrepay
+    ? "UAH"
+    : isEuroSelected
+      ? "EUR"
+      : isUsdSelected
+        ? "USD"
+        : "UAH";
 
   let certificateDiscount = 0;
   let appliedCertificateCode: string | null = null;
@@ -248,6 +254,8 @@ export async function POST(req: NextRequest) {
     process.env.DEV === "1";
   // Prepay must always go through Monobank as UAH (980)
   const isEuroForMono = !IS_DEV && orderCurrency === "EUR";
+  const isUsdForMono = !IS_DEV && orderCurrency === "USD";
+  const monoCurrencyCode = isUsdForMono ? 840 : isEuroForMono ? 978 : 980;
   const amountInMinorUnits = Math.round(amountToPay * 100);
 
   const orderLocale = typeof locale === "string" ? locale : null;
@@ -408,7 +416,11 @@ export async function POST(req: NextRequest) {
           {
             reference_id: reference,
             amount: {
-              currency_code: isEuroSelected ? "EUR" : "UAH",
+              currency_code: isUsdSelected
+                ? "USD"
+                : isEuroSelected
+                  ? "EUR"
+                  : "UAH",
               value: amountToPay.toFixed(2),
             },
           },
@@ -483,7 +495,7 @@ export async function POST(req: NextRequest) {
         payment_type,
         invoice_id: paypalOrderId,
         payment_status: "pending",
-        currency: isEuroSelected ? "EUR" : "UAH",
+        currency: orderCurrency,
         locale: typeof locale === "string" ? locale : null,
         items: normalizedItems.map(
           ({ product_id, size, quantity, price, color }) => ({
@@ -616,7 +628,7 @@ export async function POST(req: NextRequest) {
     const invoicePayload = {
       amount: amountInMinorUnits,
       // Якщо DEV=True, завжди гривня (980)
-      ccy: isEuroForMono ? 978 : 980,
+      ccy: monoCurrencyCode,
       merchantPaymInfo: {
         reference,
         destination: "Оплата замовлення",

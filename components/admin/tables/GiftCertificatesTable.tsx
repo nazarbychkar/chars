@@ -19,7 +19,7 @@ interface GiftCertificate {
   purchase_order_id: number;
   initial_balance: string | number;
   remaining_balance: string | number;
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   status: string;
   recipient_name: string | null;
   recipient_email: string | null;
@@ -75,8 +75,12 @@ function formatDate(value: string): string {
   });
 }
 
-function formatAmount(amount: string | number, currency: "UAH" | "EUR"): string {
-  const symbol = currency === "EUR" ? "€" : "₴";
+function formatAmount(
+  amount: string | number,
+  currency: "UAH" | "EUR" | "USD"
+): string {
+  const symbol =
+    currency === "EUR" ? "€" : currency === "USD" ? "$" : "₴";
   return `${Number(amount).toLocaleString("uk-UA", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,

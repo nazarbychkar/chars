@@ -16,6 +16,12 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { trackFbq, trackFbqPurchase } from "@/lib/fbq";
 import BasketCrossSell from "@/components/basket/BasketCrossSell";
 import { getAvailableInstallmentParts } from "@/lib/chastConfig";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+  type SiteCurrency,
+} from "@/lib/currency";
 
 const INSTALLMENT_PARTS_OPTIONS = getAvailableInstallmentParts();
 
@@ -57,8 +63,7 @@ export default function FinalCard() {
   const { items, updateQuantity, removeItem, clearBasket, currency } = useBasket();
   const searchParams = useSearchParams();
   const { locale, messages, withLocalePath } = useI18n();
-  const effectiveBasketCurrency =
-    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
+  const effectiveBasketCurrency = resolveEffectiveCurrency(currency, locale);
 
   // CUSTOMER
   const [customerName, setCustomerName] = useState("");
@@ -87,8 +92,7 @@ export default function FinalCard() {
     const value = items.reduce(
       (sum, item) =>
         sum +
-        (effectiveBasketCurrency === "EUR" && item.price_eur != null
-          ? item.price_eur * item.quantity
+        (resolveItemPrice(effectiveBasketCurrency, item.price, item.price_eur, item.price_usd) * item.quantity
           : item.price * item.quantity),
       0
     );
@@ -120,7 +124,7 @@ export default function FinalCard() {
   const [streetAddress, setStreetAddress] = useState("");
   const [submittedOrder, setSubmittedOrder] = useState<{
     items: typeof items;
-    orderCurrency: "UAH" | "EUR";
+    orderCurrency: SiteCurrency;
     customer: {
       name: string;
       email?: string;
@@ -155,7 +159,7 @@ export default function FinalCard() {
   // Prepay / installments are UAH-only
   useEffect(() => {
     if (
-      effectiveBasketCurrency === "EUR" &&
+      (effectiveBasketCurrency === "EUR" || effectiveBasketCurrency === "USD") &&
       (paymentType === "prepay" || paymentType === "installments")
     ) {
       setPaymentType("full");
@@ -165,9 +169,12 @@ export default function FinalCard() {
   const getCartTotal = () =>
     items.reduce((total, item) => {
       const rawItemPrice =
-        effectiveBasketCurrency === "EUR" && item.price_eur != null
-          ? item.price_eur
-          : item.price;
+        resolveItemPrice(
+          effectiveBasketCurrency,
+          item.price,
+          item.price_eur,
+          item.price_usd
+        );
       const itemPrice =
         typeof rawItemPrice === "string"
           ? parseFloat(rawItemPrice)
@@ -266,12 +273,17 @@ export default function FinalCard() {
       return;
     }
 
-    const isEuro =
-      paymentType !== "prepay" &&
-      paymentType !== "installments" &&
-      effectiveBasketCurrency === "EUR";
+    const checkoutCurrency: SiteCurrency =
+      paymentType === "prepay" || paymentType === "installments"
+        ? "UAH"
+        : effectiveBasketCurrency;
     const getItemPrice = (item: (typeof items)[0]) =>
-      isEuro && item.price_eur != null ? item.price_eur : item.price;
+      resolveItemPrice(
+        checkoutCurrency,
+        item.price,
+        item.price_eur,
+        item.price_usd
+      );
 
     // Формуємо товари для API у вибраній валюті (з урахуванням знижки)
     const apiItems = items.map((item) => {
@@ -340,7 +352,7 @@ export default function FinalCard() {
         comment,
         payment_type: paymentType,
         total_amount: fullAmount.toFixed(2),
-        currency: isEuro ? "EUR" : "UAH",
+        currency: checkoutCurrency,
         locale,
         items: apiItems,
         gift_certificate_code: appliedCertificateCode,
@@ -791,12 +803,17 @@ export default function FinalCard() {
   
   if (items.length == 0 && submittedOrder && paymentSuccess) {
     const { items: orderItems, customer } = submittedOrder;
-    const orderCurrency =
+    const orderCurrency: SiteCurrency =
       submittedOrder.orderCurrency ??
-      (locale === "en" || locale === "de" ? "EUR" : "UAH");
-    const summarySymbol = orderCurrency === "EUR" ? "€" : "₴";
+      resolveEffectiveCurrency(null, locale);
+    const summarySymbol = currencySymbol(orderCurrency);
     const getSummaryPrice = (item: (typeof orderItems)[0]) =>
-      orderCurrency === "EUR" && item.price_eur != null ? item.price_eur : item.price;
+      resolveItemPrice(
+        orderCurrency,
+        item.price,
+        item.price_eur,
+        item.price_usd
+      );
 
     return (
       <section className="site-shell site-px py-10 flex flex-col items-center gap-10">
@@ -1419,7 +1436,7 @@ export default function FinalCard() {
                             <p className="mt-1.5 text-sm text-[#072a6b]">
                               {messages.checkout.giftCertificateAppliedAmount(
                                 certificateDiscount.toFixed(2),
-                                effectiveBasketCurrency === "EUR" ? "€" : "₴"
+                                currencySymbol(effectiveBasketCurrency)
                               )}
                             </p>
                           )}
@@ -1736,11 +1753,13 @@ export default function FinalCard() {
                       </div>
                       <div className="text-zinc-600 text-base font-normal font-['Helvetica'] leading-relaxed tracking-wide">
                         {(() => {
-                          const symbol = effectiveBasketCurrency === "EUR" ? "€" : "₴";
-                          const displayPrice =
-                            effectiveBasketCurrency === "EUR" && item.price_eur != null
-                              ? item.price_eur
-                              : item.price;
+                          const symbol = currencySymbol(effectiveBasketCurrency);
+                          const displayPrice = resolveItemPrice(
+                            effectiveBasketCurrency,
+                            item.price,
+                            item.price_eur,
+                            item.price_usd
+                          );
                           return item.discount_percentage ? (
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-[#072a6b]">
@@ -1852,7 +1871,7 @@ export default function FinalCard() {
                   <div>{messages.checkout.subtotalLabel}</div>
                   <div className="font-['Helvetica']">
                     {getCartTotal().toFixed(2)}{" "}
-                    {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+                    {currencySymbol(effectiveBasketCurrency)}
                   </div>
                 </div>
                 {certificateDiscount > 0 && (
@@ -1860,7 +1879,7 @@ export default function FinalCard() {
                     <div>{messages.checkout.giftCertificateDiscountLabel}</div>
                     <div className="font-['Helvetica']">
                       −{certificateDiscount.toFixed(2)}{" "}
-                      {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+                      {currencySymbol(effectiveBasketCurrency)}
                     </div>
                   </div>
                 )}
@@ -1868,7 +1887,7 @@ export default function FinalCard() {
                   <div>{messages.checkout.totalLabel}</div>
                   <div className="font-['Helvetica'] leading-relaxed tracking-wide">
                     {Math.max(0, getCartTotal() - certificateDiscount).toFixed(2)}{" "}
-                    {effectiveBasketCurrency === "EUR" ? "€" : "₴"}
+                    {currencySymbol(effectiveBasketCurrency)}
                   </div>
                 </div>
               </div>

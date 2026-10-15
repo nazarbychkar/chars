@@ -40,8 +40,19 @@ export async function POST(req: NextRequest) {
     }
 
     const isEuroSelected = currency === "EUR";
-    const isEuroForMono = !isDevMode() && isEuroSelected;
-    const price = isEuroSelected ? tier.eur : tier.uah;
+    const isUsdSelected = currency === "USD";
+    const orderCurrency = isUsdSelected
+      ? "USD"
+      : isEuroSelected
+        ? "EUR"
+        : "UAH";
+    const isForeignForMono =
+      !isDevMode() && (isEuroSelected || isUsdSelected);
+    const price = isUsdSelected
+      ? tier.usd
+      : isEuroSelected
+        ? tier.eur
+        : tier.uah;
     const amountInMinorUnits = Math.round(price * 100);
 
     const certificateLabel = `CHARS Gift Certificate — ${tier.uah.toLocaleString("uk-UA")} ₴`;
@@ -55,7 +66,11 @@ export async function POST(req: NextRequest) {
 
     const { invoiceId, pageUrl } = await createMonobankInvoice({
       amountInMinorUnits,
-      currencyCode: isEuroForMono ? 978 : 980,
+      currencyCode: isForeignForMono
+        ? isUsdSelected
+          ? 840
+          : 978
+        : 980,
       reference,
       destination: certificateLabel,
       comment: `Подарунковий сертифікат CHARS — ${tier.uah} ₴`,
@@ -81,7 +96,7 @@ export async function POST(req: NextRequest) {
       invoice_id: invoiceId,
       payment_reference: reference,
       payment_status: "pending",
-      currency: isEuroSelected ? "EUR" : "UAH",
+      currency: orderCurrency,
       locale: orderLocale,
       tier_uah: tier.uah,
       items: [

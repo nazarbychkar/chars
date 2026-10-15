@@ -7,6 +7,11 @@ import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useProducts } from "@/lib/useProducts";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 import { buildProductSlug } from "@/lib/slug";
 
 interface SearchSidebarProps {
@@ -25,8 +30,7 @@ export default function SearchSidebar({
   const { locale, messages, withLocalePath } = useI18n();
 
   const { currency } = useBasket();
-  const isEuro =
-    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   const filteredProducts = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -116,10 +120,13 @@ export default function SearchSidebar({
                       ? product.name_de || product.name
                       : product.name;
                   const basePrice =
-                    isEuro && product.price_eur != null
-                      ? product.price_eur
-                      : product.price;
-                  const currencySymbol = isEuro ? "€" : "₴";
+                    resolveItemPrice(
+                      effectiveCurrency,
+                      Number(product.price),
+                      product.price_eur,
+                      product.price_usd
+                    );
+                  const moneyMark = currencySymbol(effectiveCurrency);
 
                   return (
                     <li key={product.id}>
@@ -145,7 +152,7 @@ export default function SearchSidebar({
                         <div className="flex flex-col">
                           <span className="font-medium">{displayName}</span>
                           <span className="text-sm text-gray-500">
-                            {basePrice} {currencySymbol}
+                            {basePrice} {moneyMark}
                           </span>
                         </div>
                       </Link>

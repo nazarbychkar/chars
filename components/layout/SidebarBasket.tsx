@@ -5,6 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import BasketCrossSell from "@/components/basket/BasketCrossSell";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 
 interface SidebarBasketProps {
   isOpen: boolean;
@@ -19,8 +24,7 @@ export default function SidebarBasket({
 }: SidebarBasketProps) {
   const { items, removeItem, updateQuantity, currency } = useBasket();
   const { messages, withLocalePath, locale } = useI18n();
-  const effectiveBasketCurrency =
-    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
+  const effectiveBasketCurrency = resolveEffectiveCurrency(currency, locale);
 
   return (
     <div className="relative z-50">
@@ -55,11 +59,13 @@ export default function SidebarBasket({
             {items.length === 0 && <p>{messages.basket.empty}</p>}
 
             {items.map((item) => {
-              const symbol = effectiveBasketCurrency === "EUR" ? "€" : "₴";
-              const displayPrice =
-                effectiveBasketCurrency === "EUR" && item.price_eur != null
-                  ? item.price_eur
-                  : item.price;
+              const symbol = currencySymbol(effectiveBasketCurrency);
+              const displayPrice = resolveItemPrice(
+                effectiveBasketCurrency,
+                item.price,
+                item.price_eur,
+                item.price_usd
+              );
               return (
               <div
                 key={`${item.id}-${item.size}`}

@@ -60,7 +60,9 @@ export function trackFbqPurchase(order: FbqPurchaseOrder): void {
       0
     ) ?? 0;
   const currency =
-    order.currency === "EUR" || order.currency === "UAH"
+    order.currency === "EUR" ||
+    order.currency === "UAH" ||
+    order.currency === "USD"
       ? order.currency
       : "UAH";
   const eventId = String(order.id);

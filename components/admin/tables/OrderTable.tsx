@@ -26,7 +26,7 @@ interface Order {
   payment_type: string;
   status: string;
   created_at: Date;
-  currency?: "UAH" | "EUR";
+  currency?: "UAH" | "EUR" | "USD";
   locale?: string | null;
   total_amount?: number;
 }
@@ -315,7 +315,11 @@ export default function OrdersTable() {
                       <div className="flex flex-col gap-0.5">
                         <span>{order.locale ? order.locale.toUpperCase() : "—"}</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {order.currency === "EUR" ? "€ EUR" : "₴ UAH"}
+                          {order.currency === "EUR"
+                            ? "€ EUR"
+                            : order.currency === "USD"
+                              ? "$ USD"
+                              : "₴ UAH"}
                         </span>
                       </div>
                     </TableCell>

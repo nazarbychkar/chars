@@ -38,7 +38,10 @@ function mapOrderForEmail(order: OrderRowForNotification): OrderForEmail {
     comment: order.comment,
     invoice_id: order.invoice_id,
     created_at: new Date(order.created_at),
-    currency: order.currency === "EUR" ? "EUR" : "UAH",
+    currency:
+      order.currency === "EUR" || order.currency === "USD"
+        ? order.currency
+        : "UAH",
     certificate_discount: Number(order.certificate_discount || 0),
     gift_certificate_code: order.gift_certificate_code,
     items: items.map(
@@ -110,15 +113,23 @@ async function handleCertificatePurchase(order: OrderRowForNotification) {
     return;
   }
 
+  const orderCurrency =
+    order.currency === "EUR" || order.currency === "USD"
+      ? order.currency
+      : "UAH";
+  const initialBalance =
+    orderCurrency === "EUR"
+      ? Number(item?.price ?? tier.eur)
+      : orderCurrency === "USD"
+        ? Number(item?.price ?? tier.usd)
+        : Number(item?.price ?? tier.uah);
+
   const cert = await sqlCreateGiftCertificateForOrder({
     purchaseOrderId: order.id,
     tierUah: tier.uah,
     tierEur: tier.eur,
-    currency: order.currency === "EUR" ? "EUR" : "UAH",
-    initialBalance:
-      order.currency === "EUR"
-        ? Number(item?.price ?? tier.eur)
-        : Number(item?.price ?? tier.uah),
+    currency: orderCurrency,
+    initialBalance,
     recipientName: order.customer_name,
     recipientEmail: order.email ?? "",
     locale: order.locale,

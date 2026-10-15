@@ -16,6 +16,11 @@ import {
   buildCategorySlug,
   buildSubcategorySlug,
 } from "@/lib/slug";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 
 interface CategoryForLabel {
   name: string;
@@ -31,6 +36,7 @@ interface Product {
   name_en?: string | null;
   name_de?: string | null;
   price_eur?: number | null;
+  price_usd?: number | null;
   first_media?: { url: string; type: string } | null;
   sizes?: { size: string; stock: string }[];
   color?: string;
@@ -57,8 +63,7 @@ export default function CatalogClient({
   const searchParams = useSearchParams();
   const { locale, withLocalePath, messages } = useI18n();
   const { currency } = useBasket();
-  const isEuro =
-    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
@@ -79,15 +84,26 @@ export default function CatalogClient({
         selectedColors.length === 0 ||
         (product.color && selectedColors.includes(product.color));
 
-      const basePrice =
-        isEuro && product.price_eur != null ? product.price_eur : product.price;
+      const basePrice = resolveItemPrice(
+        effectiveCurrency,
+        product.price,
+        product.price_eur,
+        product.price_usd
+      );
 
       const matchesMinPrice = minPrice === null || basePrice >= minPrice;
       const matchesMaxPrice = maxPrice === null || basePrice <= maxPrice;
 
       return matchesSize && matchesMinPrice && matchesMaxPrice && matchesColor;
     });
-  }, [initialProducts, selectedSizes, minPrice, maxPrice, selectedColors, isEuro]);
+  }, [
+    initialProducts,
+    selectedSizes,
+    minPrice,
+    maxPrice,
+    selectedColors,
+    effectiveCurrency,
+  ]);
 
   const sortedProducts = useMemo(() => {
     if (sortOrder === "newest") {
@@ -95,14 +111,22 @@ export default function CatalogClient({
       return filteredProducts;
     }
 
-    return [...filteredProducts].sort((a, b) =>
-      sortOrder === "asc"
-        ? (isEuro && a.price_eur != null ? a.price_eur : a.price) -
-          (isEuro && b.price_eur != null ? b.price_eur : b.price)
-        : (isEuro && b.price_eur != null ? b.price_eur : b.price) -
-          (isEuro && a.price_eur != null ? a.price_eur : a.price)
-    );
-  }, [filteredProducts, sortOrder, isEuro]);
+    return [...filteredProducts].sort((a, b) => {
+      const pa = resolveItemPrice(
+        effectiveCurrency,
+        a.price,
+        a.price_eur,
+        a.price_usd
+      );
+      const pb = resolveItemPrice(
+        effectiveCurrency,
+        b.price,
+        b.price_eur,
+        b.price_usd
+      );
+      return sortOrder === "asc" ? pa - pb : pb - pa;
+    });
+  }, [filteredProducts, sortOrder, effectiveCurrency]);
 
   const category = searchParams.get("category");
   const season = searchParams.get("season");
@@ -259,8 +283,13 @@ export default function CatalogClient({
                 ? product.name_de || product.name
                 : product.name;
             const basePrice =
-              isEuro && product.price_eur != null ? product.price_eur : product.price;
-            const currencySymbol = isEuro ? "€" : "₴";
+              resolveItemPrice(
+                effectiveCurrency,
+                product.price,
+                product.price_eur,
+                product.price_usd
+              );
+            const moneyMark = currencySymbol(effectiveCurrency);
             return (
               <Link
                 href={withLocalePath(`/product/${slug}`)}
@@ -307,11 +336,11 @@ export default function CatalogClient({
                         basePrice *
                         (1 - product.discount_percentage / 100)
                       ).toFixed(2)}
-                      {currencySymbol}
+                      {moneyMark}
                     </span>
                     <span className="opacity-40 line-through">
                       {basePrice}
-                      {currencySymbol}
+                      {moneyMark}
                     </span>
                     <span className="text-xs tracking-wide opacity-55">
                       −{product.discount_percentage}%
@@ -320,7 +349,7 @@ export default function CatalogClient({
                 ) : (
                   <span className="font-medium">
                     {basePrice}
-                    {currencySymbol}
+                    {moneyMark}
                   </span>
                 )}
               </span>

@@ -114,6 +114,10 @@ export async function PUT(
       body.price_eur !== undefined && body.price_eur !== null
         ? Number(body.price_eur)
         : null;
+    const priceUsd =
+      body.price_usd !== undefined && body.price_usd !== null
+        ? Number(body.price_usd)
+        : null;
     const discountPercentage = body.discount_percentage
       ? Number(body.discount_percentage)
       : null;
@@ -152,6 +156,7 @@ export async function PUT(
       description: body.description || null,
       price: priceNum,
       price_eur: priceEur,
+      price_usd: priceUsd,
       name_en: body.name_en || null,
       name_de: body.name_de || null,
       description_en: body.description_en || null,

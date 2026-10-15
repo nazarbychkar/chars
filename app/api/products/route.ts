@@ -98,6 +98,7 @@ export async function POST(req: Request) {
         description_de,
         price,
         price_eur,
+        price_usd,
         old_price,
         discount_percentage,
         priority = 0,
@@ -149,6 +150,7 @@ export async function POST(req: Request) {
         description_de,
         price,
         price_eur: typeof price_eur === "number" ? price_eur : null,
+        price_usd: typeof price_usd === "number" ? price_usd : null,
         old_price,
         discount_percentage,
         priority: normalizedPriority,
@@ -190,6 +192,9 @@ export async function POST(req: Request) {
     const price = Number(formData.get("price"));
     const priceEur = formData.get("price_eur")
       ? Number(formData.get("price_eur"))
+      : null;
+    const priceUsd = formData.get("price_usd")
+      ? Number(formData.get("price_usd"))
       : null;
     const oldPrice = formData.get("old_price")
       ? Number(formData.get("old_price"))
@@ -259,6 +264,7 @@ export async function POST(req: Request) {
       description,
       price,
       price_eur: priceEur,
+      price_usd: priceUsd,
       old_price: oldPrice,
       discount_percentage: discountPercentage,
       priority,

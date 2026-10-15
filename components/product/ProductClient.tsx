@@ -20,6 +20,11 @@ import {
   useColorDisplayName,
 } from "@/lib/useAutoLocalizedText";
 import ColorSwatch from "@/components/product/ColorSwatch";
+import {
+  currencySymbol as moneySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 
 // Add custom styles for smooth transitions
 const swiperStyles = `
@@ -68,6 +73,7 @@ interface ProductClientProps {
     name_de?: string | null;
     price: number;
     price_eur?: number | null;
+    price_usd?: number | null;
     old_price?: number;
     discount_percentage?: number;
     description?: string;
@@ -106,9 +112,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   
   const { locale, withLocalePath, messages } = useI18n();
   const { addItem, items, currency } = useBasket();
-  const effectiveCurrency =
-    currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
-  const isEuro = effectiveCurrency === "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   // Inject custom styles for smoother transitions
   useEffect(() => {
@@ -188,19 +192,20 @@ export default function ProductClient({ product: initialProduct }: ProductClient
   useEffect(() => {
     if (!product?.id) return;
     const discount = product.discount_percentage ?? 0;
-    const priceUah = Number(product.price) * (1 - discount / 100);
-    const priceEur =
-      product.price_eur != null
-        ? Number(product.price_eur) * (1 - discount / 100)
-        : null;
-    const value = isEuro && priceEur != null ? priceEur : priceUah;
-    const curr = isEuro ? "EUR" : "UAH";
+    const factor = 1 - discount / 100;
+    const unit = resolveItemPrice(
+      effectiveCurrency,
+      Number(product.price),
+      product.price_eur != null ? Number(product.price_eur) : null,
+      product.price_usd != null ? Number(product.price_usd) : null
+    );
+    const value = unit * factor;
     trackFbq("ViewContent", {
       content_ids: [String(product.id)],
       content_name: displayName,
       content_type: "product",
       value: Math.round(value * 100) / 100,
-      currency: curr,
+      currency: effectiveCurrency,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
@@ -349,6 +354,7 @@ export default function ProductClient({ product: initialProduct }: ProductClient
         name: displayName,
         price: product.price,
         price_eur: product.price_eur ?? null,
+        price_usd: product.price_usd ?? null,
         currency: effectiveCurrency,
         size: selectedSize,
         quantity,
@@ -614,11 +620,13 @@ export default function ProductClient({ product: initialProduct }: ProductClient
           <div className="w-full flex flex-col sm:flex-row justify-start border-b py-2 sm:p-4 gap-2">
             <div className="flex justify-start gap-4 text-xl md:text-3xl font-['Helvetica']">
               {(() => {
-                const basePrice =
-                  isEuro && product.price_eur != null
-                    ? product.price_eur
-                    : product.price;
-                const currencySymbol = isEuro ? "€" : "₴";
+                const basePrice = resolveItemPrice(
+                  effectiveCurrency,
+                  Number(product.price),
+                  product.price_eur,
+                  product.price_usd
+                );
+                const currencySymbol = moneySymbol(effectiveCurrency);
 
                 if (product.discount_percentage) {
                   const discounted =

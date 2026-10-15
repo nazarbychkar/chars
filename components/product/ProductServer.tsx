@@ -14,6 +14,7 @@ interface Product {
   name_de?: string | null;
   price: number;
   price_eur?: number | null;
+  price_usd?: number | null;
   old_price?: number;
   discount_percentage?: number;
   availability_status?: string | null;

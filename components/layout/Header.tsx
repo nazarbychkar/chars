@@ -390,7 +390,11 @@ export default function Header() {
                   aria-expanded={isCurrencyMenuOpen}
                 >
                   <span className="text-base font-medium tabular-nums">
-                    {effectiveCurrency === "EUR" ? "€" : "₴"}
+                    {effectiveCurrency === "EUR"
+                      ? "€"
+                      : effectiveCurrency === "USD"
+                        ? "$"
+                        : "₴"}
                   </span>
                   <svg aria-hidden viewBox="0 0 24 24" className="w-4 h-4">
                     <path
@@ -417,7 +421,7 @@ export default function Header() {
                           : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
                       }`}
                     >
-                      UAH
+                      ₴ UAH
                     </button>
                     <button
                       type="button"
@@ -431,7 +435,21 @@ export default function Header() {
                           : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
                       }`}
                     >
-                      EUR
+                      € EUR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrency("USD");
+                        setIsCurrencyMenuOpen(false);
+                      }}
+                      className={`mt-1 px-3 py-1.5 text-left rounded-full border text-xs tracking-wide transition-colors ${
+                        effectiveCurrency === "USD"
+                          ? "bg-[#072a6b] text-white border-[#072a6b]"
+                          : "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
+                      }`}
+                    >
+                      $ USD
                     </button>
                   </div>
                 )}

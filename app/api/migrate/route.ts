@@ -18,6 +18,9 @@ export async function POST() {
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_eur DECIMAL(10,2)`;
     console.log("✅ Added price_eur column");
 
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS price_usd DECIMAL(10,2)`;
+    console.log("✅ Added price_usd column");
+
     // Multilingual fields for product page
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS name_en TEXT`;
     console.log("✅ Added name_en column");

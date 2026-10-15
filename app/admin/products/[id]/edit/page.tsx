@@ -77,6 +77,7 @@ function EditProductPageContent() {
     descriptionDe: "",
     price: "",
     priceEur: "",
+    priceUsd: "",
     oldPrice: "",
     discountPercentage: "",
     priority: "0",
@@ -154,6 +155,7 @@ function EditProductPageContent() {
           descriptionDe: productData.description_de || "",
           price: String(productData.price),
           priceEur: productData.price_eur ? String(productData.price_eur) : "",
+          priceUsd: productData.price_usd ? String(productData.price_usd) : "",
           oldPrice: String(productData.old_price || ""),
           discountPercentage: String(productData.discount_percentage || ""),
           priority: String(productData.priority || 0),
@@ -413,6 +415,7 @@ function EditProductPageContent() {
           description_de: locales.descriptionDe || null,
           price: Number(formData.price),
           price_eur: formData.priceEur ? Number(formData.priceEur) : null,
+          price_usd: formData.priceUsd ? Number(formData.priceUsd) : null,
           old_price: formData.oldPrice ? Number(formData.oldPrice) : null,
           discount_percentage: formData.discountPercentage
             ? Number(formData.discountPercentage)
@@ -542,8 +545,8 @@ function EditProductPageContent() {
                   </div>
                 </div>
 
-                {/* Ціни: два стовпчики UAH / EUR */}
-                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Ціни: UAH / EUR / USD */}
+                <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
                   {/* UAH column */}
                   <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-gray-700">
@@ -598,7 +601,6 @@ function EditProductPageContent() {
                         placeholder="Поточна ціна в євро"
                       />
                     </div>
-                    {/* Виводимо знижку та «стару» в EUR як інформацію */}
                     <div className="text-sm text-gray-600 space-y-1">
                       <p>
                         Знижка:{" "}
@@ -613,6 +615,37 @@ function EditProductPageContent() {
                             Стара ціна, € (розрахована):{" "}
                             {(
                               Number(formData.priceEur) /
+                              (1 - Number(formData.discountPercentage) / 100)
+                            ).toFixed(2)}
+                          </p>
+                        )}
+                    </div>
+                  </div>
+
+                  {/* USD column */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-gray-700">
+                      Ціни в доларах (USD)
+                    </h3>
+                    <div>
+                      <Label>Нова ціна, $</Label>
+                      <Input
+                        type="number"
+                        value={formData.priceUsd}
+                        onChange={(e) =>
+                          handleChange("priceUsd", e.target.value)
+                        }
+                        placeholder="Поточна ціна в доларах"
+                      />
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      {formData.priceUsd &&
+                        formData.discountPercentage &&
+                        Number(formData.discountPercentage) > 0 && (
+                          <p>
+                            Стара ціна, $ (розрахована):{" "}
+                            {(
+                              Number(formData.priceUsd) /
                               (1 - Number(formData.discountPercentage) / 100)
                             ).toFixed(2)}
                           </p>

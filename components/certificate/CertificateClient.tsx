@@ -19,7 +19,6 @@ export default function CertificateClient() {
   const { currency } = useBasket();
   const effectiveCurrency =
     currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH");
-  const isEuro = effectiveCurrency === "EUR";
 
   const [selectedTier, setSelectedTier] = useState<CertificateTier>(
     CERTIFICATE_TIERS[1]
@@ -35,7 +34,12 @@ export default function CertificateClient() {
     "success" | "error" | "warning" | "info"
   >("info");
 
-  const displayPrice = isEuro ? selectedTier.eur : selectedTier.uah;
+  const displayPrice =
+    effectiveCurrency === "EUR"
+      ? selectedTier.eur
+      : effectiveCurrency === "USD"
+        ? selectedTier.usd
+        : selectedTier.uah;
 
   const showAlert = (
     message: string,
@@ -69,7 +73,7 @@ export default function CertificateClient() {
           phone_number: phone.trim(),
           email: email.trim(),
           amount_uah: selectedTier.uah,
-          currency: isEuro ? "EUR" : "UAH",
+          currency: effectiveCurrency,
           locale,
         }),
       });
@@ -164,9 +168,14 @@ export default function CertificateClient() {
           <div className="flex flex-wrap gap-2 md:gap-3">
             {CERTIFICATE_TIERS.map((tier) => {
               const isSelected = selectedTier.id === tier.id;
-              const label = isEuro
-                ? formatCertificateAmount(tier.eur, "EUR")
-                : formatCertificateAmount(tier.uah, "UAH");
+              const label = formatCertificateAmount(
+                effectiveCurrency === "EUR"
+                  ? tier.eur
+                  : effectiveCurrency === "USD"
+                    ? tier.usd
+                    : tier.uah,
+                effectiveCurrency
+              );
 
               return (
                 <button
@@ -246,9 +255,7 @@ export default function CertificateClient() {
 
             <p className="text-sm opacity-70 mb-6">
               {messages.certificate.formSubtitle(
-                isEuro
-                  ? formatCertificateAmount(selectedTier.eur, "EUR")
-                  : formatCertificateAmount(selectedTier.uah, "UAH")
+                formatCertificateAmount(displayPrice, effectiveCurrency)
               )}
             </p>
 

@@ -6,6 +6,11 @@ import Link from "next/link";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 import { buildProductSlug } from "@/lib/slug";
 
 interface RecommendedProduct {
@@ -15,6 +20,7 @@ interface RecommendedProduct {
   name_de?: string | null;
   price: number | string;
   price_eur?: number | string | null;
+  price_usd?: number | string | null;
   discount_percentage?: number | string | null;
   first_media?: { url: string; type: string } | null;
 }
@@ -37,8 +43,7 @@ export default function BasketCrossSell({
 }: BasketCrossSellProps) {
   const { withLocalePath, messages, locale } = useI18n();
   const { currency } = useBasket();
-  const isEuro =
-    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   const [products, setProducts] = useState<RecommendedProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -120,10 +125,13 @@ export default function BasketCrossSell({
                 ? product.name_de || product.name
                 : product.name;
           const basePrice =
-            isEuro && product.price_eur != null
-              ? Number(product.price_eur)
-              : Number(product.price);
-          const symbol = isEuro ? "€" : "₴";
+            resolveItemPrice(
+              effectiveCurrency,
+              Number(product.price),
+              product.price_eur != null ? Number(product.price_eur) : null,
+              product.price_usd != null ? Number(product.price_usd) : null
+            );
+          const symbol = currencySymbol(effectiveCurrency);
           const discountPct = Number(product.discount_percentage);
           const hasDiscount = Number.isFinite(discountPct) && discountPct > 0;
           const salePrice = hasDiscount

@@ -8,6 +8,11 @@ import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 import { buildProductSlug } from "@/lib/slug";
 
 function VideoWithAutoplay({ src, className }: { src: string; className?: string }) {
@@ -67,6 +72,7 @@ interface Product {
   name_de?: string | null;
   price: number;
   price_eur?: number | null;
+  price_usd?: number | null;
   discount_percentage?: number | null;
   first_media?: { url: string; type: string } | null;
 }
@@ -126,8 +132,7 @@ function getDisplayName(
 export default function TopSaleClient({ products }: TopSaleClientProps) {
   const { locale, messages, withLocalePath } = useI18n();
   const { currency } = useBasket();
-  const isEuro =
-    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   if (products.length === 0) {
     return (
@@ -165,10 +170,13 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
             {limitedProducts.map((product, index) => {
               const displayName = getDisplayName(product, locale);
               const basePrice =
-                isEuro && product.price_eur != null
-                  ? Number(product.price_eur)
-                  : Number(product.price);
-              const currencySymbol = isEuro ? "€" : "₴";
+                resolveItemPrice(
+                  effectiveCurrency,
+                  Number(product.price),
+                  product.price_eur,
+                  product.price_usd
+                );
+              const moneyMark = currencySymbol(effectiveCurrency);
 
               return (
                 <SwiperSlide key={product.id}>
@@ -205,7 +213,7 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                       <div className="text-left text-xl font-normal leading-none mt-1">
                         <ProductPrice
                           basePrice={basePrice}
-                          currencySymbol={currencySymbol}
+                          currencySymbol={moneyMark}
                           discountPercentage={product.discount_percentage}
                           align="left"
                         />
@@ -223,10 +231,13 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
           {limitedProducts.map((product, index) => {
             const displayName = getDisplayName(product, locale);
             const basePrice =
-              isEuro && product.price_eur != null
-                ? Number(product.price_eur)
-                : Number(product.price);
-            const currencySymbol = isEuro ? "€" : "₴";
+              resolveItemPrice(
+                effectiveCurrency,
+                Number(product.price),
+                product.price_eur,
+                product.price_usd
+              );
+            const moneyMark = currencySymbol(effectiveCurrency);
 
             return (
               <Link
@@ -264,7 +275,7 @@ export default function TopSaleClient({ products }: TopSaleClientProps) {
                   <div className="text-center text-base sm:text-lg font-normal leading-none mt-1">
                     <ProductPrice
                       basePrice={basePrice}
-                      currencySymbol={currencySymbol}
+                      currencySymbol={moneyMark}
                       discountPercentage={product.discount_percentage}
                     />
                   </div>

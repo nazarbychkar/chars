@@ -15,7 +15,7 @@ export type GiftCertificateEmailData = {
   code: string;
   tierUah: number;
   tierEur: number;
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   initialBalance: number;
   recipientName: string;
   recipientEmail: string;
@@ -102,7 +102,11 @@ export function buildGiftCertificateEmailHtml(
   const markUrl = `${baseUrl.replace(/\/$/, "")}/images/chars-mark-dark.png`;
   const logoUrl = `${baseUrl.replace(/\/$/, "")}/images/light-theme/chars-logo-header-light.png`;
   const displayAmount =
-    data.currency === "EUR" ? data.tierEur : data.tierUah;
+    data.currency === "EUR"
+      ? data.tierEur
+      : data.currency === "USD"
+        ? data.initialBalance
+        : data.tierUah;
   const formattedAmount = formatCertificateAmount(displayAmount, data.currency);
   const expiresStr = data.expiresAt.toLocaleDateString(
     locale === "uk" ? "uk-UA" : locale === "de" ? "de-DE" : "en-GB"
@@ -177,7 +181,11 @@ export async function sendGiftCertificateEmail(
   const t = copy(locale);
   const html = buildGiftCertificateEmailHtml(data, baseUrl);
   const displayAmount =
-    data.currency === "EUR" ? data.tierEur : data.tierUah;
+    data.currency === "EUR"
+      ? data.tierEur
+      : data.currency === "USD"
+        ? data.initialBalance
+        : data.tierUah;
   const expiresStr = data.expiresAt.toLocaleDateString(
     locale === "uk" ? "uk-UA" : locale === "de" ? "de-DE" : "en-GB"
   );

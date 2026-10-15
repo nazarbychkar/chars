@@ -9,6 +9,11 @@ import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useProducts } from "@/lib/useProducts";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 import { buildProductSlug } from "@/lib/slug";
 
 interface LimitedProduct {
@@ -18,6 +23,7 @@ interface LimitedProduct {
   name_de?: string | null;
   price: number;
   price_eur?: number | null;
+  price_usd?: number | null;
   discount_percentage?: number | null;
   first_media?: { type: string; url: string } | null;
   limited_edition?: boolean;
@@ -30,6 +36,7 @@ const templateProduct: LimitedProduct = {
   name_de: null,
   price: 1780,
   price_eur: null,
+  price_usd: null,
   discount_percentage: null,
   first_media: { type: "photo", url: "template-placeholder" },
   limited_edition: false,
@@ -80,10 +87,13 @@ function getDisplayName(product: LimitedProduct, locale: string): string {
   return product.name;
 }
 
-function getBasePrice(product: LimitedProduct, isEuro: boolean): number {
-  return isEuro && product.price_eur != null
-    ? Number(product.price_eur)
-    : Number(product.price);
+function getBasePrice(product: LimitedProduct, currency: import("@/lib/currency").SiteCurrency): number {
+  return resolveItemPrice(
+    currency,
+    Number(product.price),
+    product.price_eur,
+    product.price_usd
+  );
 }
 
 export default function LimitedEdition() {
@@ -92,8 +102,7 @@ export default function LimitedEdition() {
   });
   const { messages, withLocalePath, locale } = useI18n();
   const { currency } = useBasket();
-  const isEuro =
-    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) === "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   const products: LimitedProduct[] = useMemo(() => {
     const filled =
@@ -140,8 +149,8 @@ export default function LimitedEdition() {
           >
             {products.map((product, i) => {
               const displayName = getDisplayName(product, locale);
-              const basePrice = getBasePrice(product, isEuro);
-              const currencySymbol = isEuro ? "€" : "₴";
+              const basePrice = getBasePrice(product, effectiveCurrency);
+              const moneyMark = currencySymbol(effectiveCurrency);
               const slideKey =
                 product.id !== -1 ? product.id : `template-${i}`;
 
@@ -189,7 +198,7 @@ export default function LimitedEdition() {
                       <div className="mt-1 text-left text-xl font-normal leading-none">
                         <ProductPrice
                           basePrice={basePrice}
-                          currencySymbol={currencySymbol}
+                          currencySymbol={moneyMark}
                           discountPercentage={product.discount_percentage}
                           align="left"
                         />
@@ -206,8 +215,8 @@ export default function LimitedEdition() {
         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
           {products.map((product, i) => {
             const displayName = getDisplayName(product, locale);
-            const basePrice = getBasePrice(product, isEuro);
-            const currencySymbol = isEuro ? "€" : "₴";
+            const basePrice = getBasePrice(product, effectiveCurrency);
+            const moneyMark = currencySymbol(effectiveCurrency);
 
             return (
               <Link
@@ -253,7 +262,7 @@ export default function LimitedEdition() {
                   <div className="mt-1 text-center text-base sm:text-lg font-normal leading-none">
                     <ProductPrice
                       basePrice={basePrice}
-                      currencySymbol={currencySymbol}
+                      currencySymbol={moneyMark}
                       discountPercentage={product.discount_percentage}
                     />
                   </div>

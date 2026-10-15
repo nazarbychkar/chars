@@ -41,7 +41,7 @@ export type OrderForEmail = {
   comment?: string | null;
   invoice_id: string;
   created_at: Date;
-  currency: "UAH" | "EUR";
+  currency: "UAH" | "EUR" | "USD";
   certificate_discount?: number;
   gift_certificate_code?: string | null;
   items: OrderItemForEmail[];
@@ -55,9 +55,9 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function formatMoney(amount: number, currency: "UAH" | "EUR"): string {
-  const symbol = currency === "EUR" ? "€" : "₴";
-  return `${amount.toFixed(currency === "EUR" ? 2 : 0)} ${symbol}`;
+function formatMoney(amount: number, currency: "UAH" | "EUR" | "USD"): string {
+  const symbol = currency === "EUR" ? "€" : currency === "USD" ? "$" : "₴";
+  return `${amount.toFixed(currency === "UAH" ? 0 : 2)} ${symbol}`;
 }
 
 export function buildOrderConfirmationHtml(

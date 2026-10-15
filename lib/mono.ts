@@ -9,7 +9,7 @@ type MonoBasketItem = {
 
 export type MonoInvoiceRequest = {
   amountInMinorUnits: number;
-  currencyCode: 980 | 978;
+  currencyCode: 980 | 978 | 840;
   reference: string;
   destination: string;
   comment: string;

@@ -6,6 +6,11 @@ import Image from "next/image";
 import { getProductImageSrc } from "@/lib/getFirstProductImage";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useBasket } from "@/lib/BasketProvider";
+import {
+  currencySymbol,
+  resolveEffectiveCurrency,
+  resolveItemPrice,
+} from "@/lib/currency";
 import { buildProductSlug } from "@/lib/slug";
 
 interface YouMightLikeProps {
@@ -15,9 +20,7 @@ interface YouMightLikeProps {
 export default function YouMightLike({ productId }: YouMightLikeProps) {
   const { withLocalePath, messages, locale } = useI18n();
   const { currency } = useBasket();
-  const isEuro =
-    (currency ?? (locale === "en" || locale === "de" ? "EUR" : "UAH")) ===
-    "EUR";
+  const effectiveCurrency = resolveEffectiveCurrency(currency, locale);
 
   interface RecommendedProduct {
     id: number;
@@ -26,6 +29,7 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
     name_de?: string | null;
     price: number | string;
     price_eur?: number | string | null;
+    price_usd?: number | string | null;
     discount_percentage?: number | string | null;
     first_media?: { url: string; type: string } | null;
   }
@@ -85,10 +89,13 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                 ? product.name_de || product.name
                 : product.name;
             const basePrice =
-              isEuro && product.price_eur != null
-                ? Number(product.price_eur)
-                : Number(product.price);
-            const currencySymbol = isEuro ? " €" : " ₴";
+              resolveItemPrice(
+                effectiveCurrency,
+                Number(product.price),
+                product.price_eur != null ? Number(product.price_eur) : null,
+                product.price_usd != null ? Number(product.price_usd) : null
+              );
+            const moneyMark = " " + currencySymbol(effectiveCurrency);
             const discountPct = Number(product.discount_percentage);
             const hasDiscount =
               Number.isFinite(discountPct) && discountPct > 0;
@@ -145,11 +152,11 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                     <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                       <span className="font-medium">
                         {salePrice.toFixed(2)}
-                        {currencySymbol}
+                        {moneyMark}
                       </span>
                       <span className="opacity-40 line-through text-base sm:text-lg">
                         {basePrice}
-                        {currencySymbol}
+                        {moneyMark}
                       </span>
                       <span className="text-sm sm:text-base opacity-55">
                         −{discountPct}%
@@ -158,7 +165,7 @@ export default function YouMightLike({ productId }: YouMightLikeProps) {
                   ) : (
                     <span className="inline-block min-w-[72px]">
                       {basePrice}
-                      {currencySymbol}
+                      {moneyMark}
                     </span>
                   )}
                 </div>

@@ -45,6 +45,7 @@ export default function FormElements() {
   const [descriptionDe, setDescriptionDe] = useState("");
   const [price, setPrice] = useState("");
   const [priceEur, setPriceEur] = useState("");
+  const [priceUsd, setPriceUsd] = useState("");
   const [oldPrice, setOldPrice] = useState("");
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [categoryPriorities, setCategoryPriorities] = useState<
@@ -268,6 +269,7 @@ export default function FormElements() {
           description_de: locales.descriptionDe || null,
           price: Number(price),
           price_eur: priceEur ? Number(priceEur) : null,
+          price_usd: priceUsd ? Number(priceUsd) : null,
           old_price: oldPrice ? Number(oldPrice) : null,
           discount_percentage: discountPercentage
             ? Number(discountPercentage)
@@ -318,6 +320,7 @@ export default function FormElements() {
       setDescriptionDe("");
       setPrice("");
       setPriceEur("");
+      setPriceUsd("");
       setOldPrice("");
       setDiscountPercentage("");
       setCategoryPriorities({});
@@ -445,6 +448,15 @@ export default function FormElements() {
                     value={priceEur}
                     onChange={(e) => setPriceEur(e.target.value)}
                     placeholder="Ціна в євро для EN/DE"
+                  />
+                </div>
+                <div>
+                  <Label>Ціна в USD (опціонально)</Label>
+                  <Input
+                    type="number"
+                    value={priceUsd}
+                    onChange={(e) => setPriceUsd(e.target.value)}
+                    placeholder="Ціна в доларах"
                   />
                 </div>
                 <div>
