@@ -4,7 +4,6 @@ import path from "path";
 import { unstable_cache } from "next/cache";
 import {
   getColorVariantGroupKey,
-  getFirstNameToken,
   mergeRelatedColorRows,
   normalizeDescriptionForVariantGroup,
   type RelatedColorRow,
@@ -363,6 +362,7 @@ export async function sqlGetRelatedColorVariants(
     (await sqlGetRelatedColorsByName(name)) as RelatedColorRow[]
   );
 
+  // Secondary: identical UA description still links variants (e.g. long coat names)
   const descKey = normalizeDescriptionForVariantGroup(description);
   if (descKey) {
     lists.push(
@@ -385,34 +385,6 @@ export async function sqlGetRelatedColorVariants(
             ) AS first_color
           FROM products p
           WHERE regexp_replace(trim(COALESCE(p.description, '')), '\\s+', ' ', 'g') = ${descKey}
-          ORDER BY p.id;
-        `) as RelatedColorRow[]
-    );
-  }
-
-  const firstToken = getFirstNameToken(name);
-  if (firstToken) {
-    lists.push(
-      (await sql`
-          SELECT
-            p.id,
-            p.name,
-            COALESCE(
-              (
-                SELECT JSONB_BUILD_OBJECT('label', pc.label, 'hex', pc.hex)
-                FROM product_colors pc
-                WHERE pc.product_id = p.id
-                ORDER BY pc.id
-                LIMIT 1
-              ),
-              CASE
-                WHEN p.color IS NOT NULL THEN JSONB_BUILD_OBJECT('label', p.color, 'hex', NULL)
-                ELSE NULL
-              END
-            ) AS first_color
-          FROM products p
-          WHERE split_part(trim(p.name), ' ', 1) = ${firstToken}
-            AND cardinality(string_to_array(trim(p.name), ' ')) >= 2
           ORDER BY p.id;
         `) as RelatedColorRow[]
     );
@@ -448,31 +420,7 @@ export async function sqlGetRelatedColorsByName(name: string) {
     `;
   }
 
-  if (mode === "first_word") {
-    return await sql`
-      SELECT
-        p.id,
-        p.name,
-        COALESCE(
-          (
-            SELECT JSONB_BUILD_OBJECT('label', pc.label, 'hex', pc.hex)
-            FROM product_colors pc
-            WHERE pc.product_id = p.id
-            ORDER BY pc.id
-            LIMIT 1
-          ),
-          CASE
-            WHEN p.color IS NOT NULL THEN JSONB_BUILD_OBJECT('label', p.color, 'hex', NULL)
-            ELSE NULL
-          END
-        ) AS first_color
-      FROM products p
-      WHERE split_part(trim(p.name), ' ', 1) = ${key}
-        AND cardinality(string_to_array(trim(p.name), ' ')) = 2
-      ORDER BY p.id;
-    `;
-  }
-
+  // Same first two words → one product line, different colors
   return await sql`
     SELECT
       p.id,
@@ -491,13 +439,10 @@ export async function sqlGetRelatedColorsByName(name: string) {
         END
       ) AS first_color
     FROM products p
-    WHERE cardinality(string_to_array(trim(p.name), ' ')) >= 3
-      AND array_to_string(
-        (string_to_array(trim(p.name), ' '))[
-          1 : cardinality(string_to_array(trim(p.name), ' ')) - 1
-        ],
-        ' '
-      ) = ${key}
+    WHERE array_to_string(
+      (string_to_array(trim(p.name), ' '))[1:2],
+      ' '
+    ) = ${key}
     ORDER BY p.id;
   `;
 }

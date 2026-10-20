@@ -1,11 +1,13 @@
 /**
- * Groups product color variants by naming pattern:
- * - 2 words: "ДЖЕМПЕР ПІСОЧНИЙ" → same line as "ДЖЕМПЕР ЧОРНИЙ" (first word)
- * - 3+ words: last word is color → "ШОВКОВА СОРОЧКА БІЛА" shares base with "... ЧОРНА"
+ * Color variants share the same first two words of the product name.
+ * Example: "Сорочка базова чорна" ↔ "Сорочка базова біла"
+ * "Сорочка оверсайз …" is a different line.
+ *
+ * Optional: identical description (UA) also links variants.
  */
-export type ColorVariantGroupMode = "exact" | "first_word" | "drop_last";
+export type ColorVariantGroupMode = "exact" | "first_two_words";
 
-/** Same description in admin = one color line (пальто, сукні тощо). */
+/** Same description in admin = one color line (optional secondary rule). */
 export function normalizeDescriptionForVariantGroup(
   description?: string | null
 ): string | null {
@@ -35,9 +37,11 @@ export function mergeRelatedColorRows(
   return [...byId.values()].sort((a, b) => a.id - b.id);
 }
 
-export function getFirstNameToken(name: string): string | null {
+/** First two words of the name, or null if fewer than 2. */
+export function getFirstTwoNameTokens(name: string): string | null {
   const words = name.trim().split(/\s+/).filter((w) => w.length > 0);
-  return words.length >= 2 ? words[0] : null;
+  if (words.length < 2) return null;
+  return words.slice(0, 2).join(" ");
 }
 
 export function getColorVariantGroupKey(name: string): {
@@ -45,11 +49,8 @@ export function getColorVariantGroupKey(name: string): {
   key: string;
 } {
   const words = name.trim().split(/\s+/).filter((w) => w.length > 0);
-  if (words.length <= 1) {
+  if (words.length < 2) {
     return { mode: "exact", key: words.join(" ") };
   }
-  if (words.length === 2) {
-    return { mode: "first_word", key: words[0] };
-  }
-  return { mode: "drop_last", key: words.slice(0, -1).join(" ") };
+  return { mode: "first_two_words", key: words.slice(0, 2).join(" ") };
 }

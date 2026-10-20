@@ -402,9 +402,10 @@ export default function FormElements() {
                 <div>
                   <Label>Опис (UA)</Label>
                   <p className="text-xs text-gray-500 mb-2">
-                    Для кількох кольорів однієї моделі —{" "}
-                    <strong>однаковий</strong> опис у всіх варіантів (назва може
-                    бути різною).
+                    Кольори зʼєднуються за{" "}
+                    <strong>першими двома словами</strong> назви (напр.
+                    «Сорочка базова …»). Опційно — однаковий опис у всіх
+                    варіантів.
                   </p>
                   <TextArea
                     value={description}
