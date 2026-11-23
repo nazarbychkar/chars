@@ -1071,6 +1071,8 @@ type OrderInput = {
   locale?: string | null;
   gift_certificate_code?: string | null;
   certificate_discount?: number;
+  promo_code?: string | null;
+  promo_discount?: number;
   items: {
     product_id: number;
     size: string;
@@ -1199,6 +1201,8 @@ export async function sqlPostOrder(order: OrderInput) {
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS gift_certificate_code TEXT;`;
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS certificate_discount NUMERIC(10,2) DEFAULT 0;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT;`;
+    await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_discount NUMERIC(10,2) DEFAULT 0;`;
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMPTZ;`;
     await query`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;`;
 
@@ -1208,6 +1212,7 @@ export async function sqlPostOrder(order: OrderInput) {
         delivery_method, city, post_office,
         comment, payment_type, invoice_id, payment_status,
         currency, locale, gift_certificate_code, certificate_discount,
+        promo_code, promo_discount,
         payment_reference
       )
       VALUES (
@@ -1217,6 +1222,8 @@ export async function sqlPostOrder(order: OrderInput) {
         ${order.currency}, ${order.locale || null},
         ${order.gift_certificate_code || null},
         ${order.certificate_discount ?? 0},
+        ${order.promo_code || null},
+        ${order.promo_discount ?? 0},
         ${order.payment_reference || null}
       )
       RETURNING id;
@@ -1420,6 +1427,8 @@ export type OrderRowForNotification = {
   created_at: string | Date;
   gift_certificate_code: string | null;
   certificate_discount: string | number | null;
+  promo_code: string | null;
+  promo_discount: string | number | null;
   email_sent_at: string | Date | null;
   items: Array<{
     product_id?: number | null;
@@ -1453,6 +1462,8 @@ export async function sqlGetOrderByInvoiceId(
       o.created_at,
       o.gift_certificate_code,
       o.certificate_discount,
+      o.promo_code,
+      o.promo_discount,
       o.email_sent_at,
       COALESCE(
         JSON_AGG(
@@ -1656,6 +1667,8 @@ async function ensureOrderExtendedColumns() {
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS locale TEXT;`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS gift_certificate_code TEXT;`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS certificate_discount NUMERIC(10,2) DEFAULT 0;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT;`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_discount NUMERIC(10,2) DEFAULT 0;`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMPTZ;`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_reference TEXT;`;
   await sql`
@@ -1884,5 +1897,191 @@ export async function sqlMarkOrderEmailSent(orderId: number) {
     UPDATE orders
     SET email_sent_at = NOW()
     WHERE id = ${orderId};
+  `;
+}
+
+// =====================
+// 🏷 PROMO CODES
+// =====================
+
+let promoCodesSchemaEnsured = false;
+
+export async function ensurePromoCodesSchema(): Promise<void> {
+  if (promoCodesSchemaEnsured) return;
+  await ensureOrderExtendedColumns();
+  await sql`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      discount_percent INTEGER NOT NULL CHECK (discount_percent > 0 AND discount_percent <= 100),
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      usage_count INTEGER NOT NULL DEFAULT 0,
+      max_uses INTEGER NULL,
+      note TEXT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+  promoCodesSchemaEnsured = true;
+}
+
+export async function sqlGetAllPromoCodes() {
+  await ensurePromoCodesSchema();
+  return await sql`
+    SELECT *
+    FROM promo_codes
+    ORDER BY created_at DESC;
+  `;
+}
+
+export async function sqlGetPromoCodeByCode(code: string) {
+  await ensurePromoCodesSchema();
+  const rows = await sql`
+    SELECT *
+    FROM promo_codes
+    WHERE UPPER(code) = UPPER(${code})
+    LIMIT 1;
+  `;
+  return rows[0] as
+    | {
+        id: number;
+        code: string;
+        name: string;
+        discount_percent: number;
+        is_active: boolean;
+        usage_count: number;
+        max_uses: number | null;
+        note: string | null;
+      }
+    | undefined;
+}
+
+export async function sqlCreatePromoCode(input: {
+  code: string;
+  name: string;
+  discount_percent: number;
+  is_active?: boolean;
+  max_uses?: number | null;
+  note?: string | null;
+}) {
+  await ensurePromoCodesSchema();
+  const rows = await sql`
+    INSERT INTO promo_codes (
+      code, name, discount_percent, is_active, max_uses, note
+    ) VALUES (
+      ${input.code},
+      ${input.name},
+      ${input.discount_percent},
+      ${input.is_active !== false},
+      ${input.max_uses ?? null},
+      ${input.note || null}
+    )
+    RETURNING *;
+  `;
+  return rows[0];
+}
+
+export async function sqlUpdatePromoCode(
+  id: number,
+  input: {
+    code?: string;
+    name?: string;
+    discount_percent?: number;
+    is_active?: boolean;
+    max_uses?: number | null;
+    note?: string | null;
+  }
+) {
+  await ensurePromoCodesSchema();
+  const existing = await sql`SELECT * FROM promo_codes WHERE id = ${id} LIMIT 1`;
+  if (!existing[0]) return null;
+  const cur = existing[0] as {
+    code: string;
+    name: string;
+    discount_percent: number;
+    is_active: boolean;
+    max_uses: number | null;
+    note: string | null;
+  };
+
+  const rows = await sql`
+    UPDATE promo_codes
+    SET
+      code = ${input.code ?? cur.code},
+      name = ${input.name ?? cur.name},
+      discount_percent = ${input.discount_percent ?? cur.discount_percent},
+      is_active = ${
+        input.is_active !== undefined ? input.is_active : cur.is_active
+      },
+      max_uses = ${
+        input.max_uses !== undefined ? input.max_uses : cur.max_uses
+      },
+      note = ${input.note !== undefined ? input.note : cur.note},
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *;
+  `;
+  return rows[0] ?? null;
+}
+
+export async function sqlDeletePromoCode(id: number) {
+  await ensurePromoCodesSchema();
+  await sql`DELETE FROM promo_codes WHERE id = ${id}`;
+}
+
+export async function sqlCalculatePromoDiscount(
+  code: string,
+  orderTotal: number
+): Promise<{
+  discount: number;
+  promo: {
+    id: number;
+    code: string;
+    name: string;
+    discount_percent: number;
+  };
+}> {
+  const { normalizePromoCode, calcPromoDiscount } = await import(
+    "@/lib/promoCodes"
+  );
+  const normalized = normalizePromoCode(code);
+  if (!normalized) throw new Error("PROMO_INVALID");
+
+  const promo = await sqlGetPromoCodeByCode(normalized);
+  if (!promo) throw new Error("PROMO_NOT_FOUND");
+  if (!promo.is_active) throw new Error("PROMO_INACTIVE");
+  if (
+    promo.max_uses != null &&
+    Number(promo.usage_count) >= Number(promo.max_uses)
+  ) {
+    throw new Error("PROMO_LIMIT");
+  }
+
+  const discount = calcPromoDiscount(
+    orderTotal,
+    Number(promo.discount_percent)
+  );
+  if (discount <= 0) throw new Error("PROMO_INVALID");
+
+  return {
+    discount,
+    promo: {
+      id: promo.id,
+      code: promo.code,
+      name: promo.name,
+      discount_percent: Number(promo.discount_percent),
+    },
+  };
+}
+
+export async function sqlIncrementPromoCodeUsage(code: string) {
+  await ensurePromoCodesSchema();
+  await sql`
+    UPDATE promo_codes
+    SET
+      usage_count = usage_count + 1,
+      updated_at = NOW()
+    WHERE UPPER(code) = UPPER(${code});
   `;
 }

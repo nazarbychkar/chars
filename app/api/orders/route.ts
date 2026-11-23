@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sqlGetAllOrders, sqlPostOrder, sql, sqlCalculateGiftCertificateDiscount, sqlGetOrderByInvoiceId, sqlUpdatePaymentStatus } from "@/lib/sql";
+import {
+  sqlGetAllOrders,
+  sqlPostOrder,
+  sql,
+  sqlCalculateGiftCertificateDiscount,
+  sqlCalculatePromoDiscount,
+  sqlGetOrderByInvoiceId,
+  sqlUpdatePaymentStatus,
+} from "@/lib/sql";
 import crypto from "crypto";
 import { normalizeGiftCertificateCode } from "@/lib/giftCertificateCode";
 import { getGiftCertificateErrorMessage } from "@/lib/giftCertificateErrors";
+import {
+  getPromoCodeErrorMessage,
+  normalizePromoCode,
+} from "@/lib/promoCodes";
 import { processPaidOrderNotifications } from "@/lib/postPayment";
 import { sendOrderTelegramNotification } from "@/lib/orderTelegram";
 import {
@@ -107,6 +119,7 @@ export async function POST(req: NextRequest) {
       currency,
       locale,
       gift_certificate_code,
+      promo_code,
       installment_parts_count,
     } = body;
 
@@ -208,6 +221,48 @@ export async function POST(req: NextRequest) {
 
   let certificateDiscount = 0;
   let appliedCertificateCode: string | null = null;
+  let promoDiscount = 0;
+  let appliedPromoCode: string | null = null;
+
+  if (promo_code && String(promo_code).trim()) {
+    if (payment_type === "prepay") {
+      return NextResponse.json(
+        {
+          error: getPromoCodeErrorMessage("PROMO_WITH_PREPAY", requestLocale),
+        },
+        { status: 400 }
+      );
+    }
+    if (payment_type === "installments") {
+      return NextResponse.json(
+        {
+          error: getPromoCodeErrorMessage(
+            "PROMO_WITH_INSTALLMENTS",
+            requestLocale
+          ),
+        },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const { discount, promo } = await sqlCalculatePromoDiscount(
+        normalizePromoCode(String(promo_code)),
+        fullAmount
+      );
+      promoDiscount = discount;
+      appliedPromoCode = promo.code;
+    } catch (error) {
+      const errCode =
+        error instanceof Error ? error.message : "PROMO_NOT_FOUND";
+      return NextResponse.json(
+        { error: getPromoCodeErrorMessage(errCode, requestLocale) },
+        { status: 400 }
+      );
+    }
+  }
+
+  const amountAfterPromo = Math.max(0, fullAmount - promoDiscount);
 
   if (gift_certificate_code && String(gift_certificate_code).trim()) {
     if (payment_type === "prepay" || payment_type === "installments") {
@@ -230,7 +285,7 @@ export async function POST(req: NextRequest) {
       );
       const { discount, certificate } = await sqlCalculateGiftCertificateDiscount(
         normalizedCode,
-        fullAmount,
+        amountAfterPromo,
         orderCurrency
       );
       certificateDiscount = discount;
@@ -245,7 +300,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const payableBeforePrepay = Math.max(0, fullAmount - certificateDiscount);
+  const payableBeforePrepay = Math.max(
+    0,
+    amountAfterPromo - certificateDiscount
+  );
   const amountToPay = isPrepay ? 300 : payableBeforePrepay;
 
   const IS_DEV =
@@ -275,9 +333,16 @@ export async function POST(req: NextRequest) {
   );
 
   const resolvedPaymentType =
-    amountToPay <= 0 && appliedCertificateCode ? "certificate" : payment_type;
+    amountToPay <= 0 && appliedCertificateCode
+      ? "certificate"
+      : amountToPay <= 0 && appliedPromoCode
+        ? "full"
+        : payment_type;
 
-  if (amountToPay <= 0 && appliedCertificateCode) {
+  if (
+    amountToPay <= 0 &&
+    (appliedCertificateCode || appliedPromoCode)
+  ) {
     const invoiceId = crypto.randomUUID();
     await sqlPostOrder({
       customer_name,
@@ -294,6 +359,8 @@ export async function POST(req: NextRequest) {
       locale: orderLocale,
       gift_certificate_code: appliedCertificateCode,
       certificate_discount: certificateDiscount,
+      promo_code: appliedPromoCode,
+      promo_discount: promoDiscount,
       items: orderItemsPayload,
     });
 
@@ -603,6 +670,8 @@ export async function POST(req: NextRequest) {
         locale: orderLocale,
         gift_certificate_code: appliedCertificateCode,
         certificate_discount: certificateDiscount,
+        promo_code: appliedPromoCode,
+        promo_discount: promoDiscount,
         items: orderItemsPayload,
       });
 
@@ -696,6 +765,8 @@ export async function POST(req: NextRequest) {
       locale: orderLocale,
       gift_certificate_code: appliedCertificateCode,
       certificate_discount: certificateDiscount,
+      promo_code: appliedPromoCode,
+      promo_discount: promoDiscount,
       items: orderItemsPayload,
     });
     console.log("[POST /api/orders] Order saved to database successfully");

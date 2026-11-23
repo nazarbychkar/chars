@@ -11,6 +11,7 @@ import {
   sqlGetGiftCertificateByPurchaseOrderId,
   sqlGetOrderByInvoiceId,
   sqlGetProduct,
+  sqlIncrementPromoCodeUsage,
   sqlMarkOrderEmailSent,
   sqlRedeemGiftCertificateForOrder,
   type OrderRowForNotification,
@@ -191,6 +192,9 @@ export async function processPaidOrderNotifications(
         orderId: order.id,
         amount: Number(order.certificate_discount),
       });
+    }
+    if (order.promo_code && Number(order.promo_discount || 0) > 0) {
+      await sqlIncrementPromoCodeUsage(order.promo_code);
     }
     await handleProductOrder(order);
   }

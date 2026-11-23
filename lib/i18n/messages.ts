@@ -184,6 +184,19 @@ type Messages = {
     giftCertificateAppliedAmount: (amount: string, currency: string) => string;
     giftCertificateDiscountLabel: string;
     giftCertificateRemove: string;
+    promoCodeLabel: string;
+    promoCodePlaceholder: string;
+    promoCodeApply: string;
+    promoCodeAppliedStatus: string;
+    promoCodeAppliedAmount: (
+      percent: number,
+      amount: string,
+      currency: string
+    ) => string;
+    promoCodeDiscountLabel: string;
+    promoCodeRemove: string;
+    discountsSectionTitle: string;
+    discountsSectionHint: string;
     subtotalLabel: string;
   };
   basket: {
@@ -560,6 +573,17 @@ export const messages: MessagesMap = {
         `Знижка −${amount} ${currency}`,
       giftCertificateDiscountLabel: "Знижка сертифікатом",
       giftCertificateRemove: "Змінити код",
+      promoCodeLabel: "Промокод",
+      promoCodePlaceholder: "Введіть промокод",
+      promoCodeApply: "Застосувати",
+      promoCodeAppliedStatus: "Промокод застосовано",
+      promoCodeAppliedAmount: (percent, amount, currency) =>
+        `−${percent}% (−${amount} ${currency})`,
+      promoCodeDiscountLabel: "Знижка за промокодом",
+      promoCodeRemove: "Змінити код",
+      discountsSectionTitle: "Промокод або сертифікат",
+      discountsSectionHint:
+        "Введіть код і натисніть Enter — знижка зʼявиться одразу в сумі",
       subtotalLabel: "Проміжний підсумок",
     },
     basket: {
@@ -989,6 +1013,17 @@ export const messages: MessagesMap = {
         `Rabatt −${amount} ${currency}`,
       giftCertificateDiscountLabel: "Gutscheinrabatt",
       giftCertificateRemove: "Code ändern",
+      promoCodeLabel: "Promo-Code",
+      promoCodePlaceholder: "Promo-Code eingeben",
+      promoCodeApply: "Anwenden",
+      promoCodeAppliedStatus: "Promo-Code angewendet",
+      promoCodeAppliedAmount: (percent, amount, currency) =>
+        `−${percent}% (−${amount} ${currency})`,
+      promoCodeDiscountLabel: "Promo-Code-Rabatt",
+      promoCodeRemove: "Code ändern",
+      discountsSectionTitle: "Promo-Code oder Gutschein",
+      discountsSectionHint:
+        "Code eingeben und Enter drücken — der Rabatt erscheint sofort in der Summe",
       subtotalLabel: "Zwischensumme",
     },
     basket: {
@@ -1416,6 +1451,17 @@ export const messages: MessagesMap = {
         `Discount −${amount} ${currency}`,
       giftCertificateDiscountLabel: "Certificate discount",
       giftCertificateRemove: "Change code",
+      promoCodeLabel: "Promo code",
+      promoCodePlaceholder: "Enter promo code",
+      promoCodeApply: "Apply",
+      promoCodeAppliedStatus: "Promo code applied",
+      promoCodeAppliedAmount: (percent, amount, currency) =>
+        `−${percent}% (−${amount} ${currency})`,
+      promoCodeDiscountLabel: "Promo discount",
+      promoCodeRemove: "Change code",
+      discountsSectionTitle: "Promo code or gift certificate",
+      discountsSectionHint:
+        "Enter a code and press Enter — the discount appears in the total right away",
       subtotalLabel: "Subtotal",
     },
     basket: {

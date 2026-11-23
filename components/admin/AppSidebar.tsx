@@ -49,6 +49,11 @@ const navItems: NavItem[] = [
     icon: <TableIcon />,
     path: "/admin/certificates",
   },
+  {
+    name: "Промокоди",
+    icon: <TableIcon />,
+    path: "/admin/promo-codes",
+  },
 ];
 
 // const othersItems: NavItem[] = [

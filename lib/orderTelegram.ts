@@ -39,11 +39,12 @@ function paidAmountFromOrder(order: OrderRowForNotification): number {
     (sum, item) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),
     0
   );
-  const discount = Number(order.certificate_discount || 0);
+  const certDiscount = Number(order.certificate_discount || 0);
+  const promoDiscount = Number(order.promo_discount || 0);
 
   if (order.payment_type === "prepay") return 300;
   if (order.payment_type === "certificate") return 0;
-  return Math.max(0, subtotal - discount);
+  return Math.max(0, subtotal - promoDiscount - certDiscount);
 }
 
 /**
@@ -173,6 +174,7 @@ export async function sendOrderTelegramNotification(
   const isCertificate = order.delivery_method === "certificate";
   const items = Array.isArray(order.items) ? order.items : [];
   const discount = Number(order.certificate_discount || 0);
+  const promoDiscount = Number(order.promo_discount || 0);
   const paidAmount = paidAmountForDisplay(order, amountMinorUnits, amountCcy);
 
   const paymentLabel =
@@ -195,7 +197,7 @@ ${isCertificate ? "🎁" : "🛒"} <b>${isCertificate ? "Новий подару
 ${isCertificate ? "" : `🚚 <b>Доставка:</b> ${deliveryLabel(order.delivery_method)}
 🏙️ <b>Місто:</b> ${order.city}
 🏤 <b>Відділення:</b> ${order.post_office}
-`}${discount > 0 ? `🎫 <b>Сертифікат:</b> ${order.gift_certificate_code} (−${formatMoney(discount, currency)})\n` : ""}📝 <b>Коментар:</b> ${order.comment || "—"}
+`}${promoDiscount > 0 ? `🏷 <b>Промокод:</b> ${order.promo_code} (−${formatMoney(promoDiscount, currency)})\n` : ""}${discount > 0 ? `🎫 <b>Сертифікат:</b> ${order.gift_certificate_code} (−${formatMoney(discount, currency)})\n` : ""}📝 <b>Коментар:</b> ${order.comment || "—"}
 🌐 <b>Мова сайту:</b> ${localeLabel(order.locale)}
 💰 <b>Оплата:</b> ${paymentLabel}
 🧾 <b>Сума:</b> ${formatMoney(paidAmount, currency)}
