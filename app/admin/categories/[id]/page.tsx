@@ -644,12 +644,13 @@ export default function EditCategoryPage() {
                 onChange={(e) => handleChange("priority", e.target.value)}
               />
 
-              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                <Label>Знижка на всю категорію, %</Label>
+              <div className="mt-4 rounded-xl border border-brand-500/30 bg-brand-500/5 p-4 dark:border-brand-500/40 dark:bg-brand-500/10">
+                <Label>Знижка на всю категорію (не на підкатегорію), %</Label>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                  Застосовується до всіх товарів цієї категорії (і до тих, де вона
-                  вказана як додаткова). Порожнє поле — без знижки. Якщо у товару
-                  своя більша знижка, лишається вона.
+                  Одна знижка на <strong>всі товари категорії</strong> — усі
+                  підкатегорії теж. Також на товари, де ця категорія додаткова
+                  (напр. Sale). Порожнє — без знижки. Якщо в товару своя більша
+                  % — лишається вона.
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   {[10, 15, 20, 30].map((pct) => (

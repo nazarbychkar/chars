@@ -222,6 +222,7 @@ export default function CategoriesTable() {
     }
 
     try {
+      const existing = categories.find((c) => c.id === id);
       const res = await fetch(`/api/categories/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -229,6 +230,11 @@ export default function CategoriesTable() {
           name: name.trim(),
           name_en: nameEn.trim() || null,
           name_de: nameDe.trim() || null,
+          discount_percentage:
+            existing?.discount_percentage != null &&
+            Number(existing.discount_percentage) > 0
+              ? Number(existing.discount_percentage)
+              : null,
         }),
       });
 
@@ -245,6 +251,32 @@ export default function CategoriesTable() {
     } catch (error) {
       console.error("Error updating category:", error);
       alert("Помилка при оновленні категорії");
+    }
+  }
+
+  async function handleSetCategoryDiscount(
+    category: Category,
+    discount: number | null
+  ) {
+    try {
+      const res = await fetch(`/api/categories/${category.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: category.name,
+          name_en: category.name_en ?? null,
+          name_de: category.name_de ?? null,
+          discount_percentage: discount,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update discount");
+      const updated = await res.json();
+      setCategories((prev) =>
+        prev.map((cat) => (cat.id === category.id ? updated : cat))
+      );
+    } catch (error) {
+      console.error("Error updating category discount:", error);
+      alert("Не вдалося оновити знижку категорії");
     }
   }
 
@@ -307,6 +339,12 @@ export default function CategoriesTable() {
                   isHeader
                   className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
                 >
+                  Знижка категорії
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300"
+                >
                   Підкатегорії
                 </TableCell>
                 <TableCell
@@ -325,7 +363,7 @@ export default function CategoriesTable() {
                   <TableCell className="px-5 py-4 text-sm text-gray-700 dark:text-gray-300">
                     —
                   </TableCell>
-                  <TableCell className="px-5 py-4" colSpan={2}>
+                  <TableCell className="px-5 py-4" colSpan={3}>
                     <div className="space-y-2">
                       <input
                         type="text"
@@ -424,7 +462,7 @@ export default function CategoriesTable() {
               {loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-6 text-gray-500 dark:text-gray-400"
                   >
                     Завантаження...
@@ -433,7 +471,7 @@ export default function CategoriesTable() {
               ) : categories.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-6 text-gray-500 dark:text-gray-400"
                   >
                     Категорій не знайдено.
@@ -481,15 +519,51 @@ export default function CategoriesTable() {
                           </button>
                         </div>
                       ) : (
-                        <span className="inline-flex flex-wrap items-center gap-2 text-gray-700 dark:text-gray-300">
-                          <span>{category.name}</span>
-                          {Number(category.discount_percentage) > 0 && (
-                            <span className="rounded-full bg-[#072a6b]/10 px-2 py-0.5 text-xs font-medium text-[#072a6b] dark:bg-[#072a6b]/30 dark:text-[#9eb6d9]">
-                              −{Number(category.discount_percentage)}%
-                            </span>
-                          )}
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {category.name}
                         </span>
                       )}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-sm">
+                      <div className="flex flex-col gap-1.5 min-w-[160px]">
+                        {Number(category.discount_percentage) > 0 ? (
+                          <span className="inline-flex w-fit rounded-full bg-[#072a6b]/10 px-2.5 py-0.5 text-xs font-semibold text-[#072a6b] dark:bg-[#072a6b]/30 dark:text-[#9eb6d9]">
+                            −{Number(category.discount_percentage)}% на всі
+                            товари
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">Немає</span>
+                        )}
+                        <div className="flex flex-wrap gap-1">
+                          {[10, 15, 20].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() =>
+                                handleSetCategoryDiscount(category, pct)
+                              }
+                              className={`rounded border px-2 py-0.5 text-[11px] ${
+                                Number(category.discount_percentage) === pct
+                                  ? "border-brand-500 bg-brand-500 text-white"
+                                  : "border-gray-300 text-gray-600 hover:border-brand-400 dark:border-white/20 dark:text-gray-300"
+                              }`}
+                            >
+                              −{pct}%
+                            </button>
+                          ))}
+                          {Number(category.discount_percentage) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleSetCategoryDiscount(category, null)
+                              }
+                              className="rounded border border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 hover:bg-gray-50 dark:border-white/20"
+                            >
+                              Прибрати
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {(() => {

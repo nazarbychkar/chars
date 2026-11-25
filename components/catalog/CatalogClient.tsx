@@ -24,6 +24,7 @@ import {
 import CategoryDiscountBadge from "@/components/shared/CategoryDiscountBadge";
 
 interface CategoryForLabel {
+  id?: number;
   name: string;
   name_en?: string | null;
   name_de?: string | null;
@@ -201,13 +202,19 @@ export default function CatalogClient({
           }
         }
 
-        // Subcategory label
+        // Subcategory label (+ parent category discount if any)
         if (subcategory) {
           const subs = await fetch("/api/subcategories/all").then((r) =>
             r.json()
           );
           if (!Array.isArray(subs)) return;
-          const found = subs.find((s: { name?: string }) => {
+          const found = subs.find(
+            (s: {
+              name?: string;
+              category_id?: number | null;
+              name_en?: string | null;
+              name_de?: string | null;
+            }) => {
             const baseName = s.name || "";
             const slug = buildSubcategorySlug(baseName);
             const key = subcategory.toLowerCase();
@@ -225,6 +232,20 @@ export default function CatalogClient({
                 ? found.name_de || found.name
                 : found.name;
             setSubcategoryLabel(localized);
+
+            if (found.category_id != null) {
+              const cats = await fetch("/api/categories").then((r) => r.json());
+              if (!cancelled && Array.isArray(cats)) {
+                const parent = cats.find(
+                  (c: CategoryForLabel & { id?: number }) =>
+                    Number(c.id) === Number(found.category_id)
+                );
+                const pct = Number(parent?.discount_percentage);
+                setCategoryDiscount(
+                  Number.isFinite(pct) && pct > 0 ? pct : null
+                );
+              }
+            }
           }
         }
       } catch (e) {
@@ -271,7 +292,7 @@ export default function CatalogClient({
                   ? season
                   : messages.catalog.allProductsLabel}
               </span>
-              {!subcategory && category && (
+              {(category || subcategory) && (
                 <CategoryDiscountBadge
                   discountPercentage={categoryDiscount}
                   size="md"
