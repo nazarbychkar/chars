@@ -65,7 +65,7 @@ export function generateProductStructuredData(
     description?: string;
     price: number;
     old_price?: number;
-    discount_percentage?: number;
+    discount_percentage?: number | null;
     media?: { url: string; type: string }[];
     category_name?: string;
   },
