@@ -28,7 +28,7 @@ interface BasketItem {
   quantity: number;
   imageUrl: string;
   color?: string;
-  discount_percentage?: number;
+  discount_percentage?: number | null;
   stock?: number; // Available stock for this size
 }
 

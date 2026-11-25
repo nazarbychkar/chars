@@ -10,7 +10,7 @@ interface ProductClientWrapperProps {
     availability_status?: string | null;
     price: number;
     old_price?: number;
-    discount_percentage?: number;
+    discount_percentage?: number | null;
     description?: string;
     media?: { url: string; type: string }[];
     sizes?: { size: string; stock: string }[];

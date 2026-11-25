@@ -42,7 +42,7 @@ interface Product {
   first_media?: { url: string; type: string } | null;
   sizes?: { size: string; stock: string }[];
   color?: string;
-  discount_percentage?: number;
+  discount_percentage?: number | null;
 }
 
 interface CatalogClientProps {

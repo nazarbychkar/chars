@@ -75,7 +75,7 @@ interface ProductClientProps {
     price_eur?: number | null;
     price_usd?: number | null;
     old_price?: number;
-    discount_percentage?: number;
+    discount_percentage?: number | null;
     description?: string;
     description_en?: string | null;
     description_de?: string | null;
