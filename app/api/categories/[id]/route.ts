@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+import { normalizeDiscountPercent } from "@/lib/categoryDiscount";
 import { sqlGetCategory, sqlPutCategory, sqlDeleteCategory } from "@/lib/sql";
 
 // ========================
@@ -46,7 +48,14 @@ export async function PUT(
 
   try {
     const body = await req.json();
-    const { name, priority, name_en, name_de, recommended_look_config } = body;
+    const {
+      name,
+      priority,
+      name_en,
+      name_de,
+      recommended_look_config,
+      discount_percentage,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -92,14 +101,25 @@ export async function PUT(
           : null
         : (existing.recommended_look_config as string | null);
 
+    const finalDiscount =
+      discount_percentage !== undefined
+        ? normalizeDiscountPercent(discount_percentage)
+        : normalizeDiscountPercent(
+            (existing as { discount_percentage?: number | null })
+              .discount_percentage
+          );
+
     const updated = await sqlPutCategory(
       id,
       name,
       finalPriority,
       finalNameEn || null,
       finalNameDe || null,
-      finalRecommendedConfig || null
+      finalRecommendedConfig || null,
+      finalDiscount
     );
+    // Category discount changes affect product prices in the catalog cache
+    revalidateTag("products");
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[PUT /api/categories/:id]", error);

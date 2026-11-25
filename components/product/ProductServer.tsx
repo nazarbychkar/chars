@@ -1,5 +1,6 @@
 import ProductClientWrapper from "./ProductClientWrapper";
 import { notFound } from "next/navigation";
+import { applyCategoryDiscountToProduct } from "@/lib/categoryDiscount";
 import { sqlGetProduct } from "@/lib/sql";
 import {
   generateProductStructuredData,
@@ -16,7 +17,9 @@ interface Product {
   price_eur?: number | null;
   price_usd?: number | null;
   old_price?: number;
-  discount_percentage?: number;
+  discount_percentage?: number | null;
+  category_id?: number | null;
+  extra_category_ids?: unknown;
   availability_status?: string | null;
   description?: string;
   description_en?: string | null;
@@ -40,7 +43,9 @@ async function getProduct(id: string): Promise<Product | null> {
     if (!numericId) return null;
 
     const products = await sqlGetProduct(numericId);
-    return products[0] || null;
+    const product = (products[0] as Product | undefined) || null;
+    if (!product) return null;
+    return applyCategoryDiscountToProduct(product);
   } catch (error) {
     console.error("Error fetching product:", error);
     return null;

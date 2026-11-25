@@ -73,6 +73,111 @@ let recommendedProductIdsColumnEnsured = false;
 let availabilityStatusColumnEnsured = false;
 let productPlacementColumnsEnsured = false;
 let priceUsdColumnEnsured = false;
+let categoryDiscountColumnEnsured = false;
+
+export async function ensureCategoryDiscountColumn(): Promise<void> {
+  if (categoryDiscountColumnEnsured) return;
+  if (process.env.DISABLE_AUTO_CATEGORY_DISCOUNT_COLUMN === "1") return;
+  try {
+    await sql`
+      ALTER TABLE categories
+      ADD COLUMN IF NOT EXISTS discount_percentage INTEGER
+    `;
+    categoryDiscountColumnEnsured = true;
+  } catch (error) {
+    console.error(
+      "[sql] ensureCategoryDiscountColumn failed (grant ALTER or run migrate):",
+      error
+    );
+  }
+}
+
+type DiscountStampRow = {
+  id?: number;
+  discount_percentage?: number | null;
+  category_id?: number | null;
+  extra_category_ids?: unknown;
+};
+
+/** Stamp max(product, category, extra categories) onto discount_percentage for storefront. */
+async function stampEffectiveDiscounts<T extends DiscountStampRow>(
+  rows: T[]
+): Promise<T[]> {
+  if (!rows.length) return rows;
+  await ensureCategoryDiscountColumn();
+  await ensureProductPlacementColumns();
+
+  const catRows = (await sql`
+    SELECT id, discount_percentage
+    FROM categories
+    WHERE COALESCE(discount_percentage, 0) > 0
+  `) as { id: number; discount_percentage: number }[];
+  const catMap = new Map<number, number>();
+  for (const row of catRows) {
+    catMap.set(Number(row.id), Number(row.discount_percentage) || 0);
+  }
+  if (catMap.size === 0) return rows;
+
+  const needsLookup = rows.some(
+    (row) =>
+      row.id != null &&
+      (row.category_id === undefined || row.extra_category_ids === undefined)
+  );
+  const productMeta = new Map<
+    number,
+    { category_id: number | null; extra_category_ids: unknown }
+  >();
+  if (needsLookup) {
+    const ids = rows
+      .map((row) => row.id)
+      .filter((id): id is number => typeof id === "number");
+    if (ids.length) {
+      const metaRows = (await sql`
+        SELECT id, category_id, extra_category_ids
+        FROM products
+        WHERE id = ANY(${ids}::int[])
+      `) as {
+        id: number;
+        category_id: number | null;
+        extra_category_ids: unknown;
+      }[];
+      for (const meta of metaRows) {
+        productMeta.set(Number(meta.id), {
+          category_id: meta.category_id,
+          extra_category_ids: meta.extra_category_ids,
+        });
+      }
+    }
+  }
+
+  const { parseExtraCategoryIds } = await import("@/lib/parseExtraCategoryIds");
+
+  return rows.map((row) => {
+    const meta = row.id != null ? productMeta.get(Number(row.id)) : undefined;
+    const categoryId =
+      row.category_id !== undefined ? row.category_id : meta?.category_id ?? null;
+    const extras =
+      row.extra_category_ids !== undefined
+        ? row.extra_category_ids
+        : meta?.extra_category_ids;
+
+    const candidates = [Number(row.discount_percentage) || 0];
+    if (categoryId != null) {
+      candidates.push(catMap.get(Number(categoryId)) || 0);
+    }
+    for (const extraId of parseExtraCategoryIds(
+      extras,
+      categoryId != null ? Number(categoryId) : null
+    )) {
+      candidates.push(catMap.get(extraId) || 0);
+    }
+    const max = Math.max(...candidates);
+    return {
+      ...row,
+      discount_percentage: max > 0 ? max : null,
+    };
+  });
+}
 
 /** extra_category_ids + top_sale_priority for Sale / top-sale ordering */
 export async function ensureProductPlacementColumns(): Promise<void> {
@@ -148,7 +253,8 @@ export async function ensureAvailabilityStatusColumn(): Promise<void> {
 async function _sqlGetAllProducts() {
   await ensureAvailabilityStatusColumn();
   await ensurePriceUsdColumn();
-  return await sql`
+  await ensureProductPlacementColumns();
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -167,6 +273,7 @@ async function _sqlGetAllProducts() {
       p.season,
       p.category_id,
       p.subcategory_id,
+      p.extra_category_ids,
       p.created_at,
       p.availability_status,
       c.name AS category_name,
@@ -184,6 +291,7 @@ async function _sqlGetAllProducts() {
     ) m ON true
     ORDER BY p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 // Uncached variant for APIs / admin panels that must always see fresh data
@@ -194,7 +302,8 @@ export async function sqlGetAllProductsUncached() {
 /** Facebook/Google XML & CSV feeds: first photo by gallery order; separate first video for video-only items */
 export async function sqlGetAllProductsForFacebookFeedUncached() {
   await ensureAvailabilityStatusColumn();
-  return await sql`
+  await ensureProductPlacementColumns();
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -213,6 +322,7 @@ export async function sqlGetAllProductsForFacebookFeedUncached() {
       p.season,
       p.category_id,
       p.subcategory_id,
+      p.extra_category_ids,
       p.created_at,
       p.availability_status,
       c.name AS category_name,
@@ -241,6 +351,7 @@ export async function sqlGetAllProductsForFacebookFeedUncached() {
     ) feed_media ON true
     ORDER BY p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 export const sqlGetAllProducts = unstable_cache(
@@ -455,7 +566,7 @@ export async function sqlGetProductsByCategory(categoryName: string) {
   const categoryId = (cats[0] as { id?: number } | undefined)?.id;
   if (!categoryId) return [];
 
-  return await sql`
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -470,6 +581,7 @@ export async function sqlGetProductsByCategory(categoryName: string) {
       p.limited_edition,
       p.season,
       p.category_id,
+      p.extra_category_ids,
       c.name AS category_name,
       m.first_media
     FROM products p
@@ -493,10 +605,12 @@ export async function sqlGetProductsByCategory(categoryName: string) {
       ) DESC,
       p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 export async function sqlGetProductsBySubcategoryName(name: string) {
-  return await sql`
+  await ensureProductPlacementColumns();
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -512,6 +626,7 @@ export async function sqlGetProductsBySubcategoryName(name: string) {
       p.season,
       p.category_id,
       p.subcategory_id,
+      p.extra_category_ids,
       c.name AS category_name,
       sc.name AS subcategory_name,
       m.first_media
@@ -528,10 +643,12 @@ export async function sqlGetProductsBySubcategoryName(name: string) {
     WHERE LOWER(sc.name) = LOWER(${name})
     ORDER BY p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 export async function sqlGetProductsBySeason(season: string) {
-  return await sql`
+  await ensureProductPlacementColumns();
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -546,6 +663,7 @@ export async function sqlGetProductsBySeason(season: string) {
       p.limited_edition,
       p.season,
       p.category_id,
+      p.extra_category_ids,
       c.name AS category_name,
       m.first_media
     FROM products p
@@ -560,12 +678,13 @@ export async function sqlGetProductsBySeason(season: string) {
     WHERE ${season} = ANY(p.season)
     ORDER BY p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 // Get only top sale products (optimized - only first photo for list view)
 export async function sqlGetTopSaleProducts() {
   await ensureProductPlacementColumns();
-  return await sql`
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -579,6 +698,8 @@ export async function sqlGetTopSaleProducts() {
       p.top_sale,
       p.top_sale_priority,
       p.limited_edition,
+      p.category_id,
+      p.extra_category_ids,
       m.first_media
     FROM products p
     LEFT JOIN LATERAL (
@@ -591,6 +712,7 @@ export async function sqlGetTopSaleProducts() {
     WHERE p.top_sale = true
     ORDER BY p.top_sale_priority DESC, p.priority DESC NULLS LAST, p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 export async function sqlUpdateTopSalePriorities(
@@ -608,7 +730,8 @@ export async function sqlUpdateTopSalePriorities(
 
 // Get only limited edition products (optimized - only first photo for list view)
 export async function sqlGetLimitedEditionProducts() {
-  return await sql`
+  await ensureProductPlacementColumns();
+  const rows = await sql`
     SELECT
       p.id,
       p.name,
@@ -621,6 +744,8 @@ export async function sqlGetLimitedEditionProducts() {
       p.discount_percentage,
       p.top_sale,
       p.limited_edition,
+      p.category_id,
+      p.extra_category_ids,
       m.first_media
     FROM products p
     LEFT JOIN LATERAL (
@@ -633,12 +758,14 @@ export async function sqlGetLimitedEditionProducts() {
     WHERE p.limited_edition = true
     ORDER BY p.created_at DESC;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 export async function sqlGetProductsByIdsOrdered(ids: number[]) {
   if (!ids.length) return [];
 
-  return await sql`
+  await ensureProductPlacementColumns();
+  const rows = await sql`
     WITH target_ids AS (
       SELECT id::INT, ord::INT
       FROM UNNEST(${ids}::int[]) WITH ORDINALITY AS t(id, ord)
@@ -658,6 +785,7 @@ export async function sqlGetProductsByIdsOrdered(ids: number[]) {
       p.season,
       p.category_id,
       p.subcategory_id,
+      p.extra_category_ids,
       c.name AS category_name,
       sc.name AS subcategory_name,
       m.first_media
@@ -674,6 +802,7 @@ export async function sqlGetProductsByIdsOrdered(ids: number[]) {
     ) m ON true
     ORDER BY t.ord;
   `;
+  return stampEffectiveDiscounts(rows);
 }
 
 // Fetch all distinct colors from the database
@@ -1499,6 +1628,7 @@ export async function sqlGetOrderByInvoiceId(
 
 // Get all categories
 export async function sqlGetAllCategories() {
+  await ensureCategoryDiscountColumn();
   return await sql`
     SELECT * FROM categories
     WHERE COALESCE(priority, 0) >= 0
@@ -1508,6 +1638,7 @@ export async function sqlGetAllCategories() {
 
 // Get a single category by ID
 export async function sqlGetCategory(id: number) {
+  await ensureCategoryDiscountColumn();
   return await sql`
     SELECT * FROM categories
     WHERE id = ${id};
@@ -1520,13 +1651,22 @@ export async function sqlPostCategory(
   priority: number = 0,
   name_en?: string | null,
   name_de?: string | null,
-  recommended_look_config?: string | null
+  recommended_look_config?: string | null,
+  discount_percentage?: number | null
 ) {
+  await ensureCategoryDiscountColumn();
   const result = await sql`
-    INSERT INTO categories (name, name_en, name_de, priority, recommended_look_config)
-    VALUES (${name}, ${name_en || null}, ${name_de || null}, ${priority}, ${
-      recommended_look_config || null
-    })
+    INSERT INTO categories (
+      name, name_en, name_de, priority, recommended_look_config, discount_percentage
+    )
+    VALUES (
+      ${name},
+      ${name_en || null},
+      ${name_de || null},
+      ${priority},
+      ${recommended_look_config || null},
+      ${discount_percentage ?? null}
+    )
     RETURNING *;
   `;
   return result[0];
@@ -1539,8 +1679,10 @@ export async function sqlPutCategory(
   priority: number = 0,
   name_en?: string | null,
   name_de?: string | null,
-  recommended_look_config?: string | null
+  recommended_look_config?: string | null,
+  discount_percentage?: number | null
 ) {
+  await ensureCategoryDiscountColumn();
   const result = await sql`
     UPDATE categories
     SET
@@ -1548,7 +1690,8 @@ export async function sqlPutCategory(
       name_en = ${name_en || null},
       name_de = ${name_de || null},
       priority = ${priority},
-      recommended_look_config = ${recommended_look_config || null}
+      recommended_look_config = ${recommended_look_config || null},
+      discount_percentage = ${discount_percentage ?? null}
     WHERE id = ${id}
     RETURNING *;
   `;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeDiscountPercent } from "@/lib/categoryDiscount";
 import { sqlGetAllCategories, sqlPostCategory } from "@/lib/sql";
 
 // ========================
@@ -23,7 +24,14 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, priority, name_en, name_de, recommended_look_config } = body;
+    const {
+      name,
+      priority,
+      name_en,
+      name_de,
+      recommended_look_config,
+      discount_percentage,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -39,7 +47,8 @@ export async function POST(req: NextRequest) {
       name_de || null,
       typeof recommended_look_config === "string"
         ? recommended_look_config
-        : null
+        : null,
+      normalizeDiscountPercent(discount_percentage)
     );
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error) {

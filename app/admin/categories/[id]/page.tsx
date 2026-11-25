@@ -41,6 +41,7 @@ export default function EditCategoryPage() {
   const [formData, setFormData] = useState({
     name: "",
     priority: 0, // <-- add this
+    discount_percentage: "" as string,
     subcategories: [] as Subcategory[],
     recommendations: [] as RecommendationRule[],
   });
@@ -247,6 +248,11 @@ export default function EditCategoryPage() {
         setFormData({
           name: category.name,
           priority: category.priority ?? 0,
+          discount_percentage:
+            category.discount_percentage != null &&
+            Number(category.discount_percentage) > 0
+              ? String(category.discount_percentage)
+              : "",
           subcategories: (subcategories || []).map(
             (s: Subcategory & { priority?: number }) => ({
               ...s,
@@ -284,7 +290,12 @@ export default function EditCategoryPage() {
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: field === "priority" ? Number(value) : value,
+      [field]:
+        field === "priority"
+          ? Number(value)
+          : field === "discount_percentage"
+            ? value
+            : value,
     }));
   };
 
@@ -546,6 +557,9 @@ export default function EditCategoryPage() {
         body: JSON.stringify({
           name,
           priority: formData.priority,
+          discount_percentage: formData.discount_percentage.trim()
+            ? Number(formData.discount_percentage)
+            : null,
           recommended_look_config: JSON.stringify(
             recommendations.filter(
               (r) =>
@@ -629,6 +643,52 @@ export default function EditCategoryPage() {
                 value={formData.priority}
                 onChange={(e) => handleChange("priority", e.target.value)}
               />
+
+              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                <Label>Знижка на всю категорію, %</Label>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                  Застосовується до всіх товарів цієї категорії (і до тих, де вона
+                  вказана як додаткова). Порожнє поле — без знижки. Якщо у товару
+                  своя більша знижка, лишається вона.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[10, 15, 20, 30].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() =>
+                        handleChange("discount_percentage", String(pct))
+                      }
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                        formData.discount_percentage === String(pct)
+                          ? "border-brand-500 bg-brand-500 text-white"
+                          : "border-gray-300 text-gray-700 hover:border-brand-400 dark:border-white/20 dark:text-gray-300"
+                      }`}
+                    >
+                      −{pct}%
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleChange("discount_percentage", "")}
+                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-white dark:border-white/20 dark:text-gray-300"
+                  >
+                    Прибрати
+                  </button>
+                </div>
+                <div className="mt-2 max-w-[160px]">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={formData.discount_percentage}
+                    onChange={(e) =>
+                      handleChange("discount_percentage", e.target.value)
+                    }
+                    placeholder="напр. 15"
+                  />
+                </div>
+              </div>
 
               <Label className="mt-6">Підкатегорії</Label>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">

@@ -7,6 +7,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { useBasket } from "@/lib/BasketProvider";
 import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
 import SeasonList from "@/components/collections/SeasonList";
+import CategoryDiscountBadge from "@/components/shared/CategoryDiscountBadge";
 
 interface SidebarMenuProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface Category {
   name: string;
   name_en?: string | null;
   name_de?: string | null;
+  discount_percentage?: number | null;
   subcategories?: Subcategory[];
 }
 
@@ -161,10 +163,13 @@ export default function SidebarMenu({
                           buildCategorySlug(cat.name)
                         )}`
                       )}
-                      className="site-nav-link"
+                      className="site-nav-link inline-flex flex-wrap items-center gap-2"
                       onClick={() => setIsOpen(false)}
                     >
-                      {getCategoryLabel(cat)}
+                      <span>{getCategoryLabel(cat)}</span>
+                      <CategoryDiscountBadge
+                        discountPercentage={cat.discount_percentage}
+                      />
                     </Link>
 
                     {cat.subcategories && cat.subcategories.length > 0 && (

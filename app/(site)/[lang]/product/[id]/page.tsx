@@ -2,6 +2,7 @@ import ProductServer from "@/components/product/ProductServer";
 import YouMightLike from "@/components/product/YouMightLike";
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { applyCategoryDiscountToProduct } from "@/lib/categoryDiscount";
 import { sqlGetProduct } from "@/lib/sql";
 import { notFound, permanentRedirect } from "next/navigation";
 import Breadcrumbs from "@/components/shared/Breadcrumbs";
@@ -88,14 +89,16 @@ export async function generateMetadata({
 
   try {
     const products = await sqlGetProduct(Number(numericId));
-    const product = products[0];
+    const rawProduct = products[0];
 
-    if (!product) {
+    if (!rawProduct) {
       return {
         title: copy.productNotFound,
         alternates: pageAlternates(lang, `/product/${id}`),
       };
     }
+
+    const product = await applyCategoryDiscountToProduct(rawProduct);
 
     const { name: productName, description } = localizedName(product, lang);
     const slug = buildProductSlug(product.name, product.id);

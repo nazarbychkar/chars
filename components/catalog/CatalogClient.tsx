@@ -21,11 +21,13 @@ import {
   resolveEffectiveCurrency,
   resolveItemPrice,
 } from "@/lib/currency";
+import CategoryDiscountBadge from "@/components/shared/CategoryDiscountBadge";
 
 interface CategoryForLabel {
   name: string;
   name_en?: string | null;
   name_de?: string | null;
+  discount_percentage?: number | null;
 }
 
 interface Product {
@@ -136,6 +138,7 @@ export default function CatalogClient({
   const [subcategoryLabel, setSubcategoryLabel] = useState<string | null>(null);
   const [categoryNameUa, setCategoryNameUa] = useState<string | null>(null);
   const [subcategoryNameUa, setSubcategoryNameUa] = useState<string | null>(null);
+  const [categoryDiscount, setCategoryDiscount] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState(12);
 
   // Restore how many products user had loaded previously (Show more)
@@ -167,6 +170,7 @@ export default function CatalogClient({
         setSubcategoryLabel(null);
         setCategoryNameUa(null);
         setSubcategoryNameUa(null);
+        setCategoryDiscount(null);
 
         // Category label
         if (category) {
@@ -190,6 +194,10 @@ export default function CatalogClient({
                 ? found.name_de || found.name
                 : found.name;
             setCategoryLabel(label);
+            const pct = Number(found.discount_percentage);
+            setCategoryDiscount(
+              Number.isFinite(pct) && pct > 0 ? pct : null
+            );
           }
         }
 
@@ -251,16 +259,24 @@ export default function CatalogClient({
             >
               {"<"}
             </button>
-            <span>
-              {subcategory
-                ? subcategoryLabel ??
-                  subcategoryNameUa ??
-                  subcategory
-                : category
-                ? categoryLabel ?? categoryNameUa ?? category
-                : season
-                ? season
-                : messages.catalog.allProductsLabel}
+            <span className="inline-flex flex-wrap items-center gap-2 sm:gap-3">
+              <span>
+                {subcategory
+                  ? subcategoryLabel ??
+                    subcategoryNameUa ??
+                    subcategory
+                  : category
+                  ? categoryLabel ?? categoryNameUa ?? category
+                  : season
+                  ? season
+                  : messages.catalog.allProductsLabel}
+              </span>
+              {!subcategory && category && (
+                <CategoryDiscountBadge
+                  discountPercentage={categoryDiscount}
+                  size="md"
+                />
+              )}
             </span>
           </div>
 

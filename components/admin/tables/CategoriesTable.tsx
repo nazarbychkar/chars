@@ -15,6 +15,7 @@ interface Category {
   name: string;
   name_en?: string | null;
   name_de?: string | null;
+  discount_percentage?: number | null;
 }
 
 export default function CategoriesTable() {
@@ -480,8 +481,13 @@ export default function CategoriesTable() {
                           </button>
                         </div>
                       ) : (
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {category.name}
+                        <span className="inline-flex flex-wrap items-center gap-2 text-gray-700 dark:text-gray-300">
+                          <span>{category.name}</span>
+                          {Number(category.discount_percentage) > 0 && (
+                            <span className="rounded-full bg-[#072a6b]/10 px-2 py-0.5 text-xs font-medium text-[#072a6b] dark:bg-[#072a6b]/30 dark:text-[#9eb6d9]">
+                              −{Number(category.discount_percentage)}%
+                            </span>
+                          )}
                         </span>
                       )}
                     </TableCell>

@@ -66,6 +66,9 @@ export async function POST() {
     await sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS recommended_look_config TEXT`;
     console.log("✅ Added categories.recommended_look_config column");
 
+    await sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS discount_percentage INTEGER`;
+    console.log("✅ Added categories.discount_percentage column");
+
     // Subcategory localizations
     await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS name_en TEXT`;
     console.log("✅ Added subcategories.name_en column");

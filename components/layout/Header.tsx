@@ -15,6 +15,7 @@ import SidebarMenu from "./SidebarMenu";
 import { buildCategorySlug, buildSubcategorySlug } from "@/lib/slug";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import SeasonList from "@/components/collections/SeasonList";
+import CategoryDiscountBadge from "@/components/shared/CategoryDiscountBadge";
 
 interface Category {
   id: number;
@@ -22,6 +23,7 @@ interface Category {
   priority: number;
   name_en?: string | null;
   name_de?: string | null;
+  discount_percentage?: number | null;
   subcategories?: Subcategory[];
 }
 
@@ -318,14 +320,19 @@ export default function Header() {
                               href={`/${locale}/catalog?category=${encodeURIComponent(
                                 buildCategorySlug(category.name)
                               )}`}
-                              className={`block text-sm font-semibold uppercase tracking-[0.14em] mb-3 transition-colors duration-200 ${
+                              className={`mb-3 flex flex-wrap items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-200 ${
                                 isDark
                                   ? "text-white hover:text-[#eef7ff]"
                                   : "text-[#072a6b] hover:text-[#051f52]"
                               }`}
                               onClick={() => setCatalogOpen(false)}
                             >
-                              {getCategoryLabel(category)}
+                              <span>{getCategoryLabel(category)}</span>
+                              <CategoryDiscountBadge
+                                discountPercentage={
+                                  category.discount_percentage
+                                }
+                              />
                             </Link>
                             <ul className="space-y-1.5">
                               {(category.subcategories || []).map((sub) => (
