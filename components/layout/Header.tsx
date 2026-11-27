@@ -32,6 +32,7 @@ interface Subcategory {
   name: string;
   name_en?: string | null;
   name_de?: string | null;
+  discount_percentage?: number | null;
 }
 
 export default function Header() {
@@ -341,14 +342,21 @@ export default function Header() {
                                     href={`/${locale}/catalog?subcategory=${encodeURIComponent(
                                       buildSubcategorySlug(sub.name)
                                     )}`}
-                                    className={`text-[15px] font-normal leading-snug transition-colors duration-200 ${
+                                    className={`inline-flex flex-wrap items-center gap-2 text-[15px] font-normal leading-snug transition-colors duration-200 ${
                                       isDark
                                         ? "text-stone-300 hover:text-white"
                                         : "text-stone-700 hover:text-[#072a6b]"
                                     }`}
                                     onClick={() => setCatalogOpen(false)}
                                   >
-                                    {getSubcategoryLabel(sub)}
+                                    <span>{getSubcategoryLabel(sub)}</span>
+                                    <CategoryDiscountBadge
+                                      discountPercentage={
+                                        Number(sub.discount_percentage) > 0
+                                          ? sub.discount_percentage
+                                          : category.discount_percentage
+                                      }
+                                    />
                                   </Link>
                                 </li>
                               ))}

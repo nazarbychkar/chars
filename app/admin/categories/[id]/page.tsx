@@ -15,6 +15,8 @@ type Subcategory = {
   category_id?: number | null;
   /** Більше значення — вище в меню каталогу та списках (як у категорій) */
   priority?: number;
+  /** Знижка на всі товари цієї підкатегорії */
+  discount_percentage?: number | null;
 };
 
 type RecommendationRule = {
@@ -254,9 +256,17 @@ export default function EditCategoryPage() {
               ? String(category.discount_percentage)
               : "",
           subcategories: (subcategories || []).map(
-            (s: Subcategory & { priority?: number }) => ({
+            (s: Subcategory & {
+              priority?: number;
+              discount_percentage?: number | null;
+            }) => ({
               ...s,
               priority: s.priority ?? 0,
+              discount_percentage:
+                s.discount_percentage != null &&
+                Number(s.discount_percentage) > 0
+                  ? Number(s.discount_percentage)
+                  : null,
             })
           ),
           recommendations,
@@ -316,6 +326,17 @@ export default function EditCategoryPage() {
       if (field === "priority") {
         const n = Math.max(0, Math.floor(Number(value) || 0));
         newSubs[index] = { ...newSubs[index], priority: n };
+      } else if (field === "discount_percentage") {
+        const trimmed = String(value ?? "").trim();
+        if (!trimmed) {
+          newSubs[index] = { ...newSubs[index], discount_percentage: null };
+        } else {
+          const n = Math.min(100, Math.max(1, Math.round(Number(trimmed) || 0)));
+          newSubs[index] = {
+            ...newSubs[index],
+            discount_percentage: n > 0 ? n : null,
+          };
+        }
       } else {
         newSubs[index] = {
           ...newSubs[index],
@@ -583,6 +604,12 @@ export default function EditCategoryPage() {
         const trimmedName = sub.name.trim();
         if (!trimmedName) continue;
 
+        const subDiscount =
+          sub.discount_percentage != null &&
+          Number(sub.discount_percentage) > 0
+            ? Number(sub.discount_percentage)
+            : null;
+
         if (sub.id) {
           await fetch(`/api/subcategories/${sub.id}`, {
             method: "PUT",
@@ -593,6 +620,7 @@ export default function EditCategoryPage() {
               name_en: sub.name_en?.trim() || null,
               name_de: sub.name_de?.trim() || null,
               priority: Math.max(0, Math.floor(sub.priority ?? 0)),
+              discount_percentage: subDiscount,
             }),
           });
         } else {
@@ -605,6 +633,7 @@ export default function EditCategoryPage() {
               name_en: sub.name_en?.trim() || null,
               name_de: sub.name_de?.trim() || null,
               priority: Math.max(0, Math.floor(sub.priority ?? 0)),
+              discount_percentage: subDiscount,
             }),
           });
         }
@@ -693,8 +722,9 @@ export default function EditCategoryPage() {
 
               <Label className="mt-6">Підкатегорії</Label>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
-                Порядок у каталозі та меню: більший пріоритет — вище. Можна міняти
-                число або стрілками поміняти місцями.
+                Порядок у каталозі та меню: більший пріоритет — вище. Для кожної
+                підкатегорії можна задати окрему знижку на всі її товари (береться
+                більша з: товар / категорія / підкатегорія).
               </p>
               <button
                 type="button"
@@ -769,6 +799,66 @@ export default function EditCategoryPage() {
                     >
                       ×
                     </button>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/70 p-2.5 dark:border-white/[0.06] dark:bg-white/[0.02]">
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                      Знижка підкатегорії
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[10, 15, 20, 30].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() =>
+                            handleSubcategoryChange(
+                              index,
+                              "discount_percentage",
+                              String(pct)
+                            )
+                          }
+                          className={`rounded border px-2 py-0.5 text-[11px] font-medium ${
+                            Number(sub.discount_percentage) === pct
+                              ? "border-brand-500 bg-brand-500 text-white"
+                              : "border-gray-300 text-gray-600 hover:border-brand-400 dark:border-white/20 dark:text-gray-300"
+                          }`}
+                        >
+                          −{pct}%
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSubcategoryChange(
+                            index,
+                            "discount_percentage",
+                            ""
+                          )
+                        }
+                        className="rounded border border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 dark:border-white/20"
+                      >
+                        Прибрати
+                      </button>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={
+                          sub.discount_percentage != null &&
+                          Number(sub.discount_percentage) > 0
+                            ? String(sub.discount_percentage)
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleSubcategoryChange(
+                            index,
+                            "discount_percentage",
+                            e.target.value
+                          )
+                        }
+                        placeholder="%"
+                        className="!w-16 !py-1 !px-2 text-sm"
+                      />
+                    </div>
                   </div>
                   <button
                     type="button"

@@ -74,6 +74,7 @@ let availabilityStatusColumnEnsured = false;
 let productPlacementColumnsEnsured = false;
 let priceUsdColumnEnsured = false;
 let categoryDiscountColumnEnsured = false;
+let subcategoryDiscountColumnEnsured = false;
 
 export async function ensureCategoryDiscountColumn(): Promise<void> {
   if (categoryDiscountColumnEnsured) return;
@@ -92,19 +93,41 @@ export async function ensureCategoryDiscountColumn(): Promise<void> {
   }
 }
 
+export async function ensureSubcategoryDiscountColumn(): Promise<void> {
+  if (subcategoryDiscountColumnEnsured) return;
+  if (process.env.DISABLE_AUTO_CATEGORY_DISCOUNT_COLUMN === "1") return;
+  try {
+    await sql`
+      ALTER TABLE subcategories
+      ADD COLUMN IF NOT EXISTS discount_percentage INTEGER
+    `;
+    subcategoryDiscountColumnEnsured = true;
+  } catch (error) {
+    console.error(
+      "[sql] ensureSubcategoryDiscountColumn failed (grant ALTER or run migrate):",
+      error
+    );
+  }
+}
+
 type DiscountStampRow = {
   id?: number;
   discount_percentage?: number | null;
   category_id?: number | null;
+  subcategory_id?: number | null;
   extra_category_ids?: unknown;
 };
 
-/** Stamp max(product, category, extra categories) onto discount_percentage for storefront. */
+/**
+ * Stamp max(product, category, extra categories, subcategory)
+ * onto discount_percentage for storefront.
+ */
 async function stampEffectiveDiscounts<T extends DiscountStampRow>(
   rows: T[]
 ): Promise<T[]> {
   if (!rows.length) return rows;
   await ensureCategoryDiscountColumn();
+  await ensureSubcategoryDiscountColumn();
   await ensureProductPlacementColumns();
 
   const catRows = (await sql`
@@ -116,16 +139,33 @@ async function stampEffectiveDiscounts<T extends DiscountStampRow>(
   for (const row of catRows) {
     catMap.set(Number(row.id), Number(row.discount_percentage) || 0);
   }
-  if (catMap.size === 0) return rows;
+
+  const subRows = (await sql`
+    SELECT id, discount_percentage
+    FROM subcategories
+    WHERE COALESCE(discount_percentage, 0) > 0
+  `) as { id: number; discount_percentage: number }[];
+  const subMap = new Map<number, number>();
+  for (const row of subRows) {
+    subMap.set(Number(row.id), Number(row.discount_percentage) || 0);
+  }
+
+  if (catMap.size === 0 && subMap.size === 0) return rows;
 
   const needsLookup = rows.some(
     (row) =>
       row.id != null &&
-      (row.category_id === undefined || row.extra_category_ids === undefined)
+      (row.category_id === undefined ||
+        row.extra_category_ids === undefined ||
+        row.subcategory_id === undefined)
   );
   const productMeta = new Map<
     number,
-    { category_id: number | null; extra_category_ids: unknown }
+    {
+      category_id: number | null;
+      subcategory_id: number | null;
+      extra_category_ids: unknown;
+    }
   >();
   if (needsLookup) {
     const ids = rows
@@ -133,17 +173,19 @@ async function stampEffectiveDiscounts<T extends DiscountStampRow>(
       .filter((id): id is number => typeof id === "number");
     if (ids.length) {
       const metaRows = (await sql`
-        SELECT id, category_id, extra_category_ids
+        SELECT id, category_id, subcategory_id, extra_category_ids
         FROM products
         WHERE id = ANY(${ids}::int[])
       `) as {
         id: number;
         category_id: number | null;
+        subcategory_id: number | null;
         extra_category_ids: unknown;
       }[];
       for (const meta of metaRows) {
         productMeta.set(Number(meta.id), {
           category_id: meta.category_id,
+          subcategory_id: meta.subcategory_id,
           extra_category_ids: meta.extra_category_ids,
         });
       }
@@ -156,6 +198,10 @@ async function stampEffectiveDiscounts<T extends DiscountStampRow>(
     const meta = row.id != null ? productMeta.get(Number(row.id)) : undefined;
     const categoryId =
       row.category_id !== undefined ? row.category_id : meta?.category_id ?? null;
+    const subcategoryId =
+      row.subcategory_id !== undefined
+        ? row.subcategory_id
+        : meta?.subcategory_id ?? null;
     const extras =
       row.extra_category_ids !== undefined
         ? row.extra_category_ids
@@ -164,6 +210,9 @@ async function stampEffectiveDiscounts<T extends DiscountStampRow>(
     const candidates = [Number(row.discount_percentage) || 0];
     if (categoryId != null) {
       candidates.push(catMap.get(Number(categoryId)) || 0);
+    }
+    if (subcategoryId != null) {
+      candidates.push(subMap.get(Number(subcategoryId)) || 0);
     }
     for (const extraId of parseExtraCategoryIds(
       extras,
@@ -1714,6 +1763,7 @@ export async function sqlDeleteCategory(id: number) {
 // Get all subcategories
 export async function sqlGetAllSubcategories() {
   await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
+  await ensureSubcategoryDiscountColumn();
   return await sql`
     SELECT * FROM subcategories
     ORDER BY category_id ASC, priority DESC, id ASC;
@@ -1723,6 +1773,7 @@ export async function sqlGetAllSubcategories() {
 // Get all subcategories for a specific category
 export async function sqlGetSubcategoriesByCategory(categoryId: number) {
   await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
+  await ensureSubcategoryDiscountColumn();
   return await sql`
     SELECT * FROM subcategories
     WHERE category_id = ${categoryId}
@@ -1733,6 +1784,7 @@ export async function sqlGetSubcategoriesByCategory(categoryId: number) {
 
 // Get a single subcategory by ID
 export async function sqlGetSubcategory(id: number) {
+  await ensureSubcategoryDiscountColumn();
   return await sql`
     SELECT * FROM subcategories
     WHERE id = ${id};
@@ -1745,11 +1797,22 @@ export async function sqlPostSubcategory(
   categoryId: number,
   name_en?: string | null,
   name_de?: string | null,
-  priority: number = 0
+  priority: number = 0,
+  discount_percentage?: number | null
 ) {
+  await ensureSubcategoryDiscountColumn();
   const result = await sql`
-    INSERT INTO subcategories (name, category_id, name_en, name_de, priority)
-    VALUES (${name}, ${categoryId}, ${name_en ?? null}, ${name_de ?? null}, ${priority})
+    INSERT INTO subcategories (
+      name, category_id, name_en, name_de, priority, discount_percentage
+    )
+    VALUES (
+      ${name},
+      ${categoryId},
+      ${name_en ?? null},
+      ${name_de ?? null},
+      ${priority},
+      ${discount_percentage ?? null}
+    )
     RETURNING *;
   `;
   return result[0];
@@ -1762,13 +1825,16 @@ export async function sqlPutSubcategory(
   categoryId: number,
   name_en?: string | null,
   name_de?: string | null,
-  priority: number = 0
+  priority: number = 0,
+  discount_percentage?: number | null
 ) {
+  await ensureSubcategoryDiscountColumn();
   const result = await sql`
     UPDATE subcategories
     SET name = ${name}, category_id = ${categoryId},
         name_en = ${name_en ?? null}, name_de = ${name_de ?? null},
-        priority = ${priority}
+        priority = ${priority},
+        discount_percentage = ${discount_percentage ?? null}
     WHERE id = ${id}
     RETURNING *;
   `;

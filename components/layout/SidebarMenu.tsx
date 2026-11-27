@@ -29,6 +29,7 @@ interface Subcategory {
   name: string;
   name_en?: string | null;
   name_de?: string | null;
+  discount_percentage?: number | null;
 }
 
 export default function SidebarMenu({
@@ -196,10 +197,17 @@ export default function SidebarMenu({
                               buildSubcategorySlug(sub.name)
                             )}`
                           )}
-                          className="site-nav-link text-lg sm:text-xl opacity-90"
+                          className="site-nav-link inline-flex flex-wrap items-center gap-2 text-lg sm:text-xl opacity-90"
                           onClick={() => setIsOpen(false)}
                         >
-                          {getSubcategoryLabel(sub)}
+                          <span>{getSubcategoryLabel(sub)}</span>
+                          <CategoryDiscountBadge
+                            discountPercentage={
+                              Number(sub.discount_percentage) > 0
+                                ? sub.discount_percentage
+                                : cat.discount_percentage
+                            }
+                          />
                         </Link>
                       ))}
                     </div>

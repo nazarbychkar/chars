@@ -79,6 +79,9 @@ export async function POST() {
     await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS priority INTEGER DEFAULT 0`;
     console.log("✅ Added subcategories.priority column");
 
+    await sql`ALTER TABLE subcategories ADD COLUMN IF NOT EXISTS discount_percentage INTEGER`;
+    console.log("✅ Added subcategories.discount_percentage column");
+
     // Orders: allow international shipping and gift certificates
     await sql`ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_delivery_method_check`;
     await sql`

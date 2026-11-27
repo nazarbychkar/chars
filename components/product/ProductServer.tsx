@@ -19,6 +19,7 @@ interface Product {
   old_price?: number;
   discount_percentage?: number | null;
   category_id?: number | null;
+  subcategory_id?: number | null;
   extra_category_ids?: unknown;
   availability_status?: string | null;
   description?: string;

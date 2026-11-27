@@ -214,6 +214,7 @@ export default function CatalogClient({
               category_id?: number | null;
               name_en?: string | null;
               name_de?: string | null;
+              discount_percentage?: number | null;
             }) => {
             const baseName = s.name || "";
             const slug = buildSubcategorySlug(baseName);
@@ -233,6 +234,8 @@ export default function CatalogClient({
                 : found.name;
             setSubcategoryLabel(localized);
 
+            const subPct = Number(found.discount_percentage);
+            let parentPct = 0;
             if (found.category_id != null) {
               const cats = await fetch("/api/categories").then((r) => r.json());
               if (!cancelled && Array.isArray(cats)) {
@@ -240,12 +243,14 @@ export default function CatalogClient({
                   (c: CategoryForLabel & { id?: number }) =>
                     Number(c.id) === Number(found.category_id)
                 );
-                const pct = Number(parent?.discount_percentage);
-                setCategoryDiscount(
-                  Number.isFinite(pct) && pct > 0 ? pct : null
-                );
+                parentPct = Number(parent?.discount_percentage) || 0;
               }
             }
+            const effective = Math.max(
+              Number.isFinite(subPct) && subPct > 0 ? subPct : 0,
+              parentPct > 0 ? parentPct : 0
+            );
+            setCategoryDiscount(effective > 0 ? effective : null);
           }
         }
       } catch (e) {

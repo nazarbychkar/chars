@@ -1,5 +1,6 @@
 // /app/api/subcategories/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeDiscountPercent } from "@/lib/categoryDiscount";
 import { sqlGetSubcategoriesByCategory, sqlPostSubcategory } from "@/lib/sql";
 
 export async function GET(req: NextRequest) {
@@ -29,7 +30,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, parent_category_id, name_en, name_de, priority } = body;
+    const {
+      name,
+      parent_category_id,
+      name_en,
+      name_de,
+      priority,
+      discount_percentage,
+    } = body;
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -56,7 +64,8 @@ export async function POST(req: NextRequest) {
       categoryId,
       name_en ?? null,
       name_de ?? null,
-      priorityNum
+      priorityNum,
+      normalizeDiscountPercent(discount_percentage)
     );
     return NextResponse.json(newSubcategory, { status: 201 });
   } catch (error) {

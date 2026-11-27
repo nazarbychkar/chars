@@ -1,9 +1,14 @@
 import { parseExtraCategoryIds } from "@/lib/parseExtraCategoryIds";
-import { ensureCategoryDiscountColumn, sql } from "@/lib/sql";
+import {
+  ensureCategoryDiscountColumn,
+  ensureSubcategoryDiscountColumn,
+  sql,
+} from "@/lib/sql";
 
 export type ProductDiscountFields = {
   discount_percentage?: number | null;
   category_id?: number | null;
+  subcategory_id?: number | null;
   extra_category_ids?: unknown;
 };
 
@@ -20,11 +25,16 @@ export function computeEffectiveDiscount(
   productDiscount: number | null | undefined,
   categoryId: number | null | undefined,
   extraCategoryIds: unknown,
-  categoryDiscountById: Map<number, number>
+  categoryDiscountById: Map<number, number>,
+  subcategoryId?: number | null,
+  subcategoryDiscountById?: Map<number, number>
 ): number | null {
   const candidates = [Number(productDiscount) || 0];
   if (categoryId != null) {
     candidates.push(categoryDiscountById.get(Number(categoryId)) || 0);
+  }
+  if (subcategoryId != null && subcategoryDiscountById) {
+    candidates.push(subcategoryDiscountById.get(Number(subcategoryId)) || 0);
   }
   for (const id of parseExtraCategoryIds(
     extraCategoryIds,
@@ -37,6 +47,11 @@ export function computeEffectiveDiscount(
 }
 
 let categoryDiscountMapCache: {
+  at: number;
+  map: Map<number, number>;
+} | null = null;
+
+let subcategoryDiscountMapCache: {
   at: number;
   map: Map<number, number>;
 } | null = null;
@@ -71,15 +86,50 @@ export async function getCategoryDiscountMap(
   return map;
 }
 
+export async function getSubcategoryDiscountMap(
+  options?: { bypassCache?: boolean }
+): Promise<Map<number, number>> {
+  const now = Date.now();
+  if (
+    !options?.bypassCache &&
+    subcategoryDiscountMapCache &&
+    now - subcategoryDiscountMapCache.at < 60_000
+  ) {
+    return subcategoryDiscountMapCache.map;
+  }
+
+  await ensureSubcategoryDiscountColumn();
+  const rows = await sql`
+    SELECT id, discount_percentage
+    FROM subcategories
+    WHERE discount_percentage IS NOT NULL
+      AND discount_percentage > 0
+  `;
+
+  const map = new Map<number, number>();
+  for (const row of rows as { id: number; discount_percentage: number }[]) {
+    const pct = Number(row.discount_percentage);
+    if (pct > 0) map.set(Number(row.id), pct);
+  }
+
+  subcategoryDiscountMapCache = { at: now, map };
+  return map;
+}
+
 export async function applyCategoryDiscountToProduct<
   T extends ProductDiscountFields,
 >(product: T): Promise<T> {
-  const map = await getCategoryDiscountMap();
+  const [catMap, subMap] = await Promise.all([
+    getCategoryDiscountMap(),
+    getSubcategoryDiscountMap(),
+  ]);
   const effective = computeEffectiveDiscount(
     product.discount_percentage,
     product.category_id,
     product.extra_category_ids,
-    map
+    catMap,
+    product.subcategory_id,
+    subMap
   );
   return { ...product, discount_percentage: effective };
 }

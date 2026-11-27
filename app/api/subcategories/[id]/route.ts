@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+import { normalizeDiscountPercent } from "@/lib/categoryDiscount";
 import {
   sqlGetSubcategory,
   sqlPutSubcategory,
@@ -53,7 +55,14 @@ export async function PUT(
 
   try {
     const body = await req.json();
-    const { name, parent_category_id, name_en, name_de, priority } = body;
+    const {
+      name,
+      parent_category_id,
+      name_en,
+      name_de,
+      priority,
+      discount_percentage,
+    } = body;
 
     if (!name || typeof name !== "string") {
       return NextResponse.json(
@@ -75,15 +84,36 @@ export async function PUT(
         ? Math.max(0, Math.floor(priority))
         : 0;
 
+    const existingRows = await sqlGetSubcategory(subcategoryId);
+    const existing = Array.isArray(existingRows)
+      ? existingRows[0]
+      : existingRows;
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Subcategory not found" },
+        { status: 404 }
+      );
+    }
+
+    const finalDiscount =
+      discount_percentage !== undefined
+        ? normalizeDiscountPercent(discount_percentage)
+        : normalizeDiscountPercent(
+            (existing as { discount_percentage?: number | null })
+              .discount_percentage
+          );
+
     const updatedSubcategory = await sqlPutSubcategory(
       subcategoryId,
       name,
       categoryId,
       name_en ?? null,
       name_de ?? null,
-      priorityNum
+      priorityNum,
+      finalDiscount
     );
 
+    revalidateTag("products");
     return NextResponse.json(updatedSubcategory);
   } catch (error) {
     console.error("PUT subcategory failed:", error);
